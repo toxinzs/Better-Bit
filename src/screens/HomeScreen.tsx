@@ -4,6 +4,7 @@ import { useGameStore } from "../state/gameStore";
 import StatBar from "../components/StatBar";
 import EventModal from "../components/EventModal";
 import { availableJobs } from "../data/jobs";
+import { MIN_AGE_GYM, MIN_AGE_LIBRARY, MIN_AGE_CONVERSATION } from "../engine/lifeStage";
 
 const RELATION_LABEL: Record<string, string> = {
   mother: "Mother",
@@ -22,6 +23,8 @@ export default function HomeScreen() {
   const applyForJob = useGameStore((s) => s.applyForJob);
   const quitJob = useGameStore((s) => s.quitJob);
   const doActivity = useGameStore((s) => s.doActivity);
+  const spendTimeWith = useGameStore((s) => s.spendTimeWith);
+  const haveConversation = useGameStore((s) => s.haveConversation);
   const [showCareers, setShowCareers] = useState(false);
 
   if (!character) return null;
@@ -64,11 +67,31 @@ export default function HomeScreen() {
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Relationships</Text>
           {character.relationships.filter((r) => r.alive).map((r) => (
-            <View key={r.id} style={styles.relRow}>
-              <Text style={styles.relName}>
-                {r.name} ({RELATION_LABEL[r.type] ?? r.type})
-              </Text>
-              <Text style={styles.relLevel}>{Math.round(r.level)}</Text>
+            <View key={r.id} style={styles.relBlock}>
+              <View style={styles.relRow}>
+                <Text style={styles.relName}>
+                  {r.name} ({RELATION_LABEL[r.type] ?? r.type})
+                </Text>
+                <Text style={styles.relLevel}>{Math.round(r.level)}</Text>
+              </View>
+              <View style={styles.relActions}>
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  style={styles.relActionBtn}
+                  onPress={() => spendTimeWith(r.id)}
+                >
+                  <Text style={styles.relActionText}>Spend Time</Text>
+                </TouchableOpacity>
+                {character.age >= MIN_AGE_CONVERSATION && (
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    style={styles.relActionBtn}
+                    onPress={() => haveConversation(r.id)}
+                  >
+                    <Text style={styles.relActionText}>Talk</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           ))}
         </View>
@@ -97,14 +120,18 @@ export default function HomeScreen() {
       </ScrollView>
 
       <View style={styles.actionBar}>
-        <TouchableOpacity accessibilityRole="button" style={styles.smallBtn} onPress={() => doActivity("gym")}>
-          <Text style={styles.smallBtnText}>🏋️ Gym</Text>
-        </TouchableOpacity>
+        {character.age >= MIN_AGE_GYM && (
+          <TouchableOpacity accessibilityRole="button" style={styles.smallBtn} onPress={() => doActivity("gym")}>
+            <Text style={styles.smallBtnText}>🏋️ Gym</Text>
+          </TouchableOpacity>
+        )}
+        {character.age >= MIN_AGE_LIBRARY && (
+          <TouchableOpacity accessibilityRole="button" style={styles.smallBtn} onPress={() => doActivity("library")}>
+            <Text style={styles.smallBtnText}>📚 Library</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity accessibilityRole="button" style={styles.smallBtn} onPress={() => doActivity("doctor")}>
           <Text style={styles.smallBtnText}>🩺 Doctor</Text>
-        </TouchableOpacity>
-        <TouchableOpacity accessibilityRole="button" style={styles.smallBtn} onPress={() => doActivity("family")}>
-          <Text style={styles.smallBtnText}>👪 Family</Text>
         </TouchableOpacity>
         <TouchableOpacity accessibilityRole="button" style={styles.ageBtn} onPress={ageUp}>
           <Text style={styles.ageBtnText}>Age Up →</Text>
@@ -160,10 +187,15 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     marginBottom: 4,
   },
+  relBlock: {
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: "#26263a",
+  },
   relRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 4,
+    marginBottom: 6,
   },
   relName: {
     color: "#ddd",
@@ -173,6 +205,21 @@ const styles = StyleSheet.create({
     color: "#7fd6a0",
     fontSize: 13,
     fontWeight: "700",
+  },
+  relActions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  relActionBtn: {
+    backgroundColor: "#232336",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  relActionText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
   },
   jobRow: {
     flexDirection: "row",

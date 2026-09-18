@@ -8,6 +8,8 @@ import {
   applyActivity as engineApplyActivity,
   applyForJob as engineApplyForJob,
   quitJob as engineQuitJob,
+  spendTimeWith as engineSpendTimeWith,
+  haveConversation as engineHaveConversation,
   Activity,
 } from "../engine/lifeEngine";
 
@@ -27,6 +29,8 @@ type GameState = {
   applyForJob: (job: Job) => void;
   quitJob: () => void;
   doActivity: (activity: Activity) => void;
+  spendTimeWith: (relationshipId: string) => void;
+  haveConversation: (relationshipId: string) => void;
   restart: () => void;
 };
 
@@ -108,6 +112,22 @@ export const useGameStore = create<GameState>((set, get) => ({
     const character = get().character;
     if (!character) return;
     engineApplyActivity(character, activity);
+    set({ character: { ...character } });
+    persist(character, get().screen);
+  },
+
+  spendTimeWith: (relationshipId) => {
+    const character = get().character;
+    if (!character) return;
+    engineSpendTimeWith(character, relationshipId);
+    set({ character: { ...character } });
+    persist(character, get().screen);
+  },
+
+  haveConversation: (relationshipId) => {
+    const character = get().character;
+    if (!character) return;
+    engineHaveConversation(character, relationshipId);
     set({ character: { ...character } });
     persist(character, get().screen);
   },

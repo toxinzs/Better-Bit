@@ -73,13 +73,20 @@ prison as its own mini life-inside-a-life, parole, a criminal record that
 follows you into future job applications. Opt-in via in-fiction choices,
 never gated behind anything.
 
-## Phase 5 — health & aging depth
+## Phase 5 — health & aging depth, plus personality traits
 
 Real diagnosable conditions instead of an abstract health number, mental
 health (therapy, depression/anxiety as their own arcs, not just flavor
 text), addiction mechanics, hospital visits with real choices, and life
 expectancy that's actually shaped by health history, not just a dice roll
 against age.
+
+Also where permanent **personality traits** belong (Introvert,
+Short-Tempered, Workaholic, Charismatic, etc.) — rolled or earned through
+childhood events, and actually load-bearing: they should shift which
+event choices are available, how fast skills grow, and how a character
+reacts to trauma, not just be a label. This is a genuine gap in the
+current build, not yet started.
 
 ## Phase 6 — careers depth
 

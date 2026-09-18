@@ -2,6 +2,10 @@ import { Character, Gender, Job, LifeEvent } from "../types";
 import { clamp, randomInt, pickWeighted } from "./util";
 import { EVENTS } from "../data/events";
 import { randomFirstName, randomLastName } from "../data/names";
+import { MIN_AGE_GYM, MIN_AGE_LIBRARY, MIN_AGE_CONVERSATION } from "./lifeStage";
+
+export { getLifeStage } from "./lifeStage";
+export type { LifeStage } from "./lifeStage";
 
 export function createCharacter(
   firstName: string,
@@ -160,15 +164,27 @@ export function resolveEvent(c: Character, event: LifeEvent, choiceIndex: number
   c.fullLog.push({ age: c.age, text: c.yearLog[c.yearLog.length - 1] });
 }
 
-export type Activity = "gym" | "doctor" | "family";
+export type Activity = "gym" | "library" | "doctor";
 
 export function applyActivity(c: Character, activity: Activity) {
   if (activity === "gym") {
+    if (c.age < MIN_AGE_GYM) {
+      c.yearLog.push("You're too young for the gym.");
+      return;
+    }
     c.stats.health = clamp(c.stats.health + 5);
     c.stats.looks = clamp(c.stats.looks + 2);
     c.stats.happiness = clamp(c.stats.happiness - 1);
     c.yearLog.push("You hit the gym.");
-  } else if (activity === "doctor") {
+  } else if (activity === "library") {
+    if (c.age < MIN_AGE_LIBRARY) {
+      c.yearLog.push("You're too young to study at the library yet.");
+      return;
+    }
+    c.stats.smarts = clamp(c.stats.smarts + 5);
+    c.stats.happiness = clamp(c.stats.happiness - 1);
+    c.yearLog.push("You spent the afternoon at the library.");
+  } else {
     if (c.money >= 150) {
       c.money -= 150;
       c.stats.health = clamp(c.stats.health + 8);
@@ -176,15 +192,27 @@ export function applyActivity(c: Character, activity: Activity) {
     } else {
       c.yearLog.push("You couldn't afford a doctor's visit.");
     }
-  } else {
-    c.relationships.forEach((r) => {
-      if (r.alive && (r.type === "mother" || r.type === "father" || r.type === "child" || r.type === "partner")) {
-        r.level = clamp(r.level + 5);
-      }
-    });
-    c.stats.happiness = clamp(c.stats.happiness + 4);
-    c.yearLog.push("You spent quality time with family.");
   }
+}
+
+export function spendTimeWith(c: Character, relationshipId: string) {
+  const r = c.relationships.find((x) => x.id === relationshipId && x.alive);
+  if (!r) return;
+  r.level = clamp(r.level + 5);
+  c.stats.happiness = clamp(c.stats.happiness + 2);
+  c.yearLog.push(`You spent time with ${r.name}.`);
+}
+
+export function haveConversation(c: Character, relationshipId: string) {
+  if (c.age < MIN_AGE_CONVERSATION) {
+    c.yearLog.push("You're too young to have a real conversation yet.");
+    return;
+  }
+  const r = c.relationships.find((x) => x.id === relationshipId && x.alive);
+  if (!r) return;
+  r.level = clamp(r.level + 8);
+  c.stats.happiness = clamp(c.stats.happiness + 3);
+  c.yearLog.push(`You had a good conversation with ${r.name}.`);
 }
 
 export function applyForJob(c: Character, job: Job) {
