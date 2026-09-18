@@ -31,6 +31,8 @@ export type Relationship = {
   type: RelationType;
   level: number; // 0-100
   alive: boolean;
+  engaged?: boolean;
+  married?: boolean;
 };
 
 export type Job = {

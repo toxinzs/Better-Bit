@@ -1,8 +1,15 @@
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Character, Gender, Job, LifeEvent } from "../types";
-import { createCharacter, ageUp as engineAgeUp, resolveEvent as engineResolveEvent } from "../engine/lifeEngine";
-import { clamp } from "../engine/util";
+import {
+  createCharacter,
+  ageUp as engineAgeUp,
+  resolveEvent as engineResolveEvent,
+  applyActivity as engineApplyActivity,
+  applyForJob as engineApplyForJob,
+  quitJob as engineQuitJob,
+  Activity,
+} from "../engine/lifeEngine";
 
 const STORAGE_KEY = "@better-bit/save/v1";
 
@@ -19,7 +26,7 @@ type GameState = {
   chooseEventOption: (choiceIndex: number) => void;
   applyForJob: (job: Job) => void;
   quitJob: () => void;
-  doActivity: (activity: "gym" | "doctor" | "family") => void;
+  doActivity: (activity: Activity) => void;
   restart: () => void;
 };
 
@@ -84,8 +91,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   applyForJob: (job) => {
     const character = get().character;
     if (!character) return;
-    character.job = job;
-    character.yearLog.push(`You got a job as a ${job.title}!`);
+    engineApplyForJob(character, job);
     set({ character: { ...character } });
     persist(character, get().screen);
   },
@@ -93,8 +99,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   quitJob: () => {
     const character = get().character;
     if (!character) return;
-    character.job = null;
-    character.yearLog.push("You quit your job.");
+    engineQuitJob(character);
     set({ character: { ...character } });
     persist(character, get().screen);
   },
@@ -102,28 +107,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   doActivity: (activity) => {
     const character = get().character;
     if (!character) return;
-    if (activity === "gym") {
-      character.stats.health = clamp(character.stats.health + 5);
-      character.stats.looks = clamp(character.stats.looks + 2);
-      character.stats.happiness = clamp(character.stats.happiness - 1);
-      character.yearLog.push("You hit the gym.");
-    } else if (activity === "doctor") {
-      if (character.money >= 150) {
-        character.money -= 150;
-        character.stats.health = clamp(character.stats.health + 8);
-        character.yearLog.push("You visited the doctor for a checkup. -$150");
-      } else {
-        character.yearLog.push("You couldn't afford a doctor's visit.");
-      }
-    } else if (activity === "family") {
-      character.relationships.forEach((r) => {
-        if (r.alive && (r.type === "mother" || r.type === "father" || r.type === "child" || r.type === "partner")) {
-          r.level = clamp(r.level + 5);
-        }
-      });
-      character.stats.happiness = clamp(character.stats.happiness + 4);
-      character.yearLog.push("You spent quality time with family.");
-    }
+    engineApplyActivity(character, activity);
     set({ character: { ...character } });
     persist(character, get().screen);
   },
