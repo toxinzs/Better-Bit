@@ -116,7 +116,9 @@ export const ROMANCE_EVENTS: LifeEvent[] = [
           if (caught) {
             const p = partner(c);
             if (p) {
-              p.alive = false;
+              p.type = "ex";
+              p.married = false;
+              p.engaged = false;
             }
             c.stats.happiness = clamp(c.stats.happiness - 25);
           } else {
@@ -139,7 +141,11 @@ export const ROMANCE_EVENTS: LifeEvent[] = [
         label: "End it",
         effect: (c) => {
           const p = partner(c);
-          if (p) p.alive = false;
+          if (p) {
+            p.type = "ex";
+            p.married = false;
+            p.engaged = false;
+          }
           c.stats.happiness = clamp(c.stats.happiness - 10);
         },
       },
@@ -168,7 +174,7 @@ export const ROMANCE_EVENTS: LifeEvent[] = [
         label: "Break up",
         effect: (c) => {
           const p = partner(c);
-          if (p) p.alive = false;
+          if (p) p.type = "ex";
           c.stats.happiness = clamp(c.stats.happiness - 10);
         },
       },
@@ -323,7 +329,10 @@ export const ROMANCE_EVENTS: LifeEvent[] = [
         label: "File for divorce",
         effect: (c) => {
           const p = partner(c);
-          if (p) p.alive = false;
+          if (p) {
+            p.type = "ex";
+            p.married = false;
+          }
           c.money = Math.max(0, Math.round(c.money * 0.6));
           c.stats.happiness = clamp(c.stats.happiness - 12);
         },

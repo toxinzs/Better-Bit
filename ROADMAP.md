@@ -45,11 +45,39 @@ game has (more systems below = more events per stage).
 
 ## Phase 2 — relationships depth
 
-A real dating pool (multiple potential partners, not just "you met
-someone"), breakups, a cheating mechanic, marriage (proposal → wedding as
-its own beat, not a single popup), divorce with an asset split, parenting
-choices that actually affect how a kid turns out, siblings, grandparents,
-friendships that can sour into rivalries.
+Dating, breakups, a cheating mechanic, marriage (proposal → wedding as its
+own beat), divorce, parenting choices, siblings, grandparents — all
+**done** (this phase plus the initial event-pool pass). A real multi-option
+dating *pool* (choosing between several potential partners at once, not
+just one candidate per event) is still open for later.
+
+**Exes + texting (done).** BitLife just deletes an ex from your life the
+moment you break up (`alive: false`) — a real bug in our own earlier code
+too, now fixed: breaking up, getting caught cheating, or divorcing changes
+`Relationship.type` to `"ex"` instead of killing the relationship, so they
+stick around as a real, contactable person (`src/data/events/romance.ts`).
+Exes get their own action set — Text, Call, Booty Call, Send a Gift
+(`src/engine/relationships.ts`) — each with randomized outcomes/flavor
+lines (`src/data/textLines.ts`) and real relationship/happiness/money
+effects; a relationship level of 75+ reconciles an ex back to `"partner"`
+automatically (as long as you don't already have one), so "hitting them
+up" can genuinely go somewhere, not just flavor text.
+
+**Texts, for everyone (done).** Every relationship — not just exes — has
+a message thread (`Relationship.messages`, capped at 40, oldest trimmed)
+viewable via a real iPhone-style thread modal (`TextThreadModal.tsx`:
+bubbles, contact header, age-stamped). Populated by whatever you send
+*plus* **ambient texts** that appear on their own (a small per-year chance
+per relationship, `ambientMessageTick()` inside `ageUp()`) so there's
+always something to scroll through even for people you never explicitly
+contact — funny/messy/scandalous flavor, not always plot-relevant, per the
+BitLife vibe.
+
+**Explicitly deferred** (per direct ask): NPCs *initiating* contact
+unprompted (an incoming call/text that demands a response, rather than
+ambient flavor sitting in a thread you check on your own time) — that's a
+real interactive system, not just content, and needs its own design pass.
+Email, similarly — noted, not started.
 
 ## Phase 3 — money & assets, plus a real world state
 

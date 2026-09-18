@@ -23,7 +23,14 @@ export type RelationType =
   | "sibling"
   | "friend"
   | "partner"
-  | "child";
+  | "child"
+  | "ex";
+
+export type TextMessage = {
+  text: string;
+  fromPlayer: boolean;
+  age: number;
+};
 
 export type Relationship = {
   id: string;
@@ -33,6 +40,7 @@ export type Relationship = {
   alive: boolean;
   engaged?: boolean;
   married?: boolean;
+  messages?: TextMessage[];
 };
 
 export type Job = {

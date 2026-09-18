@@ -15,6 +15,9 @@ export function children(c: Character) {
 export function friends(c: Character) {
   return c.relationships.filter((r) => r.type === "friend" && r.alive);
 }
+export function exes(c: Character) {
+  return c.relationships.filter((r) => r.type === "ex" && r.alive);
+}
 export function hasPartner(c: Character) {
   return partner(c) !== undefined;
 }

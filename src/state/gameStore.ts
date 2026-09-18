@@ -11,6 +11,10 @@ import {
   quitJob as engineQuitJob,
   spendTimeWith as engineSpendTimeWith,
   haveConversation as engineHaveConversation,
+  textRelationship as engineTextRelationship,
+  callRelationship as engineCallRelationship,
+  bootyCall as engineBootyCall,
+  sendGift as engineSendGift,
   Activity,
 } from "../engine/lifeEngine";
 
@@ -33,6 +37,10 @@ type GameState = {
   doActivity: (activity: Activity) => void;
   spendTimeWith: (relationshipId: string) => void;
   haveConversation: (relationshipId: string) => void;
+  textRelationship: (relationshipId: string) => void;
+  callRelationship: (relationshipId: string) => void;
+  bootyCall: (relationshipId: string) => void;
+  sendGift: (relationshipId: string, amount: number) => void;
   restart: () => void;
 };
 
@@ -140,6 +148,38 @@ export const useGameStore = create<GameState>((set, get) => ({
     const character = get().character;
     if (!character) return;
     engineHaveConversation(character, relationshipId);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  textRelationship: (relationshipId) => {
+    const character = get().character;
+    if (!character) return;
+    engineTextRelationship(character, relationshipId);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  callRelationship: (relationshipId) => {
+    const character = get().character;
+    if (!character) return;
+    engineCallRelationship(character, relationshipId);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  bootyCall: (relationshipId) => {
+    const character = get().character;
+    if (!character) return;
+    engineBootyCall(character, relationshipId);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  sendGift: (relationshipId, amount) => {
+    const character = get().character;
+    if (!character) return;
+    engineSendGift(character, relationshipId, amount);
     set({ character: { ...character } });
     persist(character, get().screen, get().worldState);
   },

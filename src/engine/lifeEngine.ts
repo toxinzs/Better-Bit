@@ -4,10 +4,12 @@ import { EVENTS } from "../data/events";
 import { randomFirstName, randomLastName } from "../data/names";
 import { MIN_AGE_GYM, MIN_AGE_LIBRARY, MIN_AGE_CONVERSATION } from "./lifeStage";
 import { tickWorldState, hasActiveCondition, effectiveSalary } from "./worldState";
+import { ambientMessageTick } from "./relationships";
 
 export { getLifeStage } from "./lifeStage";
 export type { LifeStage } from "./lifeStage";
 export { createInitialWorldState, effectiveSalary, hasActiveCondition } from "./worldState";
+export { textRelationship, callRelationship, bootyCall, sendGift } from "./relationships";
 
 export function createCharacter(
   firstName: string,
@@ -106,6 +108,8 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
   if (hasActiveCondition(world, "pandemic")) {
     c.stats.health = clamp(c.stats.health - randomInt(0, 4));
   }
+
+  ambientMessageTick(c);
 
   // education auto-progression (doesn't override college/graduated)
   if (!c.inCollege && c.educationStage !== "graduated") {

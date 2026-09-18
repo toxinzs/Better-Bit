@@ -39,6 +39,16 @@ belongs in the engine instead.
 - `src/data/events/` — the event pool, split by life-stage/category (see
   `ROADMAP.md` Phase 1). Each event is age-gated and either auto-applies
   or presents real choices with distinct consequences.
+- `src/engine/relationships.ts` — texting/calling/booty-call/gift actions
+  and ambient message generation (`ambientMessageTick`, called inside
+  `ageUp()`). A `Relationship`'s `type` changes to `"ex"` on breakup/
+  divorce/caught-cheating instead of `alive: false` — `alive` means "this
+  person is dead," not "this relationship ended"; don't conflate the two
+  again. `Relationship.messages` is optional (same additive-field pattern
+  as `WorldState` on old saves) and capped at 40 entries.
+- `src/data/textLines.ts` — flavor message content banks (ex texts/calls/
+  booty-calls, ambient exchanges per relation type). Add variety here, not
+  inline in `relationships.ts`.
 - `src/data/jobs.ts` — the career ladder, gated by age/smarts/college degree.
 - `src/state/gameStore.ts` — zustand store wiring the engine to the UI,
   persists to `AsyncStorage`. **`worldState` is never reset by `restart()`**

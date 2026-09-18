@@ -3,6 +3,7 @@ import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } fr
 import { useGameStore } from "../state/gameStore";
 import StatBar from "../components/StatBar";
 import EventModal from "../components/EventModal";
+import TextThreadModal from "../components/TextThreadModal";
 import { availableJobs } from "../data/jobs";
 import { MIN_AGE_GYM, MIN_AGE_LIBRARY, MIN_AGE_CONVERSATION } from "../engine/lifeStage";
 import { effectiveSalary } from "../engine/lifeEngine";
@@ -14,6 +15,7 @@ const RELATION_LABEL: Record<string, string> = {
   friend: "Friend",
   partner: "Partner",
   child: "Child",
+  ex: "Ex",
 };
 
 const CONDITION_LABEL: Record<string, string> = {
@@ -34,9 +36,16 @@ export default function HomeScreen() {
   const doActivity = useGameStore((s) => s.doActivity);
   const spendTimeWith = useGameStore((s) => s.spendTimeWith);
   const haveConversation = useGameStore((s) => s.haveConversation);
+  const textRelationship = useGameStore((s) => s.textRelationship);
+  const callRelationship = useGameStore((s) => s.callRelationship);
+  const bootyCall = useGameStore((s) => s.bootyCall);
+  const sendGift = useGameStore((s) => s.sendGift);
   const [showCareers, setShowCareers] = useState(false);
+  const [viewingThreadId, setViewingThreadId] = useState<string | null>(null);
 
   if (!character) return null;
+
+  const viewingThread = character.relationships.find((r) => r.id === viewingThreadId);
 
   const jobs = availableJobs(character.age, character.stats.smarts, character.hasCollegeDegree);
 
@@ -102,21 +111,40 @@ export default function HomeScreen() {
                 <Text style={styles.relLevel}>{Math.round(r.level)}</Text>
               </View>
               <View style={styles.relActions}>
-                <TouchableOpacity
-                  accessibilityRole="button"
-                  style={styles.relActionBtn}
-                  onPress={() => spendTimeWith(r.id)}
-                >
-                  <Text style={styles.relActionText}>Spend Time</Text>
-                </TouchableOpacity>
-                {character.age >= MIN_AGE_CONVERSATION && (
+                {r.type === "ex" ? (
                   <TouchableOpacity
                     accessibilityRole="button"
                     style={styles.relActionBtn}
-                    onPress={() => haveConversation(r.id)}
+                    onPress={() => setViewingThreadId(r.id)}
                   >
-                    <Text style={styles.relActionText}>Talk</Text>
+                    <Text style={styles.relActionText}>💬 Messages</Text>
                   </TouchableOpacity>
+                ) : (
+                  <>
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      style={styles.relActionBtn}
+                      onPress={() => spendTimeWith(r.id)}
+                    >
+                      <Text style={styles.relActionText}>Spend Time</Text>
+                    </TouchableOpacity>
+                    {character.age >= MIN_AGE_CONVERSATION && (
+                      <TouchableOpacity
+                        accessibilityRole="button"
+                        style={styles.relActionBtn}
+                        onPress={() => haveConversation(r.id)}
+                      >
+                        <Text style={styles.relActionText}>Talk</Text>
+                      </TouchableOpacity>
+                    )}
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      style={styles.relActionBtn}
+                      onPress={() => setViewingThreadId(r.id)}
+                    >
+                      <Text style={styles.relActionText}>💬</Text>
+                    </TouchableOpacity>
+                  </>
                 )}
               </View>
             </View>
@@ -167,6 +195,18 @@ export default function HomeScreen() {
 
       {pendingEvent && (
         <EventModal event={pendingEvent} character={character} world={worldState} onChoose={chooseEventOption} />
+      )}
+
+      {viewingThread && (
+        <TextThreadModal
+          relationship={viewingThread}
+          money={character.money}
+          onText={() => textRelationship(viewingThread.id)}
+          onCall={() => callRelationship(viewingThread.id)}
+          onBootyCall={() => bootyCall(viewingThread.id)}
+          onSendGift={(amount) => sendGift(viewingThread.id, amount)}
+          onClose={() => setViewingThreadId(null)}
+        />
       )}
     </SafeAreaView>
   );
