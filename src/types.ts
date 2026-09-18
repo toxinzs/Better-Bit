@@ -48,6 +48,21 @@ export type LogEntry = {
   text: string;
 };
 
+export type MacroConditionKind = "recession" | "boom" | "war" | "pandemic";
+
+export type MacroCondition = {
+  kind: MacroConditionKind;
+  startYear: number;
+  endsYear: number;
+};
+
+export type WorldState = {
+  year: number;
+  activeCondition: MacroCondition | null;
+  history: MacroCondition[];
+  log: string[];
+};
+
 export type Character = {
   firstName: string;
   lastName: string;
@@ -69,8 +84,8 @@ export type Character = {
 
 export type EventChoice = {
   label: string;
-  effect: (c: Character) => void;
-  resultText?: (c: Character) => string;
+  effect: (c: Character, world: WorldState) => void;
+  resultText?: (c: Character, world: WorldState) => string;
 };
 
 export type LifeEvent = {
@@ -79,8 +94,8 @@ export type LifeEvent = {
   maxAge: number;
   weight?: number;
   once?: boolean;
-  condition?: (c: Character) => boolean;
-  text: (c: Character) => string;
+  condition?: (c: Character, world: WorldState) => boolean;
+  text: (c: Character, world: WorldState) => string;
   choices?: EventChoice[];
-  autoEffect?: (c: Character) => void;
+  autoEffect?: (c: Character, world: WorldState) => void;
 };

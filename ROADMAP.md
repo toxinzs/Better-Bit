@@ -55,16 +55,29 @@ friendships that can sour into rivalries.
 
 Cars, houses/real estate (buy/rent/sell), a simple stock-market mechanic,
 debt/loans, credit score, taxes, retirement savings. All the money events
-in Phase 1 are the connective tissue that leads here.
+in Phase 1 are the connective tissue that leads here. **Not built yet.**
 
-This is also where a **world state** layer belongs — right now every life
-runs in total isolation; nothing shared exists between playthroughs or
-even within one. The gap: `ageUp()` already does character ticks → filter
-eligible events → hand back a choice (the real engine loop), but there's
-no step before that for shared conditions — a recession year that cuts
-salaries/job openings, a scripted "global event" flavor beat, that kind of
-thing. Add it as its own tick inside `ageUp()`, feeding into event
-eligibility and the job market, not as a separate system bolted on after.
+**World state (done).** A shared, persistent-per-save `WorldState`
+(`src/types.ts`, `src/engine/worldState.ts`) ticks inside `ageUp()` —
+Recession/Boom/War-Draft/Pandemic, at most one active at a time, each with
+a randomized duration. It survives `restart()` and a new `startNewLife()`
+unchanged (verified: starting a second life after game-over keeps the
+same world year/history), which is the deliberate foundation for the
+future Phase 8 legacy system — your kid will inherit the same ongoing
+world, not a fresh one. Effects: `effectiveSalary()` scales pay ±15%
+during boom/recession (job list + actual income both reflect it);
+`investment-tip`/`side-hustle`/`promotion-chance` shift their odds/
+thresholds under boom/recession; a passive health tick during pandemic;
+four new personal choice events gated on an active condition
+(`src/data/events/world.ts`): `draft-notice` (war, age 18-25),
+`recession-layoff-scare`, `boom-job-offer`, `pandemic-vaccine`. A "World
+News" card on the Home screen shows the active condition and its
+elapsed/expected duration — visible, not hidden math, per the whole
+point of this phase (BitLife's RNG feels arbitrary because you can't see
+it coming). `lottery-ticket` deliberately stays untouched (pure luck, not
+economically linked) — not every money event needs a world hook.
+No job-availability shrinking yet (salary multiplier only) — a
+reasonable v1 cut, not an oversight.
 
 ## Phase 4 — crime & law
 
@@ -72,6 +85,13 @@ Petty crime → serious crime branches, getting caught, court/lawyers,
 prison as its own mini life-inside-a-life, parole, a criminal record that
 follows you into future job applications. Opt-in via in-fiction choices,
 never gated behind anything.
+
+Once this phase and the world-state system (Phase 3) both exist, tie them
+together: laws/penalties that actually change over time (a `WorldState`-
+driven legal-climate condition, mirroring how Recession/Boom already
+work), so a crime committed during a "crackdown" carries different stakes
+than the same crime in an ordinary year. Noted here so it isn't lost —
+not scoped until both halves exist.
 
 ## Phase 5 — health & aging depth, plus personality traits
 

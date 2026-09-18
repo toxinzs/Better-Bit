@@ -1,21 +1,23 @@
 import React from "react";
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Character, LifeEvent } from "../types";
+import { Character, LifeEvent, WorldState } from "../types";
 
 export default function EventModal({
   event,
   character,
+  world,
   onChoose,
 }: {
   event: LifeEvent;
   character: Character;
+  world: WorldState;
   onChoose: (choiceIndex: number) => void;
 }) {
   return (
     <Modal transparent animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.card}>
-          <Text style={styles.text}>{event.text(character)}</Text>
+          <Text style={styles.text}>{event.text(character, world)}</Text>
           <View style={styles.choices}>
             {event.choices?.map((choice, i) => (
               <TouchableOpacity accessibilityRole="button" key={i} style={styles.choiceBtn} onPress={() => onChoose(i)}>

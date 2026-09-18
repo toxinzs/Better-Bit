@@ -1,5 +1,6 @@
 import { LifeEvent } from "../../types";
 import { clamp } from "../../engine/util";
+import { hasActiveCondition } from "../../engine/worldState";
 
 export const MONEY_EVENTS: LifeEvent[] = [
   {
@@ -117,8 +118,9 @@ export const MONEY_EVENTS: LifeEvent[] = [
     choices: [
       {
         label: "Go for it",
-        effect: (c) => {
-          const success = c.stats.smarts > 50;
+        effect: (c, world) => {
+          const threshold = hasActiveCondition(world, "boom") ? 35 : hasActiveCondition(world, "recession") ? 65 : 50;
+          const success = c.stats.smarts > threshold;
           c.money += success ? 1800 : 300;
           c.stats.happiness = clamp(c.stats.happiness + 6);
         },
@@ -150,8 +152,9 @@ export const MONEY_EVENTS: LifeEvent[] = [
     choices: [
       {
         label: "Put in $500",
-        effect: (c) => {
-          const win = Math.random() > 0.5;
+        effect: (c, world) => {
+          const winChance = hasActiveCondition(world, "boom") ? 0.7 : hasActiveCondition(world, "recession") ? 0.3 : 0.5;
+          const win = Math.random() < winChance;
           c.money += win ? 1200 : -500;
         },
         resultText: (c) => `Your money moved. Balance: $${c.money.toLocaleString()}`,

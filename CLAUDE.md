@@ -24,16 +24,27 @@ Screens only render and call store actions. If you're about to write
 `character.stats.x = ...` inside `gameStore.ts` or a screen, that logic
 belongs in the engine instead.
 
-- `src/types.ts` — core data shapes (`Character`, `Stats`, `LifeEvent`, etc).
+- `src/types.ts` — core data shapes (`Character`, `Stats`, `LifeEvent`,
+  `WorldState`, etc).
 - `src/engine/lifeEngine.ts` — the simulation: character creation, aging,
   education/salary progression, death rolls, random event selection,
   activities, job application.
+- `src/engine/worldState.ts` — the shared, persistent-per-save macro-event
+  layer (Recession/Boom/War/Pandemic). Ticks inside `ageUp()`, not as a
+  separate call — see `ROADMAP.md` Phase 3. `LifeEvent`/`EventChoice`
+  functions all take `(c: Character, world: WorldState)`; existing events
+  that don't care about world state just don't declare the second param
+  (TS allows a function with fewer params to satisfy a type expecting
+  more, so this never requires touching events that don't use it).
 - `src/data/events/` — the event pool, split by life-stage/category (see
   `ROADMAP.md` Phase 1). Each event is age-gated and either auto-applies
   or presents real choices with distinct consequences.
 - `src/data/jobs.ts` — the career ladder, gated by age/smarts/college degree.
 - `src/state/gameStore.ts` — zustand store wiring the engine to the UI,
-  persists to `AsyncStorage`.
+  persists to `AsyncStorage`. **`worldState` is never reset by `restart()`**
+  — it's the one field that deliberately survives a new life. `persist()`
+  takes `worldState` as a required third argument specifically so a new
+  call site can't silently forget to carry it forward.
 - `src/screens/` — Start (character creation), Home (main play loop),
   Game Over (life summary + full life log).
 

@@ -1,11 +1,13 @@
-import { Character, Gender, Job, LifeEvent } from "../types";
+import { Character, Gender, Job, LifeEvent, WorldState } from "../types";
 import { clamp, randomInt, pickWeighted } from "./util";
 import { EVENTS } from "../data/events";
 import { randomFirstName, randomLastName } from "../data/names";
 import { MIN_AGE_GYM, MIN_AGE_LIBRARY, MIN_AGE_CONVERSATION } from "./lifeStage";
+import { tickWorldState, hasActiveCondition, effectiveSalary } from "./worldState";
 
 export { getLifeStage } from "./lifeStage";
 export type { LifeStage } from "./lifeStage";
+export { createInitialWorldState, effectiveSalary, hasActiveCondition } from "./worldState";
 
 export function createCharacter(
   firstName: string,
@@ -68,11 +70,11 @@ function deathChance(age: number, health: number): number {
   return Math.min(base, 0.95);
 }
 
-function eligibleEvents(c: Character): LifeEvent[] {
+function eligibleEvents(c: Character, world: WorldState): LifeEvent[] {
   return EVENTS.filter((e) => {
     if (c.age < e.minAge || c.age > e.maxAge) return false;
     if (e.once && c.triggeredEvents.includes(e.id)) return false;
-    if (e.condition && !e.condition(c)) return false;
+    if (e.condition && !e.condition(c, world)) return false;
     return true;
   });
 }
@@ -83,7 +85,9 @@ export type AgeUpResult = {
   pendingEvent?: LifeEvent;
 };
 
-export function ageUp(c: Character): AgeUpResult {
+export function ageUp(c: Character, world: WorldState): AgeUpResult {
+  tickWorldState(world);
+
   c.age += 1;
   c.yearLog = [];
 
@@ -99,6 +103,9 @@ export function ageUp(c: Character): AgeUpResult {
     // youthful recovery: minor injuries/illnesses heal on their own
     c.stats.health = clamp(c.stats.health + randomInt(1, 4));
   }
+  if (hasActiveCondition(world, "pandemic")) {
+    c.stats.health = clamp(c.stats.health - randomInt(0, 4));
+  }
 
   // education auto-progression (doesn't override college/graduated)
   if (!c.inCollege && c.educationStage !== "graduated") {
@@ -108,8 +115,9 @@ export function ageUp(c: Character): AgeUpResult {
 
   // income
   if (c.job) {
-    c.money += c.job.salary;
-    c.yearLog.push(`You earned $${c.job.salary.toLocaleString()} working as a ${c.job.title}.`);
+    const pay = effectiveSalary(c.job, world);
+    c.money += pay;
+    c.yearLog.push(`You earned $${pay.toLocaleString()} working as a ${c.job.title}.`);
   }
 
   // death roll: very low health raises the odds sharply but never guarantees death on its own
@@ -126,7 +134,7 @@ export function ageUp(c: Character): AgeUpResult {
   }
 
   // pick events: apply auto-effect ones immediately, hold at most one choice event
-  const pool = eligibleEvents(c);
+  const pool = eligibleEvents(c, world);
   const autoPool = pool.filter((e) => !e.choices);
   const choicePool = pool.filter((e) => e.choices && e.choices.length > 0);
 
@@ -138,8 +146,8 @@ export function ageUp(c: Character): AgeUpResult {
     if (!chosen) break;
     usedIds.add(chosen.id);
     if (chosen.once) c.triggeredEvents.push(chosen.id);
-    chosen.autoEffect?.(c);
-    const text = chosen.text(c);
+    chosen.autoEffect?.(c, world);
+    const text = chosen.text(c, world);
     c.yearLog.push(text);
     c.fullLog.push({ age: c.age, text });
   }
@@ -153,13 +161,13 @@ export function ageUp(c: Character): AgeUpResult {
   return { died: false, pendingEvent };
 }
 
-export function resolveEvent(c: Character, event: LifeEvent, choiceIndex: number) {
+export function resolveEvent(c: Character, world: WorldState, event: LifeEvent, choiceIndex: number) {
   const choice = event.choices?.[choiceIndex];
   if (!choice) return;
   if (event.once) c.triggeredEvents.push(event.id);
-  choice.effect(c);
-  const baseText = event.text(c);
-  const resultText = choice.resultText?.(c);
+  choice.effect(c, world);
+  const baseText = event.text(c, world);
+  const resultText = choice.resultText?.(c, world);
   c.yearLog.push(resultText ? `${baseText} ${resultText}` : baseText);
   c.fullLog.push({ age: c.age, text: c.yearLog[c.yearLog.length - 1] });
 }

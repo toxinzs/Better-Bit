@@ -5,6 +5,7 @@ import StatBar from "../components/StatBar";
 import EventModal from "../components/EventModal";
 import { availableJobs } from "../data/jobs";
 import { MIN_AGE_GYM, MIN_AGE_LIBRARY, MIN_AGE_CONVERSATION } from "../engine/lifeStage";
+import { effectiveSalary } from "../engine/lifeEngine";
 
 const RELATION_LABEL: Record<string, string> = {
   mother: "Mother",
@@ -15,8 +16,16 @@ const RELATION_LABEL: Record<string, string> = {
   child: "Child",
 };
 
+const CONDITION_LABEL: Record<string, string> = {
+  recession: "📉 Recession",
+  boom: "📈 Economic Boom",
+  war: "⚔️ War",
+  pandemic: "🦠 Pandemic",
+};
+
 export default function HomeScreen() {
   const character = useGameStore((s) => s.character);
+  const worldState = useGameStore((s) => s.worldState);
   const pendingEvent = useGameStore((s) => s.pendingEvent);
   const ageUp = useGameStore((s) => s.ageUp);
   const chooseEventOption = useGameStore((s) => s.chooseEventOption);
@@ -62,6 +71,24 @@ export default function HomeScreen() {
               </Text>
             ))
           )}
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>World News</Text>
+          {worldState.log.map((line, i) => (
+            <Text key={`news-${i}`} style={styles.logLine}>
+              • {line}
+            </Text>
+          ))}
+          {worldState.activeCondition ? (
+            <Text style={styles.logLine}>
+              {CONDITION_LABEL[worldState.activeCondition.kind] ?? worldState.activeCondition.kind} — year{" "}
+              {worldState.year - worldState.activeCondition.startYear + 1} of ~
+              {worldState.activeCondition.endsYear - worldState.activeCondition.startYear}
+            </Text>
+          ) : worldState.log.length === 0 ? (
+            <Text style={styles.logLine}>All quiet on the economic front.</Text>
+          ) : null}
         </View>
 
         <View style={styles.card}>
@@ -111,7 +138,7 @@ export default function HomeScreen() {
               {jobs.map((job) => (
                 <TouchableOpacity accessibilityRole="button" key={job.title} style={styles.jobRow} onPress={() => applyForJob(job)}>
                   <Text style={styles.jobTitle}>{job.title}</Text>
-                  <Text style={styles.jobSalary}>${job.salary.toLocaleString()}/yr</Text>
+                  <Text style={styles.jobSalary}>${effectiveSalary(job, worldState).toLocaleString()}/yr</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -139,7 +166,7 @@ export default function HomeScreen() {
       </View>
 
       {pendingEvent && (
-        <EventModal event={pendingEvent} character={character} onChoose={chooseEventOption} />
+        <EventModal event={pendingEvent} character={character} world={worldState} onChoose={chooseEventOption} />
       )}
     </SafeAreaView>
   );

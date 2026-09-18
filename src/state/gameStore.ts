@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Character, Gender, Job, LifeEvent } from "../types";
+import { Character, Gender, Job, LifeEvent, WorldState } from "../types";
 import {
   createCharacter,
+  createInitialWorldState,
   ageUp as engineAgeUp,
   resolveEvent as engineResolveEvent,
   applyActivity as engineApplyActivity,
@@ -20,6 +21,7 @@ export type Screen = "start" | "home" | "gameover";
 type GameState = {
   screen: Screen;
   character: Character | null;
+  worldState: WorldState;
   pendingEvent: LifeEvent | null;
   hydrated: boolean;
   hydrate: () => Promise<void>;
@@ -34,8 +36,8 @@ type GameState = {
   restart: () => void;
 };
 
-function persist(character: Character | null, screen: Screen) {
-  AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ character, screen })).catch(() => {
+function persist(character: Character | null, screen: Screen, worldState: WorldState) {
+  AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ character, screen, worldState })).catch(() => {
     // best-effort; ignore storage errors
   });
 }
@@ -43,6 +45,7 @@ function persist(character: Character | null, screen: Screen) {
 export const useGameStore = create<GameState>((set, get) => ({
   screen: "start",
   character: null,
+  worldState: createInitialWorldState(),
   pendingEvent: null,
   hydrated: false,
 
@@ -50,11 +53,18 @@ export const useGameStore = create<GameState>((set, get) => ({
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw) as { character: Character | null; screen: Screen };
+        const parsed = JSON.parse(raw) as {
+          character: Character | null;
+          screen: Screen;
+          worldState?: WorldState;
+        };
+        const worldState = parsed.worldState ?? createInitialWorldState();
         if (parsed.character) {
-          set({ character: parsed.character, screen: parsed.screen, hydrated: true });
+          set({ character: parsed.character, screen: parsed.screen, worldState, hydrated: true });
           return;
         }
+        set({ worldState, hydrated: true });
+        return;
       }
     } catch {
       // ignore corrupt/missing save
@@ -65,31 +75,33 @@ export const useGameStore = create<GameState>((set, get) => ({
   startNewLife: (firstName, lastName, gender) => {
     const character = createCharacter(firstName, lastName, gender);
     set({ character, screen: "home", pendingEvent: null });
-    persist(character, "home");
+    persist(character, "home", get().worldState);
   },
 
   ageUp: () => {
     const character = get().character;
+    const worldState = get().worldState;
     if (!character || !character.alive) return;
-    const result = engineAgeUp(character);
+    const result = engineAgeUp(character, worldState);
     if (result.died) {
-      set({ character: { ...character }, screen: "gameover" });
-      persist(character, "gameover");
+      set({ character: { ...character }, worldState: { ...worldState }, screen: "gameover" });
+      persist(character, "gameover", worldState);
       return;
     }
     set({
       character: { ...character },
+      worldState: { ...worldState },
       pendingEvent: result.pendingEvent ?? null,
     });
-    persist(character, "home");
+    persist(character, "home", worldState);
   },
 
   chooseEventOption: (choiceIndex) => {
-    const { character, pendingEvent } = get();
+    const { character, pendingEvent, worldState } = get();
     if (!character || !pendingEvent) return;
-    engineResolveEvent(character, pendingEvent, choiceIndex);
+    engineResolveEvent(character, worldState, pendingEvent, choiceIndex);
     set({ character: { ...character }, pendingEvent: null });
-    persist(character, get().screen);
+    persist(character, get().screen, worldState);
   },
 
   applyForJob: (job) => {
@@ -97,7 +109,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!character) return;
     engineApplyForJob(character, job);
     set({ character: { ...character } });
-    persist(character, get().screen);
+    persist(character, get().screen, get().worldState);
   },
 
   quitJob: () => {
@@ -105,7 +117,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!character) return;
     engineQuitJob(character);
     set({ character: { ...character } });
-    persist(character, get().screen);
+    persist(character, get().screen, get().worldState);
   },
 
   doActivity: (activity) => {
@@ -113,7 +125,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!character) return;
     engineApplyActivity(character, activity);
     set({ character: { ...character } });
-    persist(character, get().screen);
+    persist(character, get().screen, get().worldState);
   },
 
   spendTimeWith: (relationshipId) => {
@@ -121,7 +133,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!character) return;
     engineSpendTimeWith(character, relationshipId);
     set({ character: { ...character } });
-    persist(character, get().screen);
+    persist(character, get().screen, get().worldState);
   },
 
   haveConversation: (relationshipId) => {
@@ -129,11 +141,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!character) return;
     engineHaveConversation(character, relationshipId);
     set({ character: { ...character } });
-    persist(character, get().screen);
+    persist(character, get().screen, get().worldState);
   },
 
   restart: () => {
     set({ screen: "start", character: null, pendingEvent: null });
-    persist(null, "start");
+    persist(null, "start", get().worldState);
   },
 }));

@@ -8,6 +8,7 @@ import { MONEY_EVENTS } from "./money";
 import { CAREER_EVENTS } from "./career";
 import { RANDOM_EVENTS } from "./random";
 import { SENIOR_EVENTS } from "./senior";
+import { WORLD_EVENTS } from "./world";
 
 export const EVENTS: LifeEvent[] = [
   ...CHILDHOOD_EVENTS,
@@ -19,4 +20,5 @@ export const EVENTS: LifeEvent[] = [
   ...CAREER_EVENTS,
   ...RANDOM_EVENTS,
   ...SENIOR_EVENTS,
+  ...WORLD_EVENTS,
 ];

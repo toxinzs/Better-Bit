@@ -1,5 +1,6 @@
 import { LifeEvent } from "../../types";
 import { clamp } from "../../engine/util";
+import { hasActiveCondition } from "../../engine/worldState";
 
 export const CAREER_EVENTS: LifeEvent[] = [
   {
@@ -80,8 +81,9 @@ export const CAREER_EVENTS: LifeEvent[] = [
     choices: [
       {
         label: "Ask for a raise",
-        effect: (c) => {
-          if (c.job && c.stats.happiness + c.stats.smarts > 90) {
+        effect: (c, world) => {
+          const threshold = hasActiveCondition(world, "boom") ? 75 : hasActiveCondition(world, "recession") ? 105 : 90;
+          if (c.job && c.stats.happiness + c.stats.smarts > threshold) {
             c.job = { ...c.job, salary: Math.round(c.job.salary * 1.15) };
           } else {
             c.stats.happiness = clamp(c.stats.happiness - 5);
