@@ -8,6 +8,7 @@ import { ambientMessageTick } from "./relationships";
 import { tickAssets, netWorth } from "./assets";
 import { tickDebt } from "./debt";
 import { tickMarket, portfolioValue } from "./stocks";
+import { incomeTax } from "./taxes";
 
 export { getLifeStage } from "./lifeStage";
 export type { LifeStage } from "./lifeStage";
@@ -17,6 +18,7 @@ export { buyCar, sellCar, buyHome, sellHome, netWorth } from "./assets";
 export { takeOutLoan, openCreditCard, payDownLoan, chargeCard } from "./debt";
 export { creditScoreLabel } from "./finance";
 export { buyStock, sellStock, portfolioValue } from "./stocks";
+export { incomeTax, takeHomePay, effectiveTaxRate } from "./taxes";
 
 export function totalNetWorth(c: Character, world: WorldState): number {
   return netWorth(c) + portfolioValue(c, world);
@@ -133,9 +135,13 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
 
   // income
   if (c.job) {
-    const pay = effectiveSalary(c.job, world);
-    c.money += pay;
-    c.yearLog.push(`You earned $${pay.toLocaleString()} working as a ${c.job.title}.`);
+    const gross = effectiveSalary(c.job, world);
+    const tax = incomeTax(gross);
+    const net = gross - tax;
+    c.money += net;
+    c.yearLog.push(
+      `You earned $${gross.toLocaleString()} working as a ${c.job.title} — $${tax.toLocaleString()} to taxes, $${net.toLocaleString()} take-home.`,
+    );
   }
 
   tickAssets(c);

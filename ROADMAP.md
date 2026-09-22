@@ -189,8 +189,26 @@ cents since stock prices carry cents, silently breaking the
 whole-dollar convention every other number in the game follows; now
 rounds like everything else).
 
-**Still open**: taxes, retirement savings. All the money events from the
-event pool remain the connective tissue for those.
+**Income taxes (done).** `src/engine/taxes.ts`'s `incomeTax()` — real
+progressive brackets (a simplified, flattened version of actual US
+federal single-filer brackets: 10/12/22/24/32/35/37%, each rate only
+applying to the income inside that bracket, not the whole salary) —
+now actually withheld every year a job pays out, instead of the
+pre-tax `effectiveSalary()` figure landing straight in `character.money`
+like it used to. The yearly income log line spells out gross/tax/
+take-home rather than hiding the math (`$95,000 working as a Nurse —
+$16,208 to taxes, $78,792 take-home`, for example). The Career tab
+shows both the gross figure per listing (unchanged, still what
+`effectiveSalary()`/boom/recession scale) and take-home underneath it,
+plus a take-home line on the current-job card. Verified exactly:
+$18,000 (crosses 2 brackets) and a $250,000 test salary (crosses every
+bracket) both matched hand-computed tax to the dollar. Only wages are
+taxed — side hustles, investment windfalls, and stock sale proceeds
+stay untouched, the same kind of scope cut the rest of this system
+already makes (no real amortization curve on the mortgage either).
+
+**Still open**: retirement savings. All the money events from the event
+pool remain the connective tissue for that.
 
 **World state (done).** A shared, persistent-per-save `WorldState`
 (`src/types.ts`, `src/engine/worldState.ts`) ticks inside `ageUp()` —

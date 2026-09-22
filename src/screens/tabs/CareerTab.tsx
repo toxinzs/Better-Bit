@@ -5,7 +5,7 @@ import { useGameStore } from "../../state/gameStore";
 import Card from "../../components/Card";
 import Button from "../../components/Button";
 import { availableJobs } from "../../data/jobs";
-import { effectiveSalary } from "../../engine/lifeEngine";
+import { effectiveSalary, takeHomePay } from "../../engine/lifeEngine";
 import { colors, fonts, fontSize, spacing } from "../../theme";
 import { tabStyles } from "./sharedStyles";
 
@@ -28,18 +28,32 @@ export default function CareerTab() {
             {character.job ? character.job.title : "Unemployed"}
           </Text>
         </View>
-        {character.job && <Button label="Quit current job" icon="exit" variant="danger" onPress={quitJob} />}
+        {character.job && (
+          <>
+            <Text style={styles.takeHomeLine}>
+              ${effectiveSalary(character.job, worldState).toLocaleString()}/yr gross · $
+              {takeHomePay(effectiveSalary(character.job, worldState)).toLocaleString()}/yr take-home
+            </Text>
+            <Button label="Quit current job" icon="exit" variant="danger" onPress={quitJob} />
+          </>
+        )}
       </Card>
 
       <Card>
         <Text style={tabStyles.sectionTitle}>Open positions</Text>
         {jobs.length === 0 && <Text style={tabStyles.logLine}>No jobs available yet.</Text>}
-        {jobs.map((job) => (
-          <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} key={job.title} style={styles.jobRow} onPress={() => applyForJob(job)}>
-            <Text style={styles.jobTitle}>{job.title}</Text>
-            <Text style={styles.jobSalary}>${effectiveSalary(job, worldState).toLocaleString()}/yr</Text>
-          </TouchableOpacity>
-        ))}
+        {jobs.map((job) => {
+          const gross = effectiveSalary(job, worldState);
+          return (
+            <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} key={job.title} style={styles.jobRow} onPress={() => applyForJob(job)}>
+              <View>
+                <Text style={styles.jobTitle}>{job.title}</Text>
+                <Text style={styles.jobSub}>${takeHomePay(gross).toLocaleString()}/yr take-home</Text>
+              </View>
+              <Text style={styles.jobSalary}>${gross.toLocaleString()}/yr</Text>
+            </TouchableOpacity>
+          );
+        })}
       </Card>
     </ScrollView>
   );
@@ -51,6 +65,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.sm,
     marginBottom: spacing.sm,
+  },
+  takeHomeLine: {
+    color: colors.textMuted,
+    fontFamily: fonts.regular,
+    fontSize: fontSize.sm,
+    marginBottom: spacing.sm,
+  },
+  jobSub: {
+    color: colors.textMuted,
+    fontFamily: fonts.regular,
+    fontSize: fontSize.sm,
   },
   jobRow: {
     flexDirection: "row",
