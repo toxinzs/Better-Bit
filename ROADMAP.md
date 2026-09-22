@@ -207,8 +207,34 @@ taxed — side hustles, investment windfalls, and stock sale proceeds
 stay untouched, the same kind of scope cut the rest of this system
 already makes (no real amortization curve on the mortgage either).
 
-**Still open**: retirement savings. All the money events from the event
-pool remain the connective tissue for that.
+**Retirement savings (done).** A real 401(k)-style account
+(`src/engine/retirement.ts`, `Character.retirement`): a contribution
+rate (0-50%, adjustable in 1% steps in the Money tab) comes off gross
+income **pre-tax** — the same pre-tax mechanic a real 401(k) uses,
+genuinely tying into the income-tax system built two updates ago rather
+than just being flavor, since the contribution actually shrinks the
+taxable income `incomeTax()` runs on. The employer matches 50% of the
+first 6% contributed (real-world-typical structure), added on top for
+free. Growth is tied to the same simulated market everything else
+invests in — each year the balance moves by the *average* of that
+year's per-stock price change (the same numbers `tickMarket` just
+computed), like a simple index fund, rather than its own separate RNG
+model. Withdrawing before age 60 costs a real 10% early-withdrawal
+penalty; withdrawing after doesn't (withdrawals aren't taxed again on
+the way out, unlike a real 401(k) — a deliberate scope cut, not an
+oversight, matching how nothing else in this system re-taxes stock
+sale proceeds either). `totalNetWorth()` now includes the balance.
+Verified exactly: pre-tax contribution shrinking taxable income by the
+right amount, employer match staying capped at 6% even at a 20%
+contribution rate, growth matching the actual market move that tick to
+the dollar, and both withdrawal penalty paths.
+
+This closes out the "money & world" update's whole open list from
+three updates ago (stock market, debt/credit, taxes, retirement) — the
+connective tissue from here is content, not new systems: more of the
+event pool leaning on what already exists (a windfall event offering
+"put some in retirement," a side hustle interacting with credit,
+etc.), not another financial mechanic.
 
 **World state (done).** A shared, persistent-per-save `WorldState`
 (`src/types.ts`, `src/engine/worldState.ts`) ticks inside `ageUp()` —

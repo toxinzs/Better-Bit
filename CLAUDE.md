@@ -75,13 +75,22 @@ belongs in the engine instead.
   per-character. `tickMarket` runs inside `ageUp()`. `totalNetWorth()`
   (in `lifeEngine.ts`) is `netWorth() + portfolioValue()` — use it, not
   bare `netWorth()`, anywhere a screen shows "how rich is this
-  character," now that a character's wealth can include a portfolio.
+  character," now that a character's wealth can include a portfolio
+  and a retirement balance.
 - `src/engine/taxes.ts` — real progressive income tax brackets, withheld
   automatically wherever `ageUp()` pays out job income (not a separate
   tick — it's part of the existing income step). `incomeTax(gross)` /
   `takeHomePay(gross)` are pure functions of a salary number, no
   `Character` involved, so any screen showing a salary (`CareerTab`'s
   job listings) can show real take-home pay without touching the engine.
+- `src/engine/retirement.ts` — a 401(k)-style account. `applyContribution`
+  runs inside the income step in `lifeEngine.ts` **before** `incomeTax` —
+  the contribution is pre-tax, so it has to shrink taxable income before
+  tax gets computed, not after. `tickRetirementGrowth` runs right after
+  `tickMarket` (needs that tick's fresh `prevPrice`/`price` pair) and
+  ties the balance's growth to the *average* price change across
+  `world.stocks` that year, rather than its own separate RNG — one less
+  random model to keep consistent with the rest of the economy.
 - **`src/engine/CLAUDE.md`** — money-system-specific conventions (the
   world-vs-character state split, the additive-optional-field guards,
   the whole-dollar-except-stock-prices rule, `ageUp()`'s exact tick

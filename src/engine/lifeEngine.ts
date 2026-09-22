@@ -9,6 +9,7 @@ import { tickAssets, netWorth } from "./assets";
 import { tickDebt } from "./debt";
 import { tickMarket, portfolioValue } from "./stocks";
 import { incomeTax } from "./taxes";
+import { applyContribution, tickRetirementGrowth, retirementBalance } from "./retirement";
 
 export { getLifeStage } from "./lifeStage";
 export type { LifeStage } from "./lifeStage";
@@ -19,9 +20,10 @@ export { takeOutLoan, openCreditCard, payDownLoan, chargeCard } from "./debt";
 export { creditScoreLabel } from "./finance";
 export { buyStock, sellStock, portfolioValue } from "./stocks";
 export { incomeTax, takeHomePay, effectiveTaxRate } from "./taxes";
+export { setContributionRate, withdrawRetirement, retirementBalance } from "./retirement";
 
 export function totalNetWorth(c: Character, world: WorldState): number {
-  return netWorth(c) + portfolioValue(c, world);
+  return netWorth(c) + portfolioValue(c, world) + retirementBalance(c);
 }
 
 export function createCharacter(
@@ -105,6 +107,7 @@ export type AgeUpResult = {
 export function ageUp(c: Character, world: WorldState): AgeUpResult {
   tickWorldState(world);
   tickMarket(world);
+  tickRetirementGrowth(c, world);
 
   c.age += 1;
   c.yearLog = [];
@@ -136,11 +139,18 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
   // income
   if (c.job) {
     const gross = effectiveSalary(c.job, world);
-    const tax = incomeTax(gross);
-    const net = gross - tax;
+    const { contribution, employerMatch, taxableIncome } = applyContribution(c, gross);
+    const tax = incomeTax(taxableIncome);
+    const net = taxableIncome - tax;
     c.money += net;
+    const contribText =
+      contribution > 0
+        ? ` $${contribution.toLocaleString()} to retirement${
+            employerMatch > 0 ? ` (+$${employerMatch.toLocaleString()} employer match)` : ""
+          },`
+        : "";
     c.yearLog.push(
-      `You earned $${gross.toLocaleString()} working as a ${c.job.title} — $${tax.toLocaleString()} to taxes, $${net.toLocaleString()} take-home.`,
+      `You earned $${gross.toLocaleString()} working as a ${c.job.title} —${contribText} $${tax.toLocaleString()} to taxes, $${net.toLocaleString()} take-home.`,
     );
   }
 

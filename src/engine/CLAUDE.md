@@ -3,9 +3,9 @@
 This directory is the simulation itself — everything in the root
 `CLAUDE.md`'s "game rules never live in the store or a screen" rule
 applies here first. This file adds conventions specific to the money
-system (`assets.ts`, `finance.ts`, `debt.ts`, `stocks.ts`, and whatever
-taxes/retirement modules join them) that would otherwise get re-learned
-(or re-broken) every time a new financial system gets added.
+system (`assets.ts`, `finance.ts`, `debt.ts`, `stocks.ts`, `taxes.ts`,
+`retirement.ts`, and whatever joins them next) that would otherwise get
+re-learned (or re-broken) every time a new financial system gets added.
 
 ## World-level vs character-level state
 
@@ -58,13 +58,27 @@ turns into a dollar amount, not before.
 `lifeEngine.ts`'s `ageUp()` runs ticks in a specific order — read it
 before adding a new one rather than guessing where it fits:
 `tickWorldState` (macro condition roll) → `tickMarket` (stock prices,
-reads *this* year's condition) → character stat drift/education/income
-→ `tickAssets` (mortgage + car upkeep) → `tickDebt` (loan/card interest
-+ auto-payment, reads `c.money` *after* assets) → the death roll → event
-selection. A new per-year effect almost always belongs after income and
-before the death roll, in the same relative position as `tickAssets`/
-`tickDebt` (spend/earn first, so the effect has real money to work
-with).
+reads *this* year's condition) → `tickRetirementGrowth` (needs that
+tick's fresh `prevPrice`/`price` pair, so it has to come right after
+`tickMarket`, on the *pre-existing* balance) → character stat drift/
+education/income (income includes `applyContribution`, called *before*
+`incomeTax` since the contribution is pre-tax — this order matters, see
+below) → `tickAssets` (mortgage + car upkeep) → `tickDebt` (loan/card
+interest + auto-payment, reads `c.money` *after* assets) → the death
+roll → event selection. A new per-year effect almost always belongs
+after income and before the death roll, in the same relative position
+as `tickAssets`/`tickDebt` (spend/earn first, so the effect has real
+money to work with).
+
+**Pre-tax vs post-tax ordering, concretely**: `retirement.ts`'s
+`applyContribution(c, grossIncome)` returns `taxableIncome` (gross minus
+the contribution) — `incomeTax()` must run on *that*, not on
+`grossIncome` directly, or the contribution stops being pre-tax and the
+whole point of a 401(k)-style account (it lowers what you're taxed on)
+silently breaks. If a future system needs the same treatment
+(pre-tax vs. post-tax), follow this same shape: the deduction function
+returns the adjusted taxable figure, tax is computed on that return
+value, not on the original gross.
 
 ## Testing pitfall: don't hold a reference across a mutating call
 

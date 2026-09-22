@@ -27,6 +27,8 @@ import {
   chargeCard as engineChargeCard,
   buyStock as engineBuyStock,
   sellStock as engineSellStock,
+  setContributionRate as engineSetContributionRate,
+  withdrawRetirement as engineWithdrawRetirement,
   Activity,
 } from "../engine/lifeEngine";
 
@@ -63,6 +65,8 @@ type GameState = {
   chargeCard: (loanId: string, amount: number) => void;
   buyStock: (ticker: string, shares: number) => void;
   sellStock: (ticker: string, shares: number) => void;
+  setContributionRate: (ratePercent: number) => void;
+  withdrawRetirement: (amount: number) => void;
   restart: () => void;
 };
 
@@ -286,6 +290,22 @@ export const useGameStore = create<GameState>((set, get) => ({
     engineSellStock(character, worldState, ticker, shares);
     set({ character: { ...character } });
     persist(character, get().screen, worldState);
+  },
+
+  setContributionRate: (ratePercent) => {
+    const character = get().character;
+    if (!character) return;
+    engineSetContributionRate(character, ratePercent);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  withdrawRetirement: (amount) => {
+    const character = get().character;
+    if (!character) return;
+    engineWithdrawRetirement(character, amount);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
   },
 
   restart: () => {

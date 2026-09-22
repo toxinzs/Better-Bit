@@ -8,7 +8,7 @@ import { availableCars, availableHomes } from "../../data/assets";
 import { availablePersonalLoans, availableCreditCards } from "../../data/loans";
 import { STOCK_DEFS } from "../../data/stocks";
 import { totalNetWorth, creditScoreLabel } from "../../engine/lifeEngine";
-import { colors, fonts, fontSize, spacing } from "../../theme";
+import { colors, fonts, fontSize, radii, spacing } from "../../theme";
 import { tabStyles } from "./sharedStyles";
 
 const EXTRA_PAYMENT = 500;
@@ -33,6 +33,8 @@ export default function AssetsTab() {
   const chargeCard = useGameStore((s) => s.chargeCard);
   const buyStock = useGameStore((s) => s.buyStock);
   const sellStock = useGameStore((s) => s.sellStock);
+  const setContributionRate = useGameStore((s) => s.setContributionRate);
+  const withdrawRetirement = useGameStore((s) => s.withdrawRetirement);
 
   if (!character) return null;
 
@@ -43,6 +45,8 @@ export default function AssetsTab() {
   const hasCard = loans.some((l) => l.kind === "creditCard");
   const loanListings = availablePersonalLoans(character.age, creditScore);
   const cardListings = availableCreditCards(character.age, creditScore);
+  const retirement = character.retirement ?? { balance: 0, contributionRate: 0 };
+  const contributionPercent = Math.round(retirement.contributionRate * 100);
   const stocks = worldState.stocks ?? [];
   const portfolio = character.portfolio ?? [];
 
@@ -310,6 +314,59 @@ export default function AssetsTab() {
           </>
         )}
       </Card>
+
+      <Card>
+        <View style={styles.headerRow}>
+          <Ionicons name="umbrella" size={18} color={colors.primary} />
+          <Text style={tabStyles.sectionTitle}>Retirement</Text>
+        </View>
+
+        <View style={styles.creditScoreRow}>
+          <Text style={styles.creditScoreLabel}>Balance</Text>
+          <Text style={[styles.creditScoreValue, { color: colors.primary }]}>${retirement.balance.toLocaleString()}</Text>
+        </View>
+
+        <View style={styles.contribRow}>
+          <Text style={styles.creditScoreLabel}>Contribution</Text>
+          <View style={styles.contribControls}>
+            <TouchableOpacity
+              accessibilityRole="button"
+              activeOpacity={0.7}
+              style={styles.stepperBtn}
+              onPress={() => setContributionRate(Math.max(0, contributionPercent - 1))}
+            >
+              <Ionicons name="remove" size={16} color={colors.textPrimary} />
+            </TouchableOpacity>
+            <Text style={styles.contribValue}>{contributionPercent}%</Text>
+            <TouchableOpacity
+              accessibilityRole="button"
+              activeOpacity={0.7}
+              style={styles.stepperBtn}
+              onPress={() => setContributionRate(Math.min(50, contributionPercent + 1))}
+            >
+              <Ionicons name="add" size={16} color={colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+        <Text style={tabStyles.logLine}>
+          Pre-tax, comes off your paycheck automatically. Your employer matches 50% of the first 6%
+          {character.job ? "" : " — start a job to actually contribute"}.
+        </Text>
+
+        <View style={styles.loanBtnRow}>
+          <Button
+            label="Withdraw $1,000"
+            icon="cash"
+            size="sm"
+            variant="secondary"
+            disabled={retirement.balance < 1000}
+            onPress={() => withdrawRetirement(1000)}
+          />
+        </View>
+        {character.age < 60 && (
+          <Text style={styles.subheading}>10% early-withdrawal penalty before age 60</Text>
+        )}
+      </Card>
     </ScrollView>
   );
 }
@@ -379,6 +436,32 @@ const styles = StyleSheet.create({
   creditScoreTag: {
     fontFamily: fonts.semiBold,
     fontSize: fontSize.sm,
+  },
+  contribRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  contribControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  stepperBtn: {
+    backgroundColor: colors.surfaceRaised,
+    width: 30,
+    height: 30,
+    borderRadius: radii.sm,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  contribValue: {
+    color: colors.textPrimary,
+    fontFamily: fonts.extraBold,
+    fontSize: fontSize.lg,
+    minWidth: 42,
+    textAlign: "center",
   },
   loansList: {
     marginBottom: spacing.sm,

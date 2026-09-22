@@ -81,6 +81,11 @@ export type PortfolioHolding = {
   costBasis: number; // total $ paid, for gain/loss display
 };
 
+export type Retirement = {
+  balance: number;
+  contributionRate: number; // 0-0.5, fraction of gross salary
+};
+
 export type LogEntry = {
   age: number;
   text: string;
@@ -126,6 +131,7 @@ export type Character = {
   loans?: Loan[];
   creditScore?: number;
   portfolio?: PortfolioHolding[];
+  retirement?: Retirement;
   relationships: Relationship[];
   yearLog: string[];
   fullLog: LogEntry[];
