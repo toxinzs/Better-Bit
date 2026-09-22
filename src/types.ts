@@ -51,6 +51,18 @@ export type Job = {
   requiresCollege?: boolean;
 };
 
+export type OwnedCar = {
+  name: string;
+  value: number;
+};
+
+export type OwnedHome = {
+  name: string;
+  value: number;
+  mortgageBalance: number;
+  yearlyPayment: number;
+};
+
 export type LogEntry = {
   age: number;
   text: string;
@@ -84,6 +96,8 @@ export type Character = {
   educationStage: EducationStage;
   inCollege: boolean;
   hasCollegeDegree: boolean;
+  car?: OwnedCar | null;
+  home?: OwnedHome | null;
   relationships: Relationship[];
   yearLog: string[];
   fullLog: LogEntry[];

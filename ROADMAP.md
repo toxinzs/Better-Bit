@@ -91,9 +91,30 @@ Email, similarly — noted, not started.
 
 ## Phase 3 — money & assets, plus a real world state
 
-Cars, houses/real estate (buy/rent/sell), a simple stock-market mechanic,
-debt/loans, credit score, taxes, retirement savings. All the money events
-in Phase 1 are the connective tissue that leads here. **Not built yet.**
+**Cars & real estate (done).** A real net worth beyond cash-in-hand:
+`src/data/assets.ts` (catalogs — 5 car tiers, 5 home tiers, age-gated) and
+`src/engine/assets.ts` (`buyCar`/`sellCar`/`buyHome`/`sellHome`/
+`netWorth`/`tickAssets`) as their own new "Assets" tab
+(`AssetsTab.tsx`). Buying a home is a real 20%-down mortgage amortized
+straight-line over 15 years, deducted automatically inside `ageUp()`
+alongside a flat yearly car-upkeep cost — both can push money negative
+(no bankruptcy/foreclosure system yet, so overspending has a real, visible
+consequence instead of being clamped away). `netWorth()` counts car value
+and home equity, not just cash — verified exactly: net worth was
+identical before and after a $65k car + $340k home purchase, since the
+cash spent is offset by the asset value gained. Selling a car returns 65%
+of its value (depreciation); selling a home returns the actual equity
+(value minus remaining mortgage). Two pre-existing flavor events that
+used to fire regardless of reality now check it: `car-repair` requires
+actually owning a car, `rent-increase` requires *not* owning a home (you
+can't get a rent hike on a mortgage) — both were live inconsistencies
+this phase surfaced and fixed, not new content.
+
+**Still open**: a simple stock-market mechanic, debt/loans beyond a
+mortgage, credit score, taxes, retirement savings. All the money events
+from Phase 1 remain the connective tissue for those.
+
+**World state (done).** A shared, persistent-per-save `WorldState`
 
 **World state (done).** A shared, persistent-per-save `WorldState`
 (`src/types.ts`, `src/engine/worldState.ts`) ticks inside `ageUp()` —

@@ -91,6 +91,7 @@ export const MONEY_EVENTS: LifeEvent[] = [
     minAge: 18,
     maxAge: 85,
     weight: 0.7,
+    condition: (c) => c.car != null,
     text: () => "Your car's making a sound it should definitely not be making.",
     choices: [
       {
@@ -180,6 +181,7 @@ export const MONEY_EVENTS: LifeEvent[] = [
     minAge: 19,
     maxAge: 70,
     weight: 0.6,
+    condition: (c) => c.home == null,
     text: () => "Your landlord is raising the rent again.",
     choices: [
       {

@@ -5,11 +5,13 @@ import { randomFirstName, randomLastName } from "../data/names";
 import { MIN_AGE_GYM, MIN_AGE_LIBRARY, MIN_AGE_CONVERSATION } from "./lifeStage";
 import { tickWorldState, hasActiveCondition, effectiveSalary } from "./worldState";
 import { ambientMessageTick } from "./relationships";
+import { tickAssets } from "./assets";
 
 export { getLifeStage } from "./lifeStage";
 export type { LifeStage } from "./lifeStage";
 export { createInitialWorldState, effectiveSalary, hasActiveCondition } from "./worldState";
 export { textRelationship, callRelationship, bootyCall, sendGift } from "./relationships";
+export { buyCar, sellCar, buyHome, sellHome, netWorth } from "./assets";
 
 export function createCharacter(
   firstName: string,
@@ -123,6 +125,8 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
     c.money += pay;
     c.yearLog.push(`You earned $${pay.toLocaleString()} working as a ${c.job.title}.`);
   }
+
+  tickAssets(c);
 
   // death roll: very low health raises the odds sharply but never guarantees death on its own
   const dieFromHealth = c.stats.health <= 0 && Math.random() < 0.4;

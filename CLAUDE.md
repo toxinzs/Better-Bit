@@ -50,6 +50,14 @@ belongs in the engine instead.
   booty-calls, ambient exchanges per relation type). Add variety here, not
   inline in `relationships.ts`.
 - `src/data/jobs.ts` — the career ladder, gated by age/smarts/college degree.
+- `src/data/assets.ts` / `src/engine/assets.ts` — same data/engine split as
+  jobs: car/home catalogs are data, `buyCar`/`sellCar`/`buyHome`/`sellHome`/
+  `netWorth`/`tickAssets` are engine logic. `tickAssets` (mortgage payment +
+  car upkeep) runs inside `ageUp()`. `netWorth()` is the real number to
+  show anywhere "how rich is this character" comes up — it accounts for
+  car value and home equity, not just `character.money`; don't display
+  raw `money` as net worth again (`GameOverScreen` did before this system
+  existed — already fixed, don't reintroduce it in a new screen).
 - `src/state/gameStore.ts` — zustand store wiring the engine to the UI,
   persists to `AsyncStorage`. **`worldState` is never reset by `restart()`**
   — it's the one field that deliberately survives a new life. `persist()`
@@ -59,14 +67,14 @@ belongs in the engine instead.
   a thin shell: header + tab bar + persistent Age Up button — see
   `src/screens/tabs/`), Game Over (life summary + full life log).
 - `src/screens/tabs/` — `LifeTab` (stats, activities, this year, world
-  news), `PeopleTab` (relationships), `CareerTab` (jobs). `HomeScreen`
-  owns which tab is active and the two modals (`EventModal`,
-  `TextThreadModal`) since those overlay regardless of tab; each tab
-  otherwise reads the store directly rather than being handed props. A
-  new top-level section (assets, once that system exists) is a new tab
-  here, not a new card stacked onto an existing one — the whole point of
-  splitting this up was to stop the single-scroll-of-cards layout from
-  growing without bound.
+  news), `PeopleTab` (relationships), `CareerTab` (jobs), `AssetsTab`
+  (net worth, car, home). `HomeScreen` owns which tab is active and the
+  two modals (`EventModal`, `TextThreadModal`) since those overlay
+  regardless of tab; each tab otherwise reads the store directly rather
+  than being handed props. A new top-level section is a new tab here, not
+  a new card stacked onto an existing one — the whole point of splitting
+  this up was to stop the single-scroll-of-cards layout from growing
+  without bound.
 
 ### Design system
 

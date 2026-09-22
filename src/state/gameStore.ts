@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Character, Gender, Job, LifeEvent, WorldState } from "../types";
+import { CarListing, HomeListing } from "../data/assets";
 import {
   createCharacter,
   createInitialWorldState,
@@ -15,6 +16,10 @@ import {
   callRelationship as engineCallRelationship,
   bootyCall as engineBootyCall,
   sendGift as engineSendGift,
+  buyCar as engineBuyCar,
+  sellCar as engineSellCar,
+  buyHome as engineBuyHome,
+  sellHome as engineSellHome,
   Activity,
 } from "../engine/lifeEngine";
 
@@ -41,6 +46,10 @@ type GameState = {
   callRelationship: (relationshipId: string) => void;
   bootyCall: (relationshipId: string) => void;
   sendGift: (relationshipId: string, amount: number) => void;
+  buyCar: (listing: CarListing) => void;
+  sellCar: () => void;
+  buyHome: (listing: HomeListing) => void;
+  sellHome: () => void;
   restart: () => void;
 };
 
@@ -180,6 +189,38 @@ export const useGameStore = create<GameState>((set, get) => ({
     const character = get().character;
     if (!character) return;
     engineSendGift(character, relationshipId, amount);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  buyCar: (listing) => {
+    const character = get().character;
+    if (!character) return;
+    engineBuyCar(character, listing);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  sellCar: () => {
+    const character = get().character;
+    if (!character) return;
+    engineSellCar(character);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  buyHome: (listing) => {
+    const character = get().character;
+    if (!character) return;
+    engineBuyHome(character, listing);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  sellHome: () => {
+    const character = get().character;
+    if (!character) return;
+    engineSellHome(character);
     set({ character: { ...character } });
     persist(character, get().screen, get().worldState);
   },

@@ -7,15 +7,17 @@ import TextThreadModal from "../components/TextThreadModal";
 import LifeTab from "./tabs/LifeTab";
 import PeopleTab from "./tabs/PeopleTab";
 import CareerTab from "./tabs/CareerTab";
+import AssetsTab from "./tabs/AssetsTab";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
 import { playSound } from "../sound";
 
-type Tab = "life" | "people" | "career";
+type Tab = "life" | "people" | "career" | "assets";
 
 const TABS: { key: Tab; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { key: "life", label: "Life", icon: "pulse" },
   { key: "people", label: "People", icon: "people" },
   { key: "career", label: "Career", icon: "briefcase" },
+  { key: "assets", label: "Assets", icon: "wallet" },
 ];
 
 export default function HomeScreen() {
@@ -92,6 +94,7 @@ export default function HomeScreen() {
         {tab === "life" && <LifeTab />}
         {tab === "people" && <PeopleTab onOpenThread={setViewingThreadId} />}
         {tab === "career" && <CareerTab />}
+        {tab === "assets" && <AssetsTab />}
       </Animated.View>
 
       <View style={styles.bottomArea}>
