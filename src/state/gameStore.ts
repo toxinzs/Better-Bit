@@ -2,6 +2,7 @@ import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Character, Gender, Job, LifeEvent, WorldState } from "../types";
 import { CarListing, HomeListing } from "../data/assets";
+import { LoanListing, CreditCardListing } from "../data/loans";
 import {
   createCharacter,
   createInitialWorldState,
@@ -20,6 +21,10 @@ import {
   sellCar as engineSellCar,
   buyHome as engineBuyHome,
   sellHome as engineSellHome,
+  takeOutLoan as engineTakeOutLoan,
+  openCreditCard as engineOpenCreditCard,
+  payDownLoan as enginePayDownLoan,
+  chargeCard as engineChargeCard,
   Activity,
 } from "../engine/lifeEngine";
 
@@ -50,6 +55,10 @@ type GameState = {
   sellCar: () => void;
   buyHome: (listing: HomeListing) => void;
   sellHome: () => void;
+  takeOutLoan: (listing: LoanListing) => void;
+  openCreditCard: (listing: CreditCardListing) => void;
+  payDownLoan: (loanId: string, amount: number) => void;
+  chargeCard: (loanId: string, amount: number) => void;
   restart: () => void;
 };
 
@@ -221,6 +230,38 @@ export const useGameStore = create<GameState>((set, get) => ({
     const character = get().character;
     if (!character) return;
     engineSellHome(character);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  takeOutLoan: (listing) => {
+    const character = get().character;
+    if (!character) return;
+    engineTakeOutLoan(character, listing);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  openCreditCard: (listing) => {
+    const character = get().character;
+    if (!character) return;
+    engineOpenCreditCard(character, listing);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  payDownLoan: (loanId, amount) => {
+    const character = get().character;
+    if (!character) return;
+    enginePayDownLoan(character, loanId, amount);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  chargeCard: (loanId, amount) => {
+    const character = get().character;
+    if (!character) return;
+    engineChargeCard(character, loanId, amount);
     set({ character: { ...character } });
     persist(character, get().screen, get().worldState);
   },

@@ -17,7 +17,7 @@ const TABS: { key: Tab; label: string; icon: keyof typeof Ionicons.glyphMap }[] 
   { key: "life", label: "Life", icon: "pulse" },
   { key: "people", label: "People", icon: "people" },
   { key: "career", label: "Career", icon: "briefcase" },
-  { key: "assets", label: "Assets", icon: "wallet" },
+  { key: "assets", label: "Money", icon: "wallet" },
 ];
 
 export default function HomeScreen() {

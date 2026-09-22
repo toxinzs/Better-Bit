@@ -6,12 +6,15 @@ import { MIN_AGE_GYM, MIN_AGE_LIBRARY, MIN_AGE_CONVERSATION } from "./lifeStage"
 import { tickWorldState, hasActiveCondition, effectiveSalary } from "./worldState";
 import { ambientMessageTick } from "./relationships";
 import { tickAssets } from "./assets";
+import { tickDebt } from "./debt";
 
 export { getLifeStage } from "./lifeStage";
 export type { LifeStage } from "./lifeStage";
 export { createInitialWorldState, effectiveSalary, hasActiveCondition } from "./worldState";
 export { textRelationship, callRelationship, bootyCall, sendGift } from "./relationships";
 export { buyCar, sellCar, buyHome, sellHome, netWorth } from "./assets";
+export { takeOutLoan, openCreditCard, payDownLoan, chargeCard } from "./debt";
+export { creditScoreLabel } from "./finance";
 
 export function createCharacter(
   firstName: string,
@@ -38,6 +41,8 @@ export function createCharacter(
     educationStage: "none",
     inCollege: false,
     hasCollegeDegree: false,
+    loans: [],
+    creditScore: 650,
     relationships: [
       { id: "mother", name: motherName, type: "mother", level: randomInt(60, 90), alive: true },
       { id: "father", name: fatherName, type: "father", level: randomInt(55, 90), alive: true },
@@ -127,6 +132,7 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
   }
 
   tickAssets(c);
+  tickDebt(c);
 
   // death roll: very low health raises the odds sharply but never guarantees death on its own
   const dieFromHealth = c.stats.health <= 0 && Math.random() < 0.4;

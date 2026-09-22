@@ -136,9 +136,32 @@ actually owning a car, `rent-increase` requires *not* owning a home (you
 can't get a rent hike on a mortgage) — both were live inconsistencies
 this update surfaced and fixed, not new content.
 
-**Still open**: a simple stock-market mechanic, debt/loans beyond a
-mortgage, credit score, taxes, retirement savings. All the money events
-from the event pool remain the connective tissue for those.
+**Debt & credit score (done).** Personal loans and a revolving credit
+card, both real interest-bearing debt: `src/data/loans.ts` (catalogs,
+gated by age + credit score — a Medium/Large personal loan and the
+better card tiers require a real score, not just cash on hand),
+`src/engine/debt.ts` (`takeOutLoan`/`openCreditCard`/`chargeCard`/
+`payDownLoan`/`tickDebt`), a new "Credit & Loans" card in the Money tab.
+Personal loans use the same straight-line simplification the home
+mortgage already does, just with real interest baked into the total
+(simple interest, spread evenly over the term). The credit card is a
+real revolving balance: interest accrues on the outstanding balance
+every year, then an automatic minimum payment (5% of balance or $25,
+whichever is bigger) gets deducted — same "no bankruptcy system, so
+overspending has a real, visible consequence" precedent the mortgage
+already set. `creditScore` (300-850, additive-optional field like
+`WorldState` on old saves, defaults 650) moves on real signals, not a
+hidden roll: +2/year per loan paid on time, -3/year while a card sits
+above 70% utilization, +15 on full payoff, -15 the year your money goes
+negatively into the red. `netWorth()` now subtracts total loan balance
+— verified exactly end to end (a $2,000 loan's balance/payment/payoff
+schedule and a credit card's interest-then-minimum-payment math both
+matched hand-computed values every year, and the displayed net worth on
+screen matched `money + assets - debt` to the dollar).
+
+**Still open**: a simple stock-market mechanic, taxes, retirement
+savings. All the money events from the event pool remain the connective
+tissue for those.
 
 **World state (done).** A shared, persistent-per-save `WorldState`
 (`src/types.ts`, `src/engine/worldState.ts`) ticks inside `ageUp()` —

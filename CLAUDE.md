@@ -65,6 +65,14 @@ belongs in the engine instead.
   car value and home equity, not just `character.money`; don't display
   raw `money` as net worth again (`GameOverScreen` did before this system
   existed — already fixed, don't reintroduce it in a new screen).
+- `src/data/loans.ts` / `src/engine/finance.ts` / `src/engine/debt.ts` —
+  personal loans + a revolving credit card. `finance.ts`'s
+  `ensureFinance(c)` is the additive-optional-field guard for
+  `Character.loans`/`creditScore` (same pattern as `Relationship.messages`
+  and `WorldState` on old saves) — call it (or a function that already
+  calls it, like `tickDebt`) before reading either field, never read
+  `c.loans` raw. `netWorth()` in `assets.ts` subtracts total loan balance.
+  `tickDebt` runs inside `ageUp()` right after `tickAssets`.
 - `src/state/gameStore.ts` — zustand store wiring the engine to the UI,
   persists to `AsyncStorage`. **`worldState` is never reset by `restart()`**
   — it's the one field that deliberately survives a new life. `persist()`

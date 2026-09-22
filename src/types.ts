@@ -63,6 +63,18 @@ export type OwnedHome = {
   yearlyPayment: number;
 };
 
+export type LoanKind = "personal" | "creditCard" | "student";
+
+export type Loan = {
+  id: string;
+  kind: LoanKind;
+  name: string;
+  balance: number;
+  apr: number;
+  minPayment: number;
+  limit?: number; // credit cards only
+};
+
 export type LogEntry = {
   age: number;
   text: string;
@@ -98,6 +110,8 @@ export type Character = {
   hasCollegeDegree: boolean;
   car?: OwnedCar | null;
   home?: OwnedHome | null;
+  loans?: Loan[];
+  creditScore?: number;
   relationships: Relationship[];
   yearLog: string[];
   fullLog: LogEntry[];

@@ -5,9 +5,18 @@ import { useGameStore } from "../../state/gameStore";
 import Card from "../../components/Card";
 import Button from "../../components/Button";
 import { availableCars, availableHomes } from "../../data/assets";
-import { netWorth } from "../../engine/lifeEngine";
+import { availablePersonalLoans, availableCreditCards } from "../../data/loans";
+import { netWorth, creditScoreLabel } from "../../engine/lifeEngine";
 import { colors, fonts, fontSize, spacing } from "../../theme";
 import { tabStyles } from "./sharedStyles";
+
+const EXTRA_PAYMENT = 500;
+
+function creditScoreColor(score: number): string {
+  if (score >= 670) return colors.primary;
+  if (score >= 580) return colors.gold;
+  return colors.danger;
+}
 
 export default function AssetsTab() {
   const character = useGameStore((s) => s.character);
@@ -15,11 +24,20 @@ export default function AssetsTab() {
   const sellCar = useGameStore((s) => s.sellCar);
   const buyHome = useGameStore((s) => s.buyHome);
   const sellHome = useGameStore((s) => s.sellHome);
+  const takeOutLoan = useGameStore((s) => s.takeOutLoan);
+  const openCreditCard = useGameStore((s) => s.openCreditCard);
+  const payDownLoan = useGameStore((s) => s.payDownLoan);
+  const chargeCard = useGameStore((s) => s.chargeCard);
 
   if (!character) return null;
 
   const cars = availableCars(character.age);
   const homes = availableHomes(character.age);
+  const creditScore = character.creditScore ?? 650;
+  const loans = character.loans ?? [];
+  const hasCard = loans.some((l) => l.kind === "creditCard");
+  const loanListings = availablePersonalLoans(character.age, creditScore);
+  const cardListings = availableCreditCards(character.age, creditScore);
 
   return (
     <ScrollView contentContainerStyle={tabStyles.scroll}>
@@ -102,6 +120,105 @@ export default function AssetsTab() {
           })
         )}
       </Card>
+
+      <Card>
+        <View style={styles.headerRow}>
+          <Ionicons name="card" size={18} color={colors.primary} />
+          <Text style={tabStyles.sectionTitle}>Credit & Loans</Text>
+        </View>
+
+        <View style={styles.creditScoreRow}>
+          <Text style={styles.creditScoreLabel}>Credit Score</Text>
+          <View style={styles.creditScoreValueWrap}>
+            <Text style={[styles.creditScoreValue, { color: creditScoreColor(creditScore) }]}>{creditScore}</Text>
+            <Text style={[styles.creditScoreTag, { color: creditScoreColor(creditScore) }]}>
+              {creditScoreLabel(creditScore)}
+            </Text>
+          </View>
+        </View>
+
+        {loans.length > 0 && (
+          <View style={styles.loansList}>
+            {loans.map((loan) => (
+              <View key={loan.id} style={styles.loanRow}>
+                <View style={styles.loanHeaderRow}>
+                  <Text style={styles.ownedName}>{loan.name}</Text>
+                  <Text style={styles.ownedValue}>${loan.balance.toLocaleString()}</Text>
+                </View>
+                <Text style={tabStyles.logLine}>
+                  {loan.kind === "creditCard"
+                    ? `${(loan.apr * 100).toFixed(0)}% APR · $${(loan.limit ?? 0).toLocaleString()} limit`
+                    : `${(loan.apr * 100).toFixed(0)}% APR · $${loan.minPayment.toLocaleString()}/yr`}
+                </Text>
+                <View style={styles.loanBtnRow}>
+                  {loan.kind === "creditCard" && (
+                    <Button
+                      label={`Charge $${EXTRA_PAYMENT}`}
+                      icon="card"
+                      size="sm"
+                      variant="secondary"
+                      disabled={(loan.limit ?? 0) - loan.balance < EXTRA_PAYMENT}
+                      onPress={() => chargeCard(loan.id, EXTRA_PAYMENT)}
+                    />
+                  )}
+                  <Button
+                    label={`Pay extra $${EXTRA_PAYMENT}`}
+                    icon="cash"
+                    size="sm"
+                    variant="secondary"
+                    disabled={character.money < EXTRA_PAYMENT || loan.balance <= 0}
+                    onPress={() => payDownLoan(loan.id, EXTRA_PAYMENT)}
+                  />
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {!hasCard &&
+          (cardListings.length === 0 ? (
+            <Text style={tabStyles.logLine}>No credit cards available yet.</Text>
+          ) : (
+            cardListings.map((listing) => (
+              <TouchableOpacity
+                key={listing.name}
+                accessibilityRole="button"
+                activeOpacity={0.7}
+                style={styles.listingRow}
+                onPress={() => openCreditCard(listing)}
+              >
+                <View>
+                  <Text style={styles.listingName}>{listing.name}</Text>
+                  <Text style={styles.listingSub}>{(listing.apr * 100).toFixed(0)}% APR</Text>
+                </View>
+                <Text style={styles.listingPrice}>${listing.limit.toLocaleString()} limit</Text>
+              </TouchableOpacity>
+            ))
+          ))}
+
+        {loanListings.length > 0 && (
+          <View style={styles.loanListingsWrap}>
+            <Text style={styles.subheading}>Personal loans</Text>
+            {loanListings.map((listing) => (
+              <TouchableOpacity
+                key={listing.name}
+                accessibilityRole="button"
+                activeOpacity={0.7}
+                style={styles.listingRow}
+                onPress={() => takeOutLoan(listing)}
+              >
+                <View>
+                  <Text style={styles.listingName}>{listing.name}</Text>
+                  <Text style={styles.listingSub}>
+                    {(listing.apr * 100).toFixed(0)}% APR · {listing.termYears}yr
+                  </Text>
+                </View>
+                <Text style={styles.listingPrice}>${listing.amount.toLocaleString()}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </Card>
     </ScrollView>
   );
 }
@@ -144,6 +261,64 @@ const styles = StyleSheet.create({
   },
   sellHomeBtn: {
     marginTop: spacing.sm,
+  },
+  creditScoreRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.md,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  creditScoreLabel: {
+    color: colors.textSecondary,
+    fontFamily: fonts.semiBold,
+    fontSize: fontSize.base,
+  },
+  creditScoreValueWrap: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 6,
+  },
+  creditScoreValue: {
+    fontFamily: fonts.extraBold,
+    fontSize: fontSize.xl,
+  },
+  creditScoreTag: {
+    fontFamily: fonts.semiBold,
+    fontSize: fontSize.sm,
+  },
+  loansList: {
+    marginBottom: spacing.sm,
+  },
+  loanRow: {
+    marginBottom: spacing.sm + 2,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  loanHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 2,
+  },
+  loanBtnRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+    marginTop: spacing.xs + 2,
+  },
+  subheading: {
+    color: colors.textMuted,
+    fontFamily: fonts.semiBold,
+    fontSize: fontSize.sm,
+    marginTop: spacing.sm,
+    marginBottom: 4,
+    textTransform: "uppercase",
+  },
+  loanListingsWrap: {
+    marginTop: 2,
   },
   listingRow: {
     flexDirection: "row",
