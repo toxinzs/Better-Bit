@@ -1,18 +1,20 @@
 import React, { useState } from "react";
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../state/gameStore";
 import EventModal from "../components/EventModal";
 import TextThreadModal from "../components/TextThreadModal";
 import LifeTab from "./tabs/LifeTab";
 import PeopleTab from "./tabs/PeopleTab";
 import CareerTab from "./tabs/CareerTab";
+import { colors, fonts, fontSize, radii, spacing } from "../theme";
 
 type Tab = "life" | "people" | "career";
 
-const TABS: { key: Tab; label: string; icon: string }[] = [
-  { key: "life", label: "Life", icon: "📋" },
-  { key: "people", label: "People", icon: "👥" },
-  { key: "career", label: "Career", icon: "💼" },
+const TABS: { key: Tab; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { key: "life", label: "Life", icon: "pulse" },
+  { key: "people", label: "People", icon: "people" },
+  { key: "career", label: "Career", icon: "briefcase" },
 ];
 
 export default function HomeScreen() {
@@ -35,13 +37,20 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.name}>
-          {character.firstName} {character.lastName}
-        </Text>
-        <Text style={styles.meta}>
-          Age {character.age} · {character.job ? character.job.title : "Unemployed"} · $
-          {character.money.toLocaleString()}
-        </Text>
+        <View>
+          <Text style={styles.name}>
+            {character.firstName} {character.lastName}
+          </Text>
+          <View style={styles.metaRow}>
+            <Text style={styles.metaText}>Age {character.age}</Text>
+            <Text style={styles.metaDivider}>·</Text>
+            <Text style={styles.metaText}>{character.job ? character.job.title : "Unemployed"}</Text>
+          </View>
+        </View>
+        <View style={styles.moneyPill}>
+          <Ionicons name="cash" size={14} color={colors.primary} />
+          <Text style={styles.moneyText}>${character.money.toLocaleString()}</Text>
+        </View>
       </View>
 
       <View style={styles.tabContent}>
@@ -56,16 +65,18 @@ export default function HomeScreen() {
             <TouchableOpacity
               key={t.key}
               accessibilityRole="button"
+              activeOpacity={0.7}
               style={[styles.tabBtn, tab === t.key && styles.tabBtnActive]}
               onPress={() => setTab(t.key)}
             >
-              <Text style={styles.tabIcon}>{t.icon}</Text>
+              <Ionicons name={t.icon} size={18} color={tab === t.key ? colors.primary : colors.textMuted} />
               <Text style={[styles.tabLabel, tab === t.key && styles.tabLabelActive]}>{t.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
-        <TouchableOpacity accessibilityRole="button" style={styles.ageBtn} onPress={ageUp}>
-          <Text style={styles.ageBtnText}>Age Up →</Text>
+        <TouchableOpacity accessibilityRole="button" activeOpacity={0.8} style={styles.ageBtn} onPress={ageUp}>
+          <Text style={styles.ageBtnText}>Age Up</Text>
+          <Ionicons name="arrow-forward" size={16} color={colors.primaryText} />
         </TouchableOpacity>
       </View>
 
@@ -91,72 +102,98 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#12121c",
+    backgroundColor: colors.background,
   },
   header: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm + 2,
+    paddingBottom: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: "#2a2a3a",
+    borderBottomColor: colors.border,
   },
   name: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#fff",
+    fontSize: fontSize.xl,
+    fontFamily: fonts.extraBold,
+    color: colors.textPrimary,
   },
-  meta: {
-    fontSize: 13,
-    color: "#aaa",
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 2,
+  },
+  metaText: {
+    fontSize: fontSize.md,
+    fontFamily: fonts.regular,
+    color: colors.textSecondary,
+  },
+  metaDivider: {
+    color: colors.textMuted,
+    marginHorizontal: 6,
+  },
+  moneyPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: colors.surfaceRaised,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 6,
+    borderRadius: radii.pill,
+  },
+  moneyText: {
+    color: colors.primary,
+    fontFamily: fonts.bold,
+    fontSize: fontSize.md,
   },
   tabContent: {
     flex: 1,
   },
   bottomArea: {
-    backgroundColor: "#0e0e16",
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: "#2a2a3a",
-    paddingTop: 8,
-    paddingHorizontal: 12,
-    paddingBottom: 10,
+    borderTopColor: colors.border,
+    paddingTop: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm + 2,
   },
   tabBar: {
     flexDirection: "row",
-    gap: 8,
-    marginBottom: 8,
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
   tabBtn: {
     flex: 1,
     alignItems: "center",
-    paddingVertical: 8,
-    borderRadius: 10,
-    backgroundColor: "#181824",
+    paddingVertical: spacing.sm,
+    borderRadius: radii.md,
+    backgroundColor: "transparent",
   },
   tabBtnActive: {
-    backgroundColor: "#232336",
-  },
-  tabIcon: {
-    fontSize: 16,
+    backgroundColor: colors.surfaceRaised,
   },
   tabLabel: {
-    fontSize: 11,
-    color: "#888",
-    marginTop: 2,
-    fontWeight: "600",
+    fontSize: fontSize.xs,
+    color: colors.textMuted,
+    marginTop: 3,
+    fontFamily: fonts.semiBold,
   },
   tabLabelActive: {
-    color: "#fff",
+    color: colors.primary,
   },
   ageBtn: {
-    backgroundColor: "#2ecc71",
-    paddingVertical: 13,
-    borderRadius: 10,
+    flexDirection: "row",
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.md,
+    borderRadius: radii.md,
     alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
   },
   ageBtnText: {
-    color: "#0b1a10",
-    fontSize: 14,
-    fontWeight: "800",
+    color: colors.primaryText,
+    fontSize: fontSize.lg,
+    fontFamily: fonts.extraBold,
   },
 });

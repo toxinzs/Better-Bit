@@ -1,6 +1,10 @@
 import React from "react";
-import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../state/gameStore";
+import Card from "../components/Card";
+import Button from "../components/Button";
+import { colors, fonts, fontSize, spacing } from "../theme";
 
 export default function GameOverScreen() {
   const character = useGameStore((s) => s.character);
@@ -11,91 +15,134 @@ export default function GameOverScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.title}>💀 End of the line</Text>
-        <Text style={styles.subtitle}>
-          {character.firstName} {character.lastName} lived to {character.age}
-          {character.causeOfDeath ? ` (${character.causeOfDeath})` : ""}.
-        </Text>
-
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Life summary</Text>
-          <Text style={styles.line}>Final job: {character.job ? character.job.title : "Unemployed"}</Text>
-          <Text style={styles.line}>Net worth: ${character.money.toLocaleString()}</Text>
-          <Text style={styles.line}>
-            Education: {character.hasCollegeDegree ? "College graduate" : character.educationStage}
-          </Text>
-          <Text style={styles.line}>
-            Relationships left behind: {character.relationships.filter((r) => r.alive).length}
+        <View style={styles.headerWrap}>
+          <View style={styles.badge}>
+            <Ionicons name="flower" size={26} color={colors.textPrimary} />
+          </View>
+          <Text style={styles.title}>End of the line</Text>
+          <Text style={styles.subtitle}>
+            {character.firstName} {character.lastName} lived to {character.age}
+            {character.causeOfDeath ? ` (${character.causeOfDeath})` : ""}.
           </Text>
         </View>
 
-        <View style={styles.card}>
+        <Card>
+          <Text style={styles.sectionTitle}>Life summary</Text>
+          <SummaryRow icon="briefcase" label="Final job" value={character.job ? character.job.title : "Unemployed"} />
+          <SummaryRow icon="cash" label="Net worth" value={`$${character.money.toLocaleString()}`} />
+          <SummaryRow
+            icon="school"
+            label="Education"
+            value={character.hasCollegeDegree ? "College graduate" : character.educationStage}
+          />
+          <SummaryRow
+            icon="people"
+            label="Relationships left behind"
+            value={String(character.relationships.filter((r) => r.alive).length)}
+          />
+        </Card>
+
+        <Card>
           <Text style={styles.sectionTitle}>Life story</Text>
           {character.fullLog.map((entry, i) => (
             <Text key={i} style={styles.line}>
-              [{entry.age}] {entry.text}
+              <Text style={styles.lineAge}>[{entry.age}] </Text>
+              {entry.text}
             </Text>
           ))}
-        </View>
+        </Card>
 
-        <TouchableOpacity accessibilityRole="button" style={styles.primaryBtn} onPress={restart}>
-          <Text style={styles.primaryText}>Start a new life</Text>
-        </TouchableOpacity>
+        <Button label="Start a new life" icon="refresh" variant="primary" size="lg" onPress={restart} style={styles.restartBtn} />
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function SummaryRow({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string }) {
+  return (
+    <View style={styles.summaryRow}>
+      <View style={styles.summaryLabelWrap}>
+        <Ionicons name={icon} size={15} color={colors.textSecondary} />
+        <Text style={styles.summaryLabel}>{label}</Text>
+      </View>
+      <Text style={styles.summaryValue}>{value}</Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#12121c",
+    backgroundColor: colors.background,
   },
   scroll: {
-    padding: 20,
-    paddingBottom: 40,
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+  },
+  headerWrap: {
+    alignItems: "center",
+    marginBottom: spacing.xl,
+  },
+  badge: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.surfaceRaised,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.sm,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: "#fff",
-    marginBottom: 6,
+    fontSize: fontSize.xxl,
+    fontFamily: fonts.extraBold,
+    color: colors.textPrimary,
   },
   subtitle: {
-    fontSize: 15,
-    color: "#aaa",
-    marginBottom: 20,
-  },
-  card: {
-    backgroundColor: "#1a1a26",
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: "#2a2a3a",
+    fontSize: fontSize.base,
+    fontFamily: fonts.regular,
+    color: colors.textSecondary,
+    textAlign: "center",
+    marginTop: spacing.xs,
   },
   sectionTitle: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 15,
-    marginBottom: 8,
+    color: colors.textPrimary,
+    fontFamily: fonts.bold,
+    fontSize: fontSize.lg,
+    marginBottom: spacing.sm + 2,
+  },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: spacing.xs + 2,
+  },
+  summaryLabelWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  summaryLabel: {
+    color: colors.textSecondary,
+    fontFamily: fonts.regular,
+    fontSize: fontSize.base,
+  },
+  summaryValue: {
+    color: colors.textPrimary,
+    fontFamily: fonts.bold,
+    fontSize: fontSize.base,
   },
   line: {
-    color: "#ccc",
-    fontSize: 13,
+    color: colors.textSecondary,
+    fontFamily: fonts.regular,
+    fontSize: fontSize.md,
     lineHeight: 20,
-    marginBottom: 3,
+    marginBottom: 4,
   },
-  primaryBtn: {
-    backgroundColor: "#2ecc71",
-    paddingVertical: 16,
-    borderRadius: 14,
-    alignItems: "center",
-    marginTop: 8,
+  lineAge: {
+    color: colors.textMuted,
+    fontFamily: fonts.semiBold,
   },
-  primaryText: {
-    color: "#0b1a10",
-    fontWeight: "800",
-    fontSize: 17,
+  restartBtn: {
+    marginTop: spacing.sm,
   },
 });

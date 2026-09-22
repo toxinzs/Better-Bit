@@ -1,16 +1,25 @@
 import React from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../../state/gameStore";
 import StatBar from "../../components/StatBar";
+import Card from "../../components/Card";
 import { MIN_AGE_GYM, MIN_AGE_LIBRARY } from "../../engine/lifeStage";
+import { colors, fonts, fontSize, radii, spacing } from "../../theme";
 import { tabStyles } from "./sharedStyles";
 
-const CONDITION_LABEL: Record<string, string> = {
-  recession: "📉 Recession",
-  boom: "📈 Economic Boom",
-  war: "⚔️ War",
-  pandemic: "🦠 Pandemic",
+const CONDITION_META: Record<string, { label: string; icon: keyof typeof Ionicons.glyphMap; color: string }> = {
+  recession: { label: "Recession", icon: "trending-down", color: colors.danger },
+  boom: { label: "Economic Boom", icon: "trending-up", color: colors.primary },
+  war: { label: "War", icon: "flash", color: colors.danger },
+  pandemic: { label: "Pandemic", icon: "medkit", color: colors.gold },
 };
+
+const ACTIVITIES: { key: "gym" | "library" | "doctor"; label: string; icon: keyof typeof Ionicons.glyphMap; minAge?: number }[] = [
+  { key: "gym", label: "Gym", icon: "barbell", minAge: MIN_AGE_GYM },
+  { key: "library", label: "Library", icon: "book", minAge: MIN_AGE_LIBRARY },
+  { key: "doctor", label: "Doctor", icon: "medkit" },
+];
 
 export default function LifeTab() {
   const character = useGameStore((s) => s.character);
@@ -19,35 +28,36 @@ export default function LifeTab() {
 
   if (!character) return null;
 
+  const condition = worldState.activeCondition ? CONDITION_META[worldState.activeCondition.kind] : null;
+
   return (
     <ScrollView contentContainerStyle={tabStyles.scroll}>
-      <View style={tabStyles.card}>
+      <Card>
         <StatBar label="Health" value={character.stats.health} />
         <StatBar label="Happiness" value={character.stats.happiness} />
         <StatBar label="Smarts" value={character.stats.smarts} />
         <StatBar label="Looks" value={character.stats.looks} />
-      </View>
+      </Card>
 
-      <View style={tabStyles.card}>
+      <Card>
         <Text style={tabStyles.sectionTitle}>Activities</Text>
         <View style={styles.activityRow}>
-          {character.age >= MIN_AGE_GYM && (
-            <TouchableOpacity accessibilityRole="button" style={styles.activityBtn} onPress={() => doActivity("gym")}>
-              <Text style={styles.activityText}>🏋️ Gym</Text>
+          {ACTIVITIES.filter((a) => !a.minAge || character.age >= a.minAge).map((a) => (
+            <TouchableOpacity
+              key={a.key}
+              accessibilityRole="button"
+              activeOpacity={0.7}
+              style={styles.activityBtn}
+              onPress={() => doActivity(a.key)}
+            >
+              <Ionicons name={a.icon} size={20} color={colors.textPrimary} />
+              <Text style={styles.activityText}>{a.label}</Text>
             </TouchableOpacity>
-          )}
-          {character.age >= MIN_AGE_LIBRARY && (
-            <TouchableOpacity accessibilityRole="button" style={styles.activityBtn} onPress={() => doActivity("library")}>
-              <Text style={styles.activityText}>📚 Library</Text>
-            </TouchableOpacity>
-          )}
-          <TouchableOpacity accessibilityRole="button" style={styles.activityBtn} onPress={() => doActivity("doctor")}>
-            <Text style={styles.activityText}>🩺 Doctor</Text>
-          </TouchableOpacity>
+          ))}
         </View>
-      </View>
+      </Card>
 
-      <View style={tabStyles.card}>
+      <Card>
         <Text style={tabStyles.sectionTitle}>This year</Text>
         {character.yearLog.length === 0 ? (
           <Text style={tabStyles.logLine}>Nothing happened yet.</Text>
@@ -58,25 +68,27 @@ export default function LifeTab() {
             </Text>
           ))
         )}
-      </View>
+      </Card>
 
-      <View style={tabStyles.card}>
+      <Card>
         <Text style={tabStyles.sectionTitle}>World News</Text>
         {worldState.log.map((line, i) => (
           <Text key={`news-${i}`} style={tabStyles.logLine}>
             • {line}
           </Text>
         ))}
-        {worldState.activeCondition ? (
-          <Text style={tabStyles.logLine}>
-            {CONDITION_LABEL[worldState.activeCondition.kind] ?? worldState.activeCondition.kind} — year{" "}
-            {worldState.year - worldState.activeCondition.startYear + 1} of ~
-            {worldState.activeCondition.endsYear - worldState.activeCondition.startYear}
-          </Text>
+        {condition ? (
+          <View style={styles.conditionRow}>
+            <Ionicons name={condition.icon} size={15} color={condition.color} />
+            <Text style={[styles.conditionText, { color: condition.color }]}>
+              {condition.label} — year {worldState.year - worldState.activeCondition!.startYear + 1} of ~
+              {worldState.activeCondition!.endsYear - worldState.activeCondition!.startYear}
+            </Text>
+          </View>
         ) : worldState.log.length === 0 ? (
           <Text style={tabStyles.logLine}>All quiet on the economic front.</Text>
         ) : null}
-      </View>
+      </Card>
     </ScrollView>
   );
 }
@@ -84,18 +96,29 @@ export default function LifeTab() {
 const styles = StyleSheet.create({
   activityRow: {
     flexDirection: "row",
-    gap: 8,
+    gap: spacing.sm,
   },
   activityBtn: {
     flex: 1,
-    backgroundColor: "#232336",
-    paddingVertical: 12,
-    borderRadius: 10,
     alignItems: "center",
+    backgroundColor: colors.surfaceRaised,
+    paddingVertical: spacing.md,
+    borderRadius: radii.md,
+    gap: 5,
   },
   activityText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
+    color: colors.textPrimary,
+    fontSize: fontSize.sm,
+    fontFamily: fonts.semiBold,
+  },
+  conditionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 2,
+  },
+  conditionText: {
+    fontFamily: fonts.bold,
+    fontSize: fontSize.md,
   },
 });

@@ -1,6 +1,8 @@
 import React from "react";
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { Character, LifeEvent, WorldState } from "../types";
+import { colors, fonts, fontSize, radii, spacing } from "../theme";
 
 export default function EventModal({
   event,
@@ -17,11 +19,21 @@ export default function EventModal({
     <Modal transparent animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.card}>
+          <View style={styles.badge}>
+            <Ionicons name="sparkles" size={20} color={colors.gold} />
+          </View>
           <Text style={styles.text}>{event.text(character, world)}</Text>
           <View style={styles.choices}>
             {event.choices?.map((choice, i) => (
-              <TouchableOpacity accessibilityRole="button" key={i} style={styles.choiceBtn} onPress={() => onChoose(i)}>
+              <TouchableOpacity
+                accessibilityRole="button"
+                activeOpacity={0.7}
+                key={i}
+                style={styles.choiceBtn}
+                onPress={() => onChoose(i)}
+              >
                 <Text style={styles.choiceText}>{choice.label}</Text>
+                <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
               </TouchableOpacity>
             ))}
           </View>
@@ -34,39 +46,54 @@ export default function EventModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.65)",
+    backgroundColor: "rgba(0,0,0,0.7)",
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    padding: spacing.xl,
   },
   card: {
-    backgroundColor: "#1e1e2c",
-    borderRadius: 16,
-    padding: 24,
+    backgroundColor: colors.surface,
+    borderRadius: radii.xl,
+    padding: spacing.xl,
     width: "100%",
     maxWidth: 420,
     borderWidth: 1,
-    borderColor: "#3a3a4d",
+    borderColor: colors.border,
+  },
+  badge: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surfaceRaised,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.md,
   },
   text: {
-    color: "#fff",
-    fontSize: 17,
-    lineHeight: 24,
-    marginBottom: 20,
+    color: colors.textPrimary,
+    fontFamily: fonts.semiBold,
+    fontSize: fontSize.xl,
+    lineHeight: 26,
+    marginBottom: spacing.lg,
   },
   choices: {
-    gap: 10,
+    gap: spacing.sm,
   },
   choiceBtn: {
-    backgroundColor: "#2ecc71",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: colors.surfaceRaised,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.md,
   },
   choiceText: {
-    color: "#0b1a10",
-    fontWeight: "700",
-    fontSize: 15,
-    textAlign: "center",
+    color: colors.textPrimary,
+    fontFamily: fonts.semiBold,
+    fontSize: fontSize.lg,
+    flex: 1,
   },
 });

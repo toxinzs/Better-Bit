@@ -1,27 +1,21 @@
 import { StyleSheet } from "react-native";
+import { colors, fonts, fontSize, spacing } from "../../theme";
 
 export const tabStyles = StyleSheet.create({
   scroll: {
-    padding: 16,
-    paddingBottom: 24,
-  },
-  card: {
-    backgroundColor: "#1a1a26",
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: "#2a2a3a",
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
   },
   sectionTitle: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 15,
-    marginBottom: 8,
+    color: colors.textPrimary,
+    fontFamily: fonts.bold,
+    fontSize: fontSize.lg,
+    marginBottom: spacing.sm + 2,
   },
   logLine: {
-    color: "#ccc",
-    fontSize: 13,
+    color: colors.textSecondary,
+    fontFamily: fonts.regular,
+    fontSize: fontSize.md,
     lineHeight: 19,
     marginBottom: 4,
   },

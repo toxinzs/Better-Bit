@@ -1,6 +1,8 @@
 import React from "react";
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { Relationship } from "../types";
+import { colors, fonts, fontSize, radii, spacing } from "../theme";
 
 const GIFT_AMOUNT = 50;
 
@@ -29,11 +31,12 @@ export default function TextThreadModal({
       <View style={styles.overlay}>
         <View style={styles.phone}>
           <View style={styles.header}>
-            <TouchableOpacity accessibilityRole="button" onPress={onClose}>
-              <Text style={styles.backBtn}>‹ Back</Text>
+            <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} onPress={onClose} style={styles.backWrap}>
+              <Ionicons name="chevron-back" size={20} color={colors.primary} />
+              <Text style={styles.backBtn}>Back</Text>
             </TouchableOpacity>
             <Text style={styles.contactName}>{relationship.name}</Text>
-            <View style={{ width: 50 }} />
+            <View style={{ width: 60 }} />
           </View>
 
           <ScrollView style={styles.thread} contentContainerStyle={styles.threadContent}>
@@ -55,24 +58,17 @@ export default function TextThreadModal({
           </ScrollView>
 
           <View style={styles.actions}>
-            <TouchableOpacity accessibilityRole="button" style={styles.actionBtn} onPress={onText}>
-              <Text style={styles.actionText}>💬 Text</Text>
-            </TouchableOpacity>
+            <ActionButton icon="chatbubble" label="Text" onPress={onText} />
             {isEx && (
               <>
-                <TouchableOpacity accessibilityRole="button" style={styles.actionBtn} onPress={onCall}>
-                  <Text style={styles.actionText}>📞 Call</Text>
-                </TouchableOpacity>
-                <TouchableOpacity accessibilityRole="button" style={styles.actionBtn} onPress={onBootyCall}>
-                  <Text style={styles.actionText}>🔥 Booty Call</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  accessibilityRole="button"
-                  style={[styles.actionBtn, money < GIFT_AMOUNT && styles.actionBtnDisabled]}
+                <ActionButton icon="call" label="Call" onPress={onCall} />
+                <ActionButton icon="flame" label="Booty Call" onPress={onBootyCall} />
+                <ActionButton
+                  icon="gift"
+                  label={`Gift ($${GIFT_AMOUNT})`}
                   onPress={() => onSendGift(GIFT_AMOUNT)}
-                >
-                  <Text style={styles.actionText}>🎁 Gift (${GIFT_AMOUNT})</Text>
-                </TouchableOpacity>
+                  disabled={money < GIFT_AMOUNT}
+                />
               </>
             )}
           </View>
@@ -82,60 +78,91 @@ export default function TextThreadModal({
   );
 }
 
+function ActionButton({
+  icon,
+  label,
+  onPress,
+  disabled,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <TouchableOpacity
+      accessibilityRole="button"
+      activeOpacity={0.7}
+      disabled={disabled}
+      style={[styles.actionBtn, disabled && styles.actionBtnDisabled]}
+      onPress={onPress}
+    >
+      <Ionicons name={icon} size={16} color={colors.textPrimary} />
+      <Text style={styles.actionText}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.75)",
     justifyContent: "center",
     alignItems: "center",
-    padding: 16,
+    padding: spacing.lg,
   },
   phone: {
-    backgroundColor: "#0e0e16",
-    borderRadius: 20,
+    backgroundColor: colors.background,
+    borderRadius: radii.xl,
     width: "100%",
     maxWidth: 420,
     maxHeight: "85%",
     borderWidth: 1,
-    borderColor: "#2a2a3a",
+    borderColor: colors.border,
     overflow: "hidden",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 14,
-    paddingVertical: 14,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: "#2a2a3a",
-    backgroundColor: "#161622",
+    borderBottomColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  backWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: 60,
   },
   backBtn: {
-    color: "#4a9eff",
-    fontSize: 15,
-    width: 50,
+    color: colors.primary,
+    fontFamily: fonts.semiBold,
+    fontSize: fontSize.base,
   },
   contactName: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 15,
+    color: colors.textPrimary,
+    fontFamily: fonts.bold,
+    fontSize: fontSize.lg,
   },
   thread: {
     minHeight: 200,
     maxHeight: 420,
-    backgroundColor: "#0e0e16",
+    backgroundColor: colors.background,
   },
   threadContent: {
-    padding: 14,
+    padding: spacing.md,
   },
   emptyText: {
-    color: "#666",
+    color: colors.textMuted,
     textAlign: "center",
-    fontSize: 13,
-    marginTop: 20,
+    fontFamily: fonts.regular,
+    fontSize: fontSize.md,
+    marginTop: spacing.xl,
   },
   bubbleRow: {
-    marginBottom: 10,
+    marginBottom: spacing.sm + 2,
     maxWidth: "80%",
   },
   bubbleRowLeft: {
@@ -147,54 +174,60 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   bubble: {
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
+    borderRadius: radii.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 1,
   },
   bubbleThem: {
-    backgroundColor: "#2a2a3a",
+    backgroundColor: colors.bubbleThem,
     borderBottomLeftRadius: 4,
   },
   bubbleMe: {
-    backgroundColor: "#2ecc71",
+    backgroundColor: colors.bubbleMe,
     borderBottomRightRadius: 4,
   },
   bubbleTextThem: {
-    color: "#eee",
-    fontSize: 14,
+    color: colors.textPrimary,
+    fontFamily: fonts.regular,
+    fontSize: fontSize.base,
   },
   bubbleTextMe: {
-    color: "#0b1a10",
-    fontSize: 14,
+    color: colors.primaryText,
+    fontFamily: fonts.regular,
+    fontSize: fontSize.base,
   },
   bubbleAge: {
-    color: "#666",
-    fontSize: 10,
+    color: colors.textMuted,
+    fontFamily: fonts.regular,
+    fontSize: fontSize.xs,
     marginTop: 2,
   },
   actions: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
-    padding: 12,
+    gap: spacing.sm,
+    padding: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: "#2a2a3a",
-    backgroundColor: "#161622",
+    borderTopColor: colors.border,
+    backgroundColor: colors.surface,
   },
   actionBtn: {
-    flexGrow: 1,
-    backgroundColor: "#232336",
-    paddingVertical: 10,
-    borderRadius: 10,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    flexGrow: 1,
+    backgroundColor: colors.surfaceRaised,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: radii.md,
     minWidth: "45%",
   },
   actionBtnDisabled: {
     opacity: 0.4,
   },
   actionText: {
-    color: "#fff",
-    fontSize: 13,
-    fontWeight: "600",
+    color: colors.textPrimary,
+    fontSize: fontSize.md,
+    fontFamily: fonts.semiBold,
   },
 });

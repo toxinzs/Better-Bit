@@ -159,3 +159,16 @@ life," "richest," "most kids").
 Visual polish (icons/animations/transitions), sound, then the actual
 iOS/Android build once the web version is content-rich. Still free, no
 IAP, per the rule at the top of this doc.
+
+**Pulled forward and started early** (2026-09-22) — the plain-dark-cards
+look was actively hurting usability well before the rest of this phase's
+turn, so the first slice landed now rather than waiting: a real design
+system (`src/theme.ts` — color/spacing/radius/type tokens), a proper
+font (Nunito, self-hosted via Google Fonts, loaded behind the same gate
+as save hydration so nothing renders in the fallback face), real vector
+icons (`@expo/vector-icons`) replacing raw emoji everywhere in
+interactive chrome, and two reusable primitives (`Card`, `Button`)
+applied across every screen and modal. **Still open for later in this
+phase**: actual animations/transitions (tab switches, stat-bar fills,
+event resolutions are all instant right now), sound (none yet), and a
+custom app icon/splash screen (still Expo's generic defaults).

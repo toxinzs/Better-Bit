@@ -68,6 +68,27 @@ belongs in the engine instead.
   splitting this up was to stop the single-scroll-of-cards layout from
   growing without bound.
 
+### Design system
+
+- `src/theme.ts` — every color/spacing/radius/font-size token. Never hardcode
+  a hex color or raw px value in a screen/component's `StyleSheet` — import
+  from here. Font family is Nunito (`fonts.regular/semiBold/bold/extraBold`,
+  loaded via `@expo-google-fonts/nunito` in `App.tsx` behind the same
+  loading gate as `hydrated`); icons are `@expo/vector-icons`'s `Ionicons`,
+  never raw emoji in interactive UI chrome (tab bar, buttons, headers) —
+  emoji are still fine inside generated flavor/content text (event copy,
+  text-message bodies) since that's content, not chrome.
+- `src/components/Card.tsx` / `Button.tsx` — the two reusable primitives.
+  A new screen's card-shaped sections use `<Card>`, not a bespoke
+  `StyleSheet` block; a new button uses `<Button variant="primary|
+  secondary|danger|ghost">`, not a raw `TouchableOpacity`+`Text` pair,
+  unless the layout genuinely doesn't fit either (e.g. a tab bar item).
+- Event/dialogue choice buttons are deliberately **not** color-coded by
+  variant (no green vs. red choices) — that would imply which option is
+  "correct," and choices in this game are meant to be morally/practically
+  neutral trade-offs. Keep new choice UI neutral (bordered `surfaceRaised`
+  rows), not `primary`/`danger` colored.
+
 ### Testing notes
 
 - `TouchableOpacity` doesn't get `role="button"` in react-native-web

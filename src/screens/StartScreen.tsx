@@ -1,8 +1,17 @@
 import React, { useState } from "react";
 import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../state/gameStore";
+import Button from "../components/Button";
 import { Gender } from "../types";
 import { randomFirstName, randomLastName } from "../data/names";
+import { colors, fonts, fontSize, radii, spacing } from "../theme";
+
+const GENDER_OPTIONS: { key: Gender; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { key: "female", label: "Female", icon: "female" },
+  { key: "male", label: "Male", icon: "male" },
+  { key: "nonbinary", label: "Other", icon: "person" },
+];
 
 export default function StartScreen() {
   const startNewLife = useGameStore((s) => s.startNewLife);
@@ -23,17 +32,25 @@ export default function StartScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Better Bit</Text>
-      <Text style={styles.subtitle}>A life, from birth.</Text>
+      <View style={styles.logoWrap}>
+        <View style={styles.logoBadge}>
+          <Ionicons name="infinite" size={30} color={colors.primaryText} />
+        </View>
+        <Text style={styles.title}>Better Bit</Text>
+        <Text style={styles.subtitle}>A life, from birth.</Text>
+      </View>
 
       <View style={styles.genderRow}>
-        {(["female", "male", "nonbinary"] as Gender[]).map((g) => (
-          <TouchableOpacity accessibilityRole="button"
-            key={g}
-            style={[styles.genderBtn, gender === g && styles.genderBtnActive]}
-            onPress={() => setGender(g)}
+        {GENDER_OPTIONS.map((g) => (
+          <TouchableOpacity
+            accessibilityRole="button"
+            key={g.key}
+            activeOpacity={0.7}
+            style={[styles.genderBtn, gender === g.key && styles.genderBtnActive]}
+            onPress={() => setGender(g.key)}
           >
-            <Text style={styles.genderText}>{g === "nonbinary" ? "Other" : g[0].toUpperCase() + g.slice(1)}</Text>
+            <Ionicons name={g.icon} size={20} color={gender === g.key ? colors.primaryText : colors.textSecondary} />
+            <Text style={[styles.genderText, gender === g.key && styles.genderTextActive]}>{g.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -41,25 +58,20 @@ export default function StartScreen() {
       <TextInput
         style={styles.input}
         placeholder="First name (leave blank for random)"
-        placeholderTextColor="#888"
+        placeholderTextColor={colors.textMuted}
         value={firstName}
         onChangeText={setFirstName}
       />
       <TextInput
         style={styles.input}
         placeholder="Last name (leave blank for random)"
-        placeholderTextColor="#888"
+        placeholderTextColor={colors.textMuted}
         value={lastName}
         onChangeText={setLastName}
       />
 
-      <TouchableOpacity accessibilityRole="button" style={styles.secondaryBtn} onPress={reroll}>
-        <Text style={styles.secondaryText}>🎲 Randomize name</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity accessibilityRole="button" style={styles.primaryBtn} onPress={begin}>
-        <Text style={styles.primaryText}>Begin Life</Text>
-      </TouchableOpacity>
+      <Button label="Randomize name" icon="dice" variant="ghost" onPress={reroll} style={styles.rerollBtn} />
+      <Button label="Begin Life" icon="arrow-forward" variant="primary" size="lg" onPress={begin} style={styles.beginBtn} />
     </SafeAreaView>
   );
 }
@@ -67,73 +79,82 @@ export default function StartScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#12121c",
+    backgroundColor: colors.background,
     alignItems: "center",
     justifyContent: "center",
-    padding: 24,
+    padding: spacing.xl,
+  },
+  logoWrap: {
+    alignItems: "center",
+    marginBottom: spacing.xxl,
+  },
+  logoBadge: {
+    width: 56,
+    height: 56,
+    borderRadius: radii.xl,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.md,
   },
   title: {
-    fontSize: 40,
-    fontWeight: "800",
-    color: "#fff",
-    marginBottom: 4,
+    fontSize: fontSize.display,
+    fontFamily: fonts.extraBold,
+    color: colors.textPrimary,
   },
   subtitle: {
-    fontSize: 15,
-    color: "#999",
-    marginBottom: 32,
+    fontSize: fontSize.base,
+    fontFamily: fonts.regular,
+    color: colors.textSecondary,
+    marginTop: 2,
   },
   genderRow: {
     flexDirection: "row",
-    gap: 10,
-    marginBottom: 20,
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
   },
   genderBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    backgroundColor: "#232336",
+    alignItems: "center",
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radii.md,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: colors.border,
+    gap: 4,
   },
   genderBtnActive: {
-    backgroundColor: "#2ecc71",
-    borderColor: "#2ecc71",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   genderText: {
-    color: "#fff",
-    fontWeight: "600",
+    color: colors.textSecondary,
+    fontFamily: fonts.semiBold,
+    fontSize: fontSize.sm,
+  },
+  genderTextActive: {
+    color: colors.primaryText,
   },
   input: {
     width: "100%",
     maxWidth: 340,
-    backgroundColor: "#1c1c2a",
-    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: "#333",
-    color: "#fff",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 12,
-    fontSize: 15,
+    borderColor: colors.border,
+    color: colors.textPrimary,
+    fontFamily: fonts.regular,
+    paddingHorizontal: spacing.md + 2,
+    paddingVertical: spacing.md,
+    marginBottom: spacing.sm + 2,
+    fontSize: fontSize.lg,
   },
-  secondaryBtn: {
-    marginTop: 4,
-    marginBottom: 24,
+  rerollBtn: {
+    marginTop: spacing.xs,
+    marginBottom: spacing.xl,
   },
-  secondaryText: {
-    color: "#7fd6a0",
-    fontSize: 14,
-  },
-  primaryBtn: {
-    backgroundColor: "#2ecc71",
-    paddingVertical: 16,
-    paddingHorizontal: 48,
-    borderRadius: 14,
-  },
-  primaryText: {
-    color: "#0b1a10",
-    fontWeight: "800",
-    fontSize: 18,
+  beginBtn: {
+    width: "100%",
+    maxWidth: 340,
   },
 });
