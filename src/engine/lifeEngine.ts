@@ -5,8 +5,9 @@ import { randomFirstName, randomLastName } from "../data/names";
 import { MIN_AGE_GYM, MIN_AGE_LIBRARY, MIN_AGE_CONVERSATION } from "./lifeStage";
 import { tickWorldState, hasActiveCondition, effectiveSalary } from "./worldState";
 import { ambientMessageTick } from "./relationships";
-import { tickAssets } from "./assets";
+import { tickAssets, netWorth } from "./assets";
 import { tickDebt } from "./debt";
+import { tickMarket, portfolioValue } from "./stocks";
 
 export { getLifeStage } from "./lifeStage";
 export type { LifeStage } from "./lifeStage";
@@ -15,6 +16,11 @@ export { textRelationship, callRelationship, bootyCall, sendGift } from "./relat
 export { buyCar, sellCar, buyHome, sellHome, netWorth } from "./assets";
 export { takeOutLoan, openCreditCard, payDownLoan, chargeCard } from "./debt";
 export { creditScoreLabel } from "./finance";
+export { buyStock, sellStock, portfolioValue } from "./stocks";
+
+export function totalNetWorth(c: Character, world: WorldState): number {
+  return netWorth(c) + portfolioValue(c, world);
+}
 
 export function createCharacter(
   firstName: string,
@@ -96,6 +102,7 @@ export type AgeUpResult = {
 
 export function ageUp(c: Character, world: WorldState): AgeUpResult {
   tickWorldState(world);
+  tickMarket(world);
 
   c.age += 1;
   c.yearLog = [];

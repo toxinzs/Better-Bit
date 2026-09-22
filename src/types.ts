@@ -75,6 +75,12 @@ export type Loan = {
   limit?: number; // credit cards only
 };
 
+export type PortfolioHolding = {
+  ticker: string;
+  shares: number;
+  costBasis: number; // total $ paid, for gain/loss display
+};
+
 export type LogEntry = {
   age: number;
   text: string;
@@ -88,11 +94,18 @@ export type MacroCondition = {
   endsYear: number;
 };
 
+export type StockState = {
+  ticker: string;
+  price: number;
+  prevPrice: number;
+};
+
 export type WorldState = {
   year: number;
   activeCondition: MacroCondition | null;
   history: MacroCondition[];
   log: string[];
+  stocks?: StockState[];
 };
 
 export type Character = {
@@ -112,6 +125,7 @@ export type Character = {
   home?: OwnedHome | null;
   loans?: Loan[];
   creditScore?: number;
+  portfolio?: PortfolioHolding[];
   relationships: Relationship[];
   yearLog: string[];
   fullLog: LogEntry[];

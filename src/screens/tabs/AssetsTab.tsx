@@ -6,11 +6,13 @@ import Card from "../../components/Card";
 import Button from "../../components/Button";
 import { availableCars, availableHomes } from "../../data/assets";
 import { availablePersonalLoans, availableCreditCards } from "../../data/loans";
-import { netWorth, creditScoreLabel } from "../../engine/lifeEngine";
+import { STOCK_DEFS } from "../../data/stocks";
+import { totalNetWorth, creditScoreLabel } from "../../engine/lifeEngine";
 import { colors, fonts, fontSize, spacing } from "../../theme";
 import { tabStyles } from "./sharedStyles";
 
 const EXTRA_PAYMENT = 500;
+const BUY_AMOUNT = 500;
 
 function creditScoreColor(score: number): string {
   if (score >= 670) return colors.primary;
@@ -20,6 +22,7 @@ function creditScoreColor(score: number): string {
 
 export default function AssetsTab() {
   const character = useGameStore((s) => s.character);
+  const worldState = useGameStore((s) => s.worldState);
   const buyCar = useGameStore((s) => s.buyCar);
   const sellCar = useGameStore((s) => s.sellCar);
   const buyHome = useGameStore((s) => s.buyHome);
@@ -28,6 +31,8 @@ export default function AssetsTab() {
   const openCreditCard = useGameStore((s) => s.openCreditCard);
   const payDownLoan = useGameStore((s) => s.payDownLoan);
   const chargeCard = useGameStore((s) => s.chargeCard);
+  const buyStock = useGameStore((s) => s.buyStock);
+  const sellStock = useGameStore((s) => s.sellStock);
 
   if (!character) return null;
 
@@ -38,12 +43,14 @@ export default function AssetsTab() {
   const hasCard = loans.some((l) => l.kind === "creditCard");
   const loanListings = availablePersonalLoans(character.age, creditScore);
   const cardListings = availableCreditCards(character.age, creditScore);
+  const stocks = worldState.stocks ?? [];
+  const portfolio = character.portfolio ?? [];
 
   return (
     <ScrollView contentContainerStyle={tabStyles.scroll}>
       <Card style={styles.netWorthCard}>
         <Text style={styles.netWorthLabel}>Net Worth</Text>
-        <Text style={styles.netWorthValue}>${netWorth(character).toLocaleString()}</Text>
+        <Text style={styles.netWorthValue}>${totalNetWorth(character, worldState).toLocaleString()}</Text>
       </Card>
 
       <Card>
@@ -217,6 +224,90 @@ export default function AssetsTab() {
               </TouchableOpacity>
             ))}
           </View>
+        )}
+      </Card>
+
+      <Card>
+        <View style={styles.headerRow}>
+          <Ionicons name="trending-up" size={18} color={colors.primary} />
+          <Text style={tabStyles.sectionTitle}>Investments</Text>
+        </View>
+
+        {character.age < 18 ? (
+          <Text style={tabStyles.logLine}>Too young to open a brokerage account yet.</Text>
+        ) : (
+          <>
+            {portfolio.length > 0 && (
+              <View style={styles.loansList}>
+                {portfolio.map((holding) => {
+                  const stock = stocks.find((s) => s.ticker === holding.ticker);
+                  const def = STOCK_DEFS.find((d) => d.ticker === holding.ticker);
+                  const price = stock?.price ?? 0;
+                  const value = Math.round(price * holding.shares);
+                  const gain = value - holding.costBasis;
+                  return (
+                    <View key={holding.ticker} style={styles.loanRow}>
+                      <View style={styles.loanHeaderRow}>
+                        <Text style={styles.ownedName}>
+                          {holding.ticker} · {holding.shares} sh
+                        </Text>
+                        <Text style={styles.ownedValue}>${value.toLocaleString()}</Text>
+                      </View>
+                      <Text style={tabStyles.logLine}>
+                        {def?.name ?? holding.ticker} · ${price.toFixed(2)}/sh ·{" "}
+                        <Text style={{ color: gain >= 0 ? colors.primary : colors.danger }}>
+                          {gain >= 0 ? "+" : "-"}${Math.abs(Math.round(gain)).toLocaleString()}
+                        </Text>
+                      </Text>
+                      <View style={styles.loanBtnRow}>
+                        <Button
+                          label="Sell all"
+                          icon="cash"
+                          size="sm"
+                          variant="secondary"
+                          onPress={() => sellStock(holding.ticker, holding.shares)}
+                        />
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+
+            <Text style={styles.subheading}>Market</Text>
+            {stocks.map((stock) => {
+              const def = STOCK_DEFS.find((d) => d.ticker === stock.ticker);
+              const changePct = stock.prevPrice > 0 ? ((stock.price - stock.prevPrice) / stock.prevPrice) * 100 : 0;
+              const shares = Math.floor(BUY_AMOUNT / stock.price);
+              return (
+                <View key={stock.ticker} style={styles.loanRow}>
+                  <View style={styles.loanHeaderRow}>
+                    <Text style={styles.ownedName}>
+                      {stock.ticker} · {def?.name ?? stock.ticker}
+                    </Text>
+                    <Text style={styles.ownedValue}>${stock.price.toFixed(2)}</Text>
+                  </View>
+                  <Text style={tabStyles.logLine}>
+                    {def?.sector ?? ""} ·{" "}
+                    <Text style={{ color: changePct >= 0 ? colors.primary : colors.danger }}>
+                      {changePct >= 0 ? "+" : ""}
+                      {changePct.toFixed(1)}% this year
+                    </Text>
+                  </Text>
+                  <View style={styles.loanBtnRow}>
+                    <Button
+                      label={`Buy $${BUY_AMOUNT} (${shares} sh)`}
+                      icon="trending-up"
+                      size="sm"
+                      variant="secondary"
+                      disabled={shares < 1 || character.money < shares * stock.price}
+                      onPress={() => buyStock(stock.ticker, shares)}
+                    />
+                  </View>
+                </View>
+              );
+            })}
+          </>
         )}
       </Card>
     </ScrollView>

@@ -25,6 +25,8 @@ import {
   openCreditCard as engineOpenCreditCard,
   payDownLoan as enginePayDownLoan,
   chargeCard as engineChargeCard,
+  buyStock as engineBuyStock,
+  sellStock as engineSellStock,
   Activity,
 } from "../engine/lifeEngine";
 
@@ -59,6 +61,8 @@ type GameState = {
   openCreditCard: (listing: CreditCardListing) => void;
   payDownLoan: (loanId: string, amount: number) => void;
   chargeCard: (loanId: string, amount: number) => void;
+  buyStock: (ticker: string, shares: number) => void;
+  sellStock: (ticker: string, shares: number) => void;
   restart: () => void;
 };
 
@@ -264,6 +268,24 @@ export const useGameStore = create<GameState>((set, get) => ({
     engineChargeCard(character, loanId, amount);
     set({ character: { ...character } });
     persist(character, get().screen, get().worldState);
+  },
+
+  buyStock: (ticker, shares) => {
+    const character = get().character;
+    const worldState = get().worldState;
+    if (!character) return;
+    engineBuyStock(character, worldState, ticker, shares);
+    set({ character: { ...character } });
+    persist(character, get().screen, worldState);
+  },
+
+  sellStock: (ticker, shares) => {
+    const character = get().character;
+    const worldState = get().worldState;
+    if (!character) return;
+    engineSellStock(character, worldState, ticker, shares);
+    set({ character: { ...character } });
+    persist(character, get().screen, worldState);
   },
 
   restart: () => {

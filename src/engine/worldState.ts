@@ -1,5 +1,6 @@
 import { Job, MacroCondition, MacroConditionKind, WorldState } from "../types";
 import { pickWeighted, randomInt } from "./util";
+import { STOCK_DEFS } from "../data/stocks";
 
 type MacroConditionDef = {
   kind: MacroConditionKind;
@@ -48,7 +49,13 @@ const MACRO_CONDITIONS: MacroConditionDef[] = [
 const CHANCE_OF_NEW_CONDITION = 0.05;
 
 export function createInitialWorldState(): WorldState {
-  return { year: 0, activeCondition: null, history: [], log: [] };
+  return {
+    year: 0,
+    activeCondition: null,
+    history: [],
+    log: [],
+    stocks: STOCK_DEFS.map((d) => ({ ticker: d.ticker, price: d.basePrice, prevPrice: d.basePrice })),
+  };
 }
 
 export function tickWorldState(world: WorldState): void {

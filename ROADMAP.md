@@ -159,9 +159,38 @@ schedule and a credit card's interest-then-minimum-payment math both
 matched hand-computed values every year, and the displayed net worth on
 screen matched `money + assets - debt` to the dollar).
 
-**Still open**: a simple stock-market mechanic, taxes, retirement
-savings. All the money events from the event pool remain the connective
-tissue for those.
+**Stock market (done).** Six fictional companies (`src/data/stocks.ts`
+— no real tickers, no real market data, entirely simulated) with prices
+that move every year (`src/engine/stocks.ts`'s `tickMarket`, called
+inside `ageUp()`): a modest baseline drift (+2%/yr, like a real index'
+long-run average) shifted by the active `WorldState` condition (+6%
+boom, -8% recession) plus a random shock scaled to each stock's own
+volatility. Prices are **shared, world-level state** (`WorldState.stocks`,
+seeded in `createInitialWorldState()`), the same reasoning `WorldState`
+itself already uses — everyone in a save watches the same market, and a
+future generation (Legacy DLC) will inherit the same ongoing one instead
+of a fresh one. `buyStock`/`sellStock` support partial sells (real
+cost-basis tracking per holding, for a real gain/loss figure, not just a
+current-value number) and are gated to age 18+ (a "too young to open a
+brokerage account" message below that, same pattern as the car/home
+gates). A new "Investments" card in the Money tab shows owned positions
+(shares, current value, gain/loss in green/red) above a market list
+(price, this-year's % change in green/red, a quick "Buy $500 worth"
+button sized to whatever that buys in whole shares). `totalNetWorth()`
+(new composed export in `lifeEngine.ts` — `netWorth()` itself stays
+car/home/debt-only, doesn't know stocks exist) adds portfolio value on
+top of the existing net worth calculation; `GameOverScreen` and the
+Money tab both switched to it. Verified exactly end to end: buy/sell/
+partial-sell math down to the dollar, a rejected over-limit sell, and
+the displayed net worth on screen matching `money + assets - debt +
+portfolio` by hand — including catching and fixing a real bug the first
+version of this check surfaced (`portfolioValue()` returned fractional
+cents since stock prices carry cents, silently breaking the
+whole-dollar convention every other number in the game follows; now
+rounds like everything else).
+
+**Still open**: taxes, retirement savings. All the money events from the
+event pool remain the connective tissue for those.
 
 **World state (done).** A shared, persistent-per-save `WorldState`
 (`src/types.ts`, `src/engine/worldState.ts`) ticks inside `ageUp()` —

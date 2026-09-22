@@ -5,10 +5,11 @@ import { useGameStore } from "../state/gameStore";
 import Card from "../components/Card";
 import Button from "../components/Button";
 import { colors, fonts, fontSize, spacing } from "../theme";
-import { netWorth } from "../engine/lifeEngine";
+import { totalNetWorth } from "../engine/lifeEngine";
 
 export default function GameOverScreen() {
   const character = useGameStore((s) => s.character);
+  const worldState = useGameStore((s) => s.worldState);
   const restart = useGameStore((s) => s.restart);
 
   if (!character) return null;
@@ -30,7 +31,7 @@ export default function GameOverScreen() {
         <Card>
           <Text style={styles.sectionTitle}>Life summary</Text>
           <SummaryRow icon="briefcase" label="Final job" value={character.job ? character.job.title : "Unemployed"} />
-          <SummaryRow icon="cash" label="Net worth" value={`$${netWorth(character).toLocaleString()}`} />
+          <SummaryRow icon="cash" label="Net worth" value={`$${totalNetWorth(character, worldState).toLocaleString()}`} />
           {character.car && <SummaryRow icon="car-sport" label="Car" value={character.car.name} />}
           {character.home && <SummaryRow icon="home" label="Home" value={character.home.name} />}
           <SummaryRow
