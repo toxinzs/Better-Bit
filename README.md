@@ -11,7 +11,7 @@ targets web now and iOS/Android later without a rewrite.
 
 ## Play it
 
-**[toxinzs.github.io/better-bit](https://toxinzs.github.io/better-bit/)**
+**[toxinzs.github.io/Better-Bit](https://toxinzs.github.io/Better-Bit/)**
 — deployed automatically from `main` via GitHub Actions
 (`.github/workflows/deploy.yml`). Check the in-game "What's New" link on the
 Start screen for the current version and changelog.

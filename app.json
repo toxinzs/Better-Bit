@@ -22,7 +22,7 @@
       "favicon": "./assets/favicon.png"
     },
     "experiments": {
-      "baseUrl": "/better-bit"
+      "baseUrl": "/Better-Bit"
     }
   }
 }
