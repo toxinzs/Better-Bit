@@ -9,9 +9,15 @@ the same codebase targets web now and iOS/Android later.
 **Standing rule, applies to all future work**: nothing is ever behind a
 paywall. No premium currency, no ads, no subscription tier gating
 content, no loot boxes. Every career/activity/relationship/cosmetic is
-unlocked by playing, never by paying. Full reasoning and the phase-by-phase
-content roadmap live in `ROADMAP.md` — read that before adding a system,
-it's the source of truth for what's next and why.
+unlocked by playing, never by paying. Full reasoning and the content
+roadmap live in `ROADMAP.md` — read that before adding a system, it's the
+source of truth for what's next and why. It's organized into **Core
+Updates** (systems every character touches — events, relationships, money,
+world state, identity, presentation) and **DLC Packs** (big standalone
+systems in the shape BitLife would sell as paid DLC — crime, deep
+health/personality, career depth, pets/hobbies, legacy — except free,
+same as everything else here; "DLC" is a scoping label, not a
+monetization tier).
 
 ### Architecture
 
@@ -31,14 +37,15 @@ belongs in the engine instead.
   activities, job application.
 - `src/engine/worldState.ts` — the shared, persistent-per-save macro-event
   layer (Recession/Boom/War/Pandemic). Ticks inside `ageUp()`, not as a
-  separate call — see `ROADMAP.md` Phase 3. `LifeEvent`/`EventChoice`
+  separate call — see `ROADMAP.md`'s "Money & World" update.
+  `LifeEvent`/`EventChoice`
   functions all take `(c: Character, world: WorldState)`; existing events
   that don't care about world state just don't declare the second param
   (TS allows a function with fewer params to satisfy a type expecting
   more, so this never requires touching events that don't use it).
 - `src/data/events/` — the event pool, split by life-stage/category (see
-  `ROADMAP.md` Phase 1). Each event is age-gated and either auto-applies
-  or presents real choices with distinct consequences.
+  `ROADMAP.md`'s "Foundations" update). Each event is age-gated and either
+  auto-applies or presents real choices with distinct consequences.
 - `src/engine/relationships.ts` — texting/calling/booty-call/gift actions
   and ambient message generation (`ambientMessageTick`, called inside
   `ageUp()`). A `Relationship`'s `type` changes to `"ex"` on breakup/
@@ -105,8 +112,8 @@ belongs in the engine instead.
   `scripts/generate-sounds.mjs` (re-run it after editing the note
   definitions in that file to regenerate) rather than sourced externally —
   zero network dependency, zero licensing risk. There's no mute toggle yet
-  (noted in `ROADMAP.md` Phase 9) since there's no settings surface to put
-  one on.
+  (noted in `ROADMAP.md`'s "Presentation" update) since there's no settings
+  surface to put one on.
 - `Animated.Value`s that should reflect a prop change (a stat bar's fill,
   the age-up pulse) need a `useRef` + `useEffect` pair keyed on that prop,
   not a plain animation fired once on mount — see `StatBar.tsx` for the
