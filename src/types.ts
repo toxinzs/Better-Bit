@@ -94,7 +94,7 @@ export type LogEntry = {
   text: string;
 };
 
-export type MacroConditionKind = "recession" | "boom" | "war" | "pandemic";
+export type MacroConditionKind = "recession" | "boom" | "war" | "pandemic" | "crackdown";
 
 export type MacroCondition = {
   kind: MacroConditionKind;
@@ -136,6 +136,7 @@ export type Character = {
   portfolio?: PortfolioHolding[];
   retirement?: Retirement;
   criminalRecord?: boolean;
+  recordCleanYears?: number;
   inJail?: boolean;
   jailYearsLeft?: number;
   jailYearsTotal?: number;
@@ -147,7 +148,11 @@ export type Character = {
 
 export type EventChoice = {
   label: string;
-  effect: (c: Character, world: WorldState) => void;
+  // returning a LifeEvent chains a follow-up choice screen (reusing the
+  // same pendingEvent/EventModal machinery) instead of ending here - see
+  // the court/trial sequence in engine/crime.ts for the pattern. Existing
+  // choices that return nothing are unaffected.
+  effect: (c: Character, world: WorldState) => void | LifeEvent;
   resultText?: (c: Character, world: WorldState) => string;
 };
 

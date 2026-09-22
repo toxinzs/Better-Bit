@@ -342,7 +342,7 @@ verify as its own unit — the "DLC" framing is purely organizational (see
 "How this roadmap is organized" above). All free, all unlocked from the
 start once built, same as everything else.
 
-### DLC: Crime & Punishment — v1 done, court/lawyers still open
+### DLC: Crime & Punishment — v1 + v2 done, prison activities still open
 
 **v1 (done).** A real Crime tab with eight crimes across three tiers
 (petty/moderate/serious — `src/data/crimes.ts`), each with a real success
@@ -350,32 +350,60 @@ chance (`successChance()` in `src/engine/crime.ts` — your smarts shifts
 it, not a flat roll) and a real reward range on success. Getting caught
 doesn't auto-resolve: it produces a synthetic "arrest" `LifeEvent` reusing
 the exact same `pendingEvent`/`EventModal` machinery `ageUp()` already
-uses for random events, so no separate UI was needed for it. The choice
-is real — pay the bail amount to settle it with just a record (a real
-credit score hit, -25), or can't/won't pay and do the time (inJail=true,
-a rolled sentence, a bigger credit hit, -50, and your job is gone). Jail
-is its own branch inside `ageUp()`: no job income (naturally, since the
-job was cleared), no random civilian events, a dedicated sentence tick
-instead (`tickSentence()` — countdown, a 15% parole roll once you've
-served half, release), and real hardship (extra happiness loss every
-year, a 10% chance of a fight). A criminal record follows you for real:
-`data/jobs.ts` gained `requiresCleanRecord` on the trust-based jobs
-(teacher, nurse, doctor, lawyer, accountant, bank teller), and
-`availableJobs()` filters them out — verified end to end, including that
-non-trust jobs (software engineer, electrician, marketing manager) stay
-open. Verified exactly (deterministic `Math.random` overrides in test):
-success/failure rolls, sentence length matching the roll formula by
-hand, bail/jail credit score deltas to the point, and a full 3-year jail
-countdown to release.
+uses for random events, so no separate UI was needed for it. Jail is its
+own branch inside `ageUp()`: no job income (naturally, since the job was
+cleared), no random civilian events, a dedicated sentence tick instead
+(`tickSentence()` — countdown, a 15% parole roll once you've served half,
+release), and real hardship (extra happiness loss every year, a 10%
+chance of a fight). A criminal record follows you for real: `data/jobs.ts`
+gained `requiresCleanRecord` on the trust-based jobs (teacher, nurse,
+doctor, lawyer, accountant, bank teller), and `availableJobs()` filters
+them out.
 
-**Deliberately trimmed for v1, not forgotten**: no court/trial sequence
-(bail effectively resolves the case for now — "your lawyer got you a
-deal" is the unstated flavor), no lawyer-quality tradeoff, no
-`WorldState` crime-wave/crackdown condition yet (still the planned tie-in
-once this needs raising the stakes), a criminal record never expires
-(no path back to a clean record yet), and prison itself has no activities
+**v2 — the court/lawyers pass (done).** What v1 punted on. The arrest
+choice is now a real two-step court sequence instead of a single "pay
+bail" screen: **plead guilty** for a certain, halved sentence, or **fight
+the charges**, which chains a second choice screen — *"who's defending
+you?"* — Public Defender (free, worse odds), Hired Lawyer, or Top Lawyer
+(both cost real money scaled to the crime's tier, and shift the
+conviction-avoidance chance), each filtered out of the list entirely if
+you can't afford it. The trial verdict is a real roll (crime tier + lawyer
+quality + your smarts + whether a `crackdown` is active), landing on
+either full acquittal (no record, a happiness boost) or conviction at the
+*full*, unreduced sentence — meaningfully worse than taking the guilty-
+plea deal, which is the actual risk/reward the choice is built on.
+
+This needed a real engine capability that didn't exist before: **chained
+choice events**. `EventChoice.effect` can now optionally return a
+follow-up `LifeEvent` (`void | LifeEvent`, so all ~100 existing events
+are untouched — they just don't return anything), and `resolveEvent`
+passes it back up so the store sets it as the *next* `pendingEvent`
+instead of clearing it. Same `EventModal`, next screen. This is now the
+standing pattern for any future player-initiated action that needs a
+real multi-step choice, not just crime.
+
+A `WorldState` **crackdown** condition joined Recession/Boom/War/Pandemic
+(same shape, `src/engine/worldState.ts`) — while active, both the
+initial success chance to commit a crime *and* the trial's conviction
+chance get worse, the stakes-raising tie-in v1 had noted as planned.
+**Expungement** closes the loop v1 left open: `recordCleanYears` ticks up
+every year outside jail (naturally starts counting from release, not
+conviction, since the tick is skipped while `c.inJail`), resets to 0 on
+any new conviction, and once it hits 7, a "Petition to expunge" action
+appears in the Crime tab (a real filing fee, a real smarts-shifted
+success chance) that can clear the record for good.
+
+Verified exactly (deterministic `Math.random` overrides): the guilty-plea
+sentence math, the chained trial event appearing with the right
+crime-tier-scaled lawyer costs, conviction/acquittal credit-score deltas,
+lawyer-tier affordability filtering down to just the Public Defender,
+expungement's exact fee and gating, and the clean-years clock ticking
+correctly outside jail.
+
+**Still open, not forgotten**: prison itself still has no activities
 beyond the automatic sentence tick (no yard time/library/cellmate
-choices). All real next slices for this pack, not a different pack.
+choices) — the next natural slice for this pack whenever it's picked
+back up.
 
 ### DLC: Mind & Body — not started
 

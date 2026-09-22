@@ -4,7 +4,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../../state/gameStore";
 import Card from "../../components/Card";
 import { availableCrimes, CrimeDef } from "../../data/crimes";
-import { successChance } from "../../engine/lifeEngine";
+import {
+  successChance,
+  canPetitionExpungement,
+  hasActiveCondition,
+  EXPUNGEMENT_FEE,
+  EXPUNGEMENT_ELIGIBLE_YEARS,
+} from "../../engine/lifeEngine";
 import { colors, fonts, fontSize, radii, spacing } from "../../theme";
 import { tabStyles } from "./sharedStyles";
 
@@ -16,7 +22,9 @@ const TIER_META: Record<CrimeDef["tier"], { label: string; color: string }> = {
 
 export default function CrimeTab() {
   const character = useGameStore((s) => s.character);
+  const worldState = useGameStore((s) => s.worldState);
   const commitCrime = useGameStore((s) => s.commitCrime);
+  const petitionExpungement = useGameStore((s) => s.petitionExpungement);
 
   if (!character) return null;
 
@@ -39,14 +47,24 @@ export default function CrimeTab() {
   }
 
   const crimes = availableCrimes(character.age);
+  const crackdown = hasActiveCondition(worldState, "crackdown");
+  const cleanYears = character.recordCleanYears ?? 0;
+  const eligibleForExpungement = canPetitionExpungement(character);
 
   return (
     <ScrollView contentContainerStyle={tabStyles.scroll}>
       <Card>
         <Text style={tabStyles.sectionTitle}>Crime</Text>
         <Text style={tabStyles.logLine}>
-          Real risk, real reward. Getting caught means a record — and maybe time served.
+          Real risk, real reward. Get caught and it's a real trial — plead guilty for a certain, lighter deal, or fight
+          it and risk worse.
         </Text>
+        {crackdown && (
+          <View style={styles.recordBadge}>
+            <Ionicons name="alert-circle" size={14} color={colors.danger} />
+            <Text style={styles.recordBadgeText}>Police are cracking down — odds are worse right now</Text>
+          </View>
+        )}
         {character.criminalRecord && (
           <View style={styles.recordBadge}>
             <Ionicons name="warning" size={14} color={colors.danger} />
@@ -54,6 +72,30 @@ export default function CrimeTab() {
           </View>
         )}
       </Card>
+
+      {character.criminalRecord && (
+        <Card>
+          <Text style={tabStyles.sectionTitle}>Your Record</Text>
+          <Text style={tabStyles.logLine}>
+            {cleanYears}/{EXPUNGEMENT_ELIGIBLE_YEARS} clean years since your last conviction.
+          </Text>
+          {eligibleForExpungement ? (
+            <TouchableOpacity
+              accessibilityRole="button"
+              activeOpacity={0.7}
+              style={styles.commitBtn}
+              onPress={petitionExpungement}
+            >
+              <Ionicons name="document-text" size={14} color={colors.textPrimary} />
+              <Text style={styles.commitBtnText}>Petition to expunge (${EXPUNGEMENT_FEE.toLocaleString()})</Text>
+            </TouchableOpacity>
+          ) : (
+            <Text style={tabStyles.logLine}>
+              Eligible for expungement after {EXPUNGEMENT_ELIGIBLE_YEARS} clean years.
+            </Text>
+          )}
+        </Card>
+      )}
 
       {crimes.length === 0 && (
         <Card>
@@ -63,7 +105,7 @@ export default function CrimeTab() {
 
       {crimes.map((crime) => {
         const tier = TIER_META[crime.tier];
-        const chance = Math.round(successChance(crime, character.stats.smarts) * 100);
+        const chance = Math.round(successChance(crime, character.stats.smarts, worldState) * 100);
         return (
           <Card key={crime.id}>
             <View style={styles.headerRow}>
@@ -74,8 +116,10 @@ export default function CrimeTab() {
             </View>
             <Text style={tabStyles.logLine}>
               {chance}% chance to pull it off
-              {crime.rewardMax > 0 ? ` · up to $${crime.rewardMax.toLocaleString()}` : ""} · bail $
-              {crime.bailAmount.toLocaleString()}
+              {crime.rewardMax > 0 ? ` · up to $${crime.rewardMax.toLocaleString()}` : ""}
+              {crime.sentenceMaxYears > 0
+                ? ` · ${crime.sentenceMinYears}-${crime.sentenceMaxYears}yr if convicted`
+                : ""}
             </Text>
             <TouchableOpacity
               accessibilityRole="button"

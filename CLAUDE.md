@@ -36,8 +36,8 @@ belongs in the engine instead.
   education/salary progression, death rolls, random event selection,
   activities, job application.
 - `src/engine/worldState.ts` — the shared, persistent-per-save macro-event
-  layer (Recession/Boom/War/Pandemic). Ticks inside `ageUp()`, not as a
-  separate call — see `ROADMAP.md`'s "Money & World" update.
+  layer (Recession/Boom/War/Pandemic/Crackdown). Ticks inside `ageUp()`,
+  not as a separate call — see `ROADMAP.md`'s "Money & World" update.
   `LifeEvent`/`EventChoice`
   functions all take `(c: Character, world: WorldState)`; existing events
   that don't care about world state just don't declare the second param
@@ -101,18 +101,33 @@ belongs in the engine instead.
   adding to `assets.ts`/`finance.ts`/`debt.ts`/`stocks.ts` or a sibling
   (taxes/retirement) — it's more detail than belongs in this file.
 - `src/data/crimes.ts` / `src/engine/crime.ts` — the first DLC pack
-  (Crime & Punishment, v1). `commitCrime(c, id)` returns a synthetic
+  (Crime & Punishment). `commitCrime(c, id, world)` returns a synthetic
   `LifeEvent | null` — `null` on success (resolved immediately), a real
   `LifeEvent` on getting caught, which the store sets as `pendingEvent`
   and `EventModal` renders exactly like a random event's choice. This is
   the pattern for any future player-initiated action (not an `ageUp()`
   draw) that needs a real choice: build a `LifeEvent` in the engine,
   hand it back to the caller, let the store set `pendingEvent` with it —
-  don't build a second choice-UI component. `tickSentence(c)` is called
-  from inside `ageUp()`, not as a standalone action — see the
-  `c.inJail` branch there (it replaces the normal event-pool draw
-  entirely while incarcerated, and the job income step already no-ops
-  on its own since sentencing clears `c.job`).
+  don't build a second choice-UI component. **Chained multi-step choices**
+  (the court sequence — plead guilty vs. fight it, then a lawyer pick):
+  an `EventChoice.effect` can return `void | LifeEvent` — returning a
+  `LifeEvent` chains it as the *next* `pendingEvent` instead of clearing
+  it, so a sequence of screens reuses the same `EventModal` with no new
+  component. When a choice's `resultText` needs to describe an outcome
+  that was rolled live inside its own `effect` (not knowable in advance,
+  unlike a pre-rolled sentence length), share it via a closure variable
+  declared *outside* both functions, mutated in `effect`, read in
+  `resultText` — `resolveEvent` always calls them back to back, see
+  `buildTrialEvent`'s `convicted` variable for the pattern. Don't try to
+  infer the outcome from post-effect character state instead — that
+  breaks the moment the character already had unrelated state (e.g. an
+  existing record) before this exact effect ran. `tickSentence(c)` and
+  `tickRecordClock(c)` are called from inside `ageUp()`, not as
+  standalone actions — see the `c.inJail` branch there (jail replaces
+  the normal event-pool draw entirely, and the job income step already
+  no-ops on its own since sentencing clears `c.job`; the record clock
+  only ticks in the non-jail branch, which is what makes it naturally
+  count "years since release" without extra bookkeeping).
 - `src/state/gameStore.ts` — zustand store wiring the engine to the UI,
   persists to `AsyncStorage`. **`worldState` is never reset by `restart()`**
   — it's the one field that deliberately survives a new life. `persist()`

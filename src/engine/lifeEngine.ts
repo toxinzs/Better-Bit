@@ -10,7 +10,7 @@ import { tickDebt } from "./debt";
 import { tickMarket, portfolioValue } from "./stocks";
 import { incomeTax } from "./taxes";
 import { applyContribution, tickRetirementGrowth, retirementBalance } from "./retirement";
-import { tickSentence } from "./crime";
+import { tickSentence, tickRecordClock } from "./crime";
 
 export { getLifeStage } from "./lifeStage";
 export type { LifeStage } from "./lifeStage";
@@ -22,7 +22,14 @@ export { creditScoreLabel } from "./finance";
 export { buyStock, sellStock, portfolioValue } from "./stocks";
 export { incomeTax, takeHomePay, effectiveTaxRate } from "./taxes";
 export { setContributionRate, withdrawRetirement, retirementBalance } from "./retirement";
-export { commitCrime, successChance } from "./crime";
+export {
+  commitCrime,
+  successChance,
+  petitionExpungement,
+  canPetitionExpungement,
+  EXPUNGEMENT_FEE,
+  EXPUNGEMENT_ELIGIBLE_YEARS,
+} from "./crime";
 
 export function totalNetWorth(c: Character, world: WorldState): number {
   return netWorth(c) + portfolioValue(c, world) + retirementBalance(c);
@@ -186,6 +193,8 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
   if (c.inJail) {
     tickSentence(c);
   } else {
+    tickRecordClock(c);
+
     // pick events: apply auto-effect ones immediately, hold at most one choice event
     const pool = eligibleEvents(c, world);
     const autoPool = pool.filter((e) => !e.choices);
@@ -217,15 +226,19 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
   return { died: false, pendingEvent };
 }
 
-export function resolveEvent(c: Character, world: WorldState, event: LifeEvent, choiceIndex: number) {
+// Returns a follow-up LifeEvent when the chosen choice's effect chains one
+// (see the EventChoice.effect return type) - the caller (the store) sets
+// that as the next pendingEvent instead of clearing it.
+export function resolveEvent(c: Character, world: WorldState, event: LifeEvent, choiceIndex: number): LifeEvent | undefined {
   const choice = event.choices?.[choiceIndex];
-  if (!choice) return;
+  if (!choice) return undefined;
   if (event.once) c.triggeredEvents.push(event.id);
-  choice.effect(c, world);
+  const next = choice.effect(c, world);
   const baseText = event.text(c, world);
   const resultText = choice.resultText?.(c, world);
   c.yearLog.push(resultText ? `${baseText} ${resultText}` : baseText);
   c.fullLog.push({ age: c.age, text: c.yearLog[c.yearLog.length - 1] });
+  return next || undefined;
 }
 
 export type Activity = "gym" | "library" | "doctor";

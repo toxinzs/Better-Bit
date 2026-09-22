@@ -44,6 +44,14 @@ const MACRO_CONDITIONS: MacroConditionDef[] = [
     startText: "🦠 A pandemic is spreading.",
     endText: "🦠 The pandemic has run its course.",
   },
+  {
+    kind: "crackdown",
+    weight: 2,
+    minDuration: 1,
+    maxDuration: 3,
+    startText: "🚨 Police are cracking down. Arrests are up and judges aren't feeling lenient.",
+    endText: "🚨 The crackdown has eased off.",
+  },
 ];
 
 const CHANCE_OF_NEW_CONDITION = 0.05;

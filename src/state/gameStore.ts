@@ -30,6 +30,7 @@ import {
   setContributionRate as engineSetContributionRate,
   withdrawRetirement as engineWithdrawRetirement,
   commitCrime as engineCommitCrime,
+  petitionExpungement as enginePetitionExpungement,
   Activity,
 } from "../engine/lifeEngine";
 
@@ -69,6 +70,7 @@ type GameState = {
   setContributionRate: (ratePercent: number) => void;
   withdrawRetirement: (amount: number) => void;
   commitCrime: (crimeId: string) => void;
+  petitionExpungement: () => void;
   restart: () => void;
 };
 
@@ -135,8 +137,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   chooseEventOption: (choiceIndex) => {
     const { character, pendingEvent, worldState } = get();
     if (!character || !pendingEvent) return;
-    engineResolveEvent(character, worldState, pendingEvent, choiceIndex);
-    set({ character: { ...character }, pendingEvent: null });
+    // a chained follow-up (e.g. the court sequence) becomes the next
+    // pendingEvent instead of clearing it - same EventModal, next screen
+    const next = engineResolveEvent(character, worldState, pendingEvent, choiceIndex);
+    set({ character: { ...character }, pendingEvent: next ?? null });
     persist(character, get().screen, worldState);
   },
 
@@ -312,11 +316,20 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   commitCrime: (crimeId) => {
     const character = get().character;
+    const worldState = get().worldState;
     if (!character) return;
     // if caught, this returns a synthetic arrest LifeEvent - reuse the same
     // pendingEvent/EventModal machinery ageUp() already uses for choices
-    const arrestEvent = engineCommitCrime(character, crimeId);
+    const arrestEvent = engineCommitCrime(character, crimeId, worldState);
     set({ character: { ...character }, pendingEvent: arrestEvent ?? get().pendingEvent });
+    persist(character, get().screen, worldState);
+  },
+
+  petitionExpungement: () => {
+    const character = get().character;
+    if (!character) return;
+    enginePetitionExpungement(character);
+    set({ character: { ...character } });
     persist(character, get().screen, get().worldState);
   },
 
