@@ -1,5 +1,5 @@
-import React from "react";
-import { StyleSheet, Text, TouchableOpacity, ViewStyle } from "react-native";
+import React, { useRef } from "react";
+import { Animated, Pressable, StyleSheet, Text, ViewStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
 
@@ -24,24 +24,32 @@ export default function Button({
 }) {
   const variantStyle = VARIANT_STYLES[variant];
   const sizeStyle = SIZE_STYLES[size];
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const pressIn = () => Animated.spring(scale, { toValue: 0.95, friction: 5, useNativeDriver: true }).start();
+  const pressOut = () => Animated.spring(scale, { toValue: 1, friction: 4, useNativeDriver: true }).start();
 
   return (
-    <TouchableOpacity
+    <Pressable
       accessibilityRole="button"
-      activeOpacity={0.7}
       disabled={disabled}
       onPress={onPress}
-      style={[
-        styles.base,
-        sizeStyle.container,
-        { backgroundColor: variantStyle.background },
-        disabled && styles.disabled,
-        style,
-      ]}
+      onPressIn={pressIn}
+      onPressOut={pressOut}
     >
-      {icon && <Ionicons name={icon} size={sizeStyle.iconSize} color={variantStyle.color} style={styles.icon} />}
-      <Text style={[styles.label, sizeStyle.label, { color: variantStyle.color }]}>{label}</Text>
-    </TouchableOpacity>
+      <Animated.View
+        style={[
+          styles.base,
+          sizeStyle.container,
+          { backgroundColor: variantStyle.background, transform: [{ scale }] },
+          disabled && styles.disabled,
+          style,
+        ]}
+      >
+        {icon && <Ionicons name={icon} size={sizeStyle.iconSize} color={variantStyle.color} style={styles.icon} />}
+        <Text style={[styles.label, sizeStyle.label, { color: variantStyle.color }]}>{label}</Text>
+      </Animated.View>
+    </Pressable>
   );
 }
 

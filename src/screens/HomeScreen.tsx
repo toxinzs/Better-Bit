@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated, Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../state/gameStore";
 import EventModal from "../components/EventModal";
@@ -8,6 +8,7 @@ import LifeTab from "./tabs/LifeTab";
 import PeopleTab from "./tabs/PeopleTab";
 import CareerTab from "./tabs/CareerTab";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
+import { playSound } from "../sound";
 
 type Tab = "life" | "people" | "career";
 
@@ -30,6 +31,37 @@ export default function HomeScreen() {
   const [tab, setTab] = useState<Tab>("life");
   const [viewingThreadId, setViewingThreadId] = useState<string | null>(null);
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    fadeAnim.setValue(0);
+    Animated.timing(fadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  }, [tab, fadeAnim]);
+
+  const ageScale = useRef(new Animated.Value(1)).current;
+  const prevAge = useRef(character?.age);
+  useEffect(() => {
+    if (character && prevAge.current !== character.age) {
+      ageScale.setValue(1.4);
+      Animated.spring(ageScale, { toValue: 1, friction: 4, useNativeDriver: true }).start();
+      prevAge.current = character.age;
+    }
+  }, [character?.age, ageScale]);
+
+  const ageBtnScale = useRef(new Animated.Value(1)).current;
+  const ageBtnPressIn = () => Animated.spring(ageBtnScale, { toValue: 0.96, friction: 5, useNativeDriver: true }).start();
+  const ageBtnPressOut = () => Animated.spring(ageBtnScale, { toValue: 1, friction: 4, useNativeDriver: true }).start();
+
+  const handleAgeUp = () => {
+    ageUp();
+    const after = useGameStore.getState().character;
+    playSound(after && !after.alive ? "gameOver" : "ageUp");
+  };
+
+  const handleChoose = (choiceIndex: number) => {
+    playSound("choice");
+    chooseEventOption(choiceIndex);
+  };
+
   if (!character) return null;
 
   const viewingThread = character.relationships.find((r) => r.id === viewingThreadId);
@@ -42,7 +74,10 @@ export default function HomeScreen() {
             {character.firstName} {character.lastName}
           </Text>
           <View style={styles.metaRow}>
-            <Text style={styles.metaText}>Age {character.age}</Text>
+            <Text style={styles.metaText}>Age </Text>
+            <Animated.Text style={[styles.metaText, styles.ageValue, { transform: [{ scale: ageScale }] }]}>
+              {character.age}
+            </Animated.Text>
             <Text style={styles.metaDivider}>·</Text>
             <Text style={styles.metaText}>{character.job ? character.job.title : "Unemployed"}</Text>
           </View>
@@ -53,11 +88,11 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <View style={styles.tabContent}>
+      <Animated.View style={[styles.tabContent, { opacity: fadeAnim }]}>
         {tab === "life" && <LifeTab />}
         {tab === "people" && <PeopleTab onOpenThread={setViewingThreadId} />}
         {tab === "career" && <CareerTab />}
-      </View>
+      </Animated.View>
 
       <View style={styles.bottomArea}>
         <View style={styles.tabBar}>
@@ -74,24 +109,26 @@ export default function HomeScreen() {
             </TouchableOpacity>
           ))}
         </View>
-        <TouchableOpacity accessibilityRole="button" activeOpacity={0.8} style={styles.ageBtn} onPress={ageUp}>
-          <Text style={styles.ageBtnText}>Age Up</Text>
-          <Ionicons name="arrow-forward" size={16} color={colors.primaryText} />
-        </TouchableOpacity>
+        <Pressable accessibilityRole="button" onPress={handleAgeUp} onPressIn={ageBtnPressIn} onPressOut={ageBtnPressOut}>
+          <Animated.View style={[styles.ageBtn, { transform: [{ scale: ageBtnScale }] }]}>
+            <Text style={styles.ageBtnText}>Age Up</Text>
+            <Ionicons name="arrow-forward" size={16} color={colors.primaryText} />
+          </Animated.View>
+        </Pressable>
       </View>
 
       {pendingEvent && (
-        <EventModal event={pendingEvent} character={character} world={worldState} onChoose={chooseEventOption} />
+        <EventModal key={pendingEvent.id} event={pendingEvent} character={character} world={worldState} onChoose={handleChoose} />
       )}
 
       {viewingThread && (
         <TextThreadModal
           relationship={viewingThread}
           money={character.money}
-          onText={() => textRelationship(viewingThread.id)}
-          onCall={() => callRelationship(viewingThread.id)}
-          onBootyCall={() => bootyCall(viewingThread.id)}
-          onSendGift={(amount) => sendGift(viewingThread.id, amount)}
+          onText={() => { playSound("sent"); textRelationship(viewingThread.id); }}
+          onCall={() => { playSound("sent"); callRelationship(viewingThread.id); }}
+          onBootyCall={() => { playSound("sent"); bootyCall(viewingThread.id); }}
+          onSendGift={(amount) => { playSound("sent"); sendGift(viewingThread.id, amount); }}
           onClose={() => setViewingThreadId(null)}
         />
       )}
@@ -128,6 +165,10 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     fontFamily: fonts.regular,
     color: colors.textSecondary,
+  },
+  ageValue: {
+    fontFamily: fonts.bold,
+    color: colors.textPrimary,
   },
   metaDivider: {
     color: colors.textMuted,

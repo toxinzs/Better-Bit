@@ -14,6 +14,10 @@ import HomeScreen from "./src/screens/HomeScreen";
 import GameOverScreen from "./src/screens/GameOverScreen";
 import { colors } from "./src/theme";
 
+if (typeof window !== "undefined") {
+  (window as any).__store = useGameStore;
+}
+
 export default function App() {
   const screen = useGameStore((s) => s.screen);
   const hydrated = useGameStore((s) => s.hydrated);

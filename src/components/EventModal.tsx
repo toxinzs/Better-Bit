@@ -1,5 +1,5 @@
-import React from "react";
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { Animated, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Character, LifeEvent, WorldState } from "../types";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
@@ -15,10 +15,20 @@ export default function EventModal({
   world: WorldState;
   onChoose: (choiceIndex: number) => void;
 }) {
+  const scale = useRef(new Animated.Value(0.85)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(scale, { toValue: 1, friction: 7, tension: 60, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+    ]).start();
+  }, [scale, opacity]);
+
   return (
     <Modal transparent animationType="fade">
       <View style={styles.overlay}>
-        <View style={styles.card}>
+        <Animated.View style={[styles.card, { opacity, transform: [{ scale }] }]}>
           <View style={styles.badge}>
             <Ionicons name="sparkles" size={20} color={colors.gold} />
           </View>
@@ -37,7 +47,7 @@ export default function EventModal({
               </TouchableOpacity>
             ))}
           </View>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );

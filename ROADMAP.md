@@ -51,6 +51,16 @@ own beat), divorce, parenting choices, siblings, grandparents — all
 dating *pool* (choosing between several potential partners at once, not
 just one candidate per event) is still open for later.
 
+**Open, not started**: the Relationships list (`PeopleTab`) currently
+shows every action for every person, all the time — fine at 5 relationships,
+already a lot at 15+. Should become collapsed rows by default (name,
+relation, level) that expand on tap to reveal the action set — same
+actions as today, just not all visible at once. Room to grow the action
+set per relation type once it expands (right now family/friends only get
+Spend Time/Talk/Messages; an expanded row is exactly where a "Give a
+gift," "Have a difficult conversation," or type-specific action later
+would go without recluttering the collapsed view).
+
 **Exes + texting (done).** BitLife just deletes an ex from your life the
 moment you break up (`alive: false`) — a real bug in our own earlier code
 too, now fixed: breaking up, getting caught cheating, or divorcing changes
@@ -168,7 +178,43 @@ font (Nunito, self-hosted via Google Fonts, loaded behind the same gate
 as save hydration so nothing renders in the fallback face), real vector
 icons (`@expo/vector-icons`) replacing raw emoji everywhere in
 interactive chrome, and two reusable primitives (`Card`, `Button`)
-applied across every screen and modal. **Still open for later in this
-phase**: actual animations/transitions (tab switches, stat-bar fills,
-event resolutions are all instant right now), sound (none yet), and a
-custom app icon/splash screen (still Expo's generic defaults).
+applied across every screen and modal.
+
+**Next slice (done)**: real animations — `StatBar` fill eases via
+`Animated.timing` instead of snapping, with a value-pulse on change; tab
+switches cross-fade; the age number pulses on `ageUp()`; the Age Up
+button and every `Button` press spring-scale down; `EventModal` enters
+with a scale+fade spring (remounts per-event via a `key={event.id}` so
+the entrance replays every time, not just the first). A first sound pass
+landed alongside it: four short tones synthesized by
+`scripts/generate-sounds.mjs` (self-generated, zero network/licensing
+dependency) played via `expo-audio` — Age Up, an event choice, any ex
+action (text/call/booty-call/gift), and game over (which pre-empts the
+Age Up cue on the turn a character actually dies).
+
+**Still open for later in this phase**: a mute/volume toggle (there's no
+settings surface at all yet to put one on), and a custom app icon/splash
+screen (still Expo's generic defaults).
+
+## Phase 10 — identity: regional names & appearance
+
+Character creation today is bare: a gender picker and two free-text name
+fields, defaulting to one small, culturally narrow hardcoded pool
+(`src/data/names.ts` — about a dozen first names per gender, 15 last
+names total) with no concept of where a character is *from*. The ask:
+add a real **country/region of origin** to character creation, then make
+two things actually depend on it —
+- **Names**: hundreds of real, region-appropriate first/last names per
+  culture, not one pool reused for everyone regardless of origin.
+- **Appearance**: `Stats.looks` is currently just a 0-100 number with no
+  description behind it at all — no appearance system exists yet, visual
+  or textual. Whatever gets built (starting with descriptive flavor text
+  tied to origin, since there's no avatar/portrait system to hang a visual
+  version on yet) needs to be demographically plausible for the chosen
+  region, not randomized independent of it.
+
+This is a real content-research phase, not a quick data add — doing
+regional naming conventions and appearance respectfully means actually
+sourcing accurate per-region data, not guessing. Touches character
+creation UI (a region/country picker on `StartScreen`) and the `Character`
+model (a new origin field). Not started.

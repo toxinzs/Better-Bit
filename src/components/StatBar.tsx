@@ -1,5 +1,5 @@
-import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { Animated, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
 
@@ -12,6 +12,26 @@ const STAT_META: Record<string, { color: string; icon: keyof typeof Ionicons.gly
 
 export default function StatBar({ label, value }: { label: string; value: number }) {
   const meta = STAT_META[label] ?? { color: colors.primary, icon: "ellipse" as const };
+  const clamped = Math.max(0, Math.min(100, value));
+
+  const width = useRef(new Animated.Value(clamped)).current;
+  const valueScale = useRef(new Animated.Value(1)).current;
+  const prevValue = useRef(clamped);
+
+  useEffect(() => {
+    Animated.timing(width, {
+      toValue: clamped,
+      duration: 450,
+      useNativeDriver: false,
+    }).start();
+
+    if (prevValue.current !== clamped) {
+      valueScale.setValue(1.35);
+      Animated.spring(valueScale, { toValue: 1, friction: 4, useNativeDriver: false }).start();
+      prevValue.current = clamped;
+    }
+  }, [clamped, width, valueScale]);
+
   return (
     <View style={styles.row}>
       <View style={styles.labelWrap}>
@@ -19,9 +39,17 @@ export default function StatBar({ label, value }: { label: string; value: number
         <Text style={styles.label}>{label}</Text>
       </View>
       <View style={styles.track}>
-        <View style={[styles.fill, { width: `${Math.max(0, Math.min(100, value))}%`, backgroundColor: meta.color }]} />
+        <Animated.View
+          style={[
+            styles.fill,
+            {
+              backgroundColor: meta.color,
+              width: width.interpolate({ inputRange: [0, 100], outputRange: ["0%", "100%"] }),
+            },
+          ]}
+        />
       </View>
-      <Text style={styles.value}>{Math.round(value)}</Text>
+      <Animated.Text style={[styles.value, { transform: [{ scale: valueScale }] }]}>{Math.round(clamped)}</Animated.Text>
     </View>
   );
 }
