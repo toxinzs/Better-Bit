@@ -114,6 +114,13 @@ belongs in the engine instead.
   a new card stacked onto an existing one — the whole point of splitting
   this up was to stop the single-scroll-of-cards layout from growing
   without bound.
+- `src/version.ts` — `APP_VERSION` and `CHANGELOG` (newest entry first).
+  Bump the version and add a matching changelog entry whenever a Core
+  Update or DLC pack lands (minor bump) or a real fix ships (patch
+  bump) — this is what makes the game feel like it's actually shipping
+  builds, not just accumulating features invisibly. `WhatsNewModal`
+  (opened from a small "v1.0.0 · What's New" link on `StartScreen`)
+  reads straight from `CHANGELOG`; no separate UI content to maintain.
 
 ### Design system
 

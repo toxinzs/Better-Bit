@@ -3,8 +3,10 @@ import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } fro
 import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../state/gameStore";
 import Button from "../components/Button";
+import WhatsNewModal from "../components/WhatsNewModal";
 import { Gender } from "../types";
 import { randomFirstName, randomLastName } from "../data/names";
+import { APP_VERSION } from "../version";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
 
 const GENDER_OPTIONS: { key: Gender; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
@@ -18,6 +20,7 @@ export default function StartScreen() {
   const [gender, setGender] = useState<Gender>("nonbinary");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [showWhatsNew, setShowWhatsNew] = useState(false);
 
   const reroll = () => {
     setFirstName(randomFirstName(gender));
@@ -72,6 +75,12 @@ export default function StartScreen() {
 
       <Button label="Randomize name" icon="dice" variant="ghost" onPress={reroll} style={styles.rerollBtn} />
       <Button label="Begin Life" icon="arrow-forward" variant="primary" size="lg" onPress={begin} style={styles.beginBtn} />
+
+      <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} onPress={() => setShowWhatsNew(true)} style={styles.versionRow}>
+        <Text style={styles.versionText}>v{APP_VERSION} · What's New</Text>
+      </TouchableOpacity>
+
+      {showWhatsNew && <WhatsNewModal onClose={() => setShowWhatsNew(false)} />}
     </SafeAreaView>
   );
 }
@@ -156,5 +165,14 @@ const styles = StyleSheet.create({
   beginBtn: {
     width: "100%",
     maxWidth: 340,
+  },
+  versionRow: {
+    marginTop: spacing.lg,
+    padding: spacing.sm,
+  },
+  versionText: {
+    color: colors.textMuted,
+    fontFamily: fonts.regular,
+    fontSize: fontSize.sm,
   },
 });

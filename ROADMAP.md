@@ -318,6 +318,17 @@ dependency) played via `expo-audio` — Age Up, an event choice, any ex
 action (text/call/booty-call/gift), and game over (which pre-empts the
 Age Up cue on the turn a character actually dies).
 
+**Versioning (done).** A real version number (`src/version.ts`'s
+`APP_VERSION`) and an in-game changelog (`CHANGELOG`, newest first),
+surfaced via a small "v1.0.0 · What's New" link on the Start screen
+that opens `WhatsNewModal`. The point: make this feel like a real,
+actively-shipped game with real builds, not a pile of invisible
+features. Convention going forward — bump the minor version and add a
+changelog entry when a Core Update or DLC pack lands, bump the patch
+version for a real fix; the current entry (1.0.0, "The money update")
+retroactively covers the whole Money & World push plus the collapsible
+relationships UI, since versioning started after those already shipped.
+
 **Still open for later in this update**: a mute/volume toggle (there's no
 settings surface at all yet to put one on), and a custom app icon/splash
 screen (still Expo's generic defaults).
