@@ -17,7 +17,7 @@ export default function CareerTab() {
 
   if (!character) return null;
 
-  const jobs = availableJobs(character.age, character.stats.smarts, character.hasCollegeDegree);
+  const jobs = availableJobs(character.age, character.stats.smarts, character.hasCollegeDegree, character.criminalRecord ?? false);
 
   return (
     <ScrollView contentContainerStyle={tabStyles.scroll}>
@@ -25,7 +25,7 @@ export default function CareerTab() {
         <View style={styles.currentRow}>
           <Ionicons name="briefcase" size={18} color={colors.primary} />
           <Text style={tabStyles.sectionTitle}>
-            {character.job ? character.job.title : "Unemployed"}
+            {character.inJail ? "Incarcerated" : character.job ? character.job.title : "Unemployed"}
           </Text>
         </View>
         {character.job && (
@@ -37,24 +37,36 @@ export default function CareerTab() {
             <Button label="Quit current job" icon="exit" variant="danger" onPress={quitJob} />
           </>
         )}
+        {character.criminalRecord && (
+          <Text style={styles.recordLine}>
+            You have a criminal record — some jobs won't consider you.
+          </Text>
+        )}
       </Card>
 
-      <Card>
-        <Text style={tabStyles.sectionTitle}>Open positions</Text>
-        {jobs.length === 0 && <Text style={tabStyles.logLine}>No jobs available yet.</Text>}
-        {jobs.map((job) => {
-          const gross = effectiveSalary(job, worldState);
-          return (
-            <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} key={job.title} style={styles.jobRow} onPress={() => applyForJob(job)}>
-              <View>
-                <Text style={styles.jobTitle}>{job.title}</Text>
-                <Text style={styles.jobSub}>${takeHomePay(gross).toLocaleString()}/yr take-home</Text>
-              </View>
-              <Text style={styles.jobSalary}>${gross.toLocaleString()}/yr</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </Card>
+      {character.inJail ? (
+        <Card>
+          <Text style={tabStyles.sectionTitle}>Open positions</Text>
+          <Text style={tabStyles.logLine}>You can't work from behind bars.</Text>
+        </Card>
+      ) : (
+        <Card>
+          <Text style={tabStyles.sectionTitle}>Open positions</Text>
+          {jobs.length === 0 && <Text style={tabStyles.logLine}>No jobs available yet.</Text>}
+          {jobs.map((job) => {
+            const gross = effectiveSalary(job, worldState);
+            return (
+              <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} key={job.title} style={styles.jobRow} onPress={() => applyForJob(job)}>
+                <View>
+                  <Text style={styles.jobTitle}>{job.title}</Text>
+                  <Text style={styles.jobSub}>${takeHomePay(gross).toLocaleString()}/yr take-home</Text>
+                </View>
+                <Text style={styles.jobSalary}>${gross.toLocaleString()}/yr</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </Card>
+      )}
     </ScrollView>
   );
 }
@@ -71,6 +83,12 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: fontSize.sm,
     marginBottom: spacing.sm,
+  },
+  recordLine: {
+    color: colors.danger,
+    fontFamily: fonts.regular,
+    fontSize: fontSize.sm,
+    marginTop: spacing.sm,
   },
   jobSub: {
     color: colors.textMuted,

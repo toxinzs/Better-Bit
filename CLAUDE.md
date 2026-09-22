@@ -56,7 +56,10 @@ belongs in the engine instead.
 - `src/data/textLines.ts` — flavor message content banks (ex texts/calls/
   booty-calls, ambient exchanges per relation type). Add variety here, not
   inline in `relationships.ts`.
-- `src/data/jobs.ts` — the career ladder, gated by age/smarts/college degree.
+- `src/data/jobs.ts` — the career ladder, gated by age/smarts/college
+  degree, and now `requiresCleanRecord` for trust-based jobs (teacher,
+  nurse, doctor, lawyer, accountant, bank teller) — `availableJobs()`
+  takes `criminalRecord` as a required 4th argument, filtering those out.
 - `src/data/assets.ts` / `src/engine/assets.ts` — same data/engine split as
   jobs: car/home catalogs are data, `buyCar`/`sellCar`/`buyHome`/`sellHome`/
   `netWorth`/`tickAssets` are engine logic. `tickAssets` (mortgage payment +
@@ -97,6 +100,19 @@ belongs in the engine instead.
   order, a testing pitfall that's already bitten twice). Read it before
   adding to `assets.ts`/`finance.ts`/`debt.ts`/`stocks.ts` or a sibling
   (taxes/retirement) — it's more detail than belongs in this file.
+- `src/data/crimes.ts` / `src/engine/crime.ts` — the first DLC pack
+  (Crime & Punishment, v1). `commitCrime(c, id)` returns a synthetic
+  `LifeEvent | null` — `null` on success (resolved immediately), a real
+  `LifeEvent` on getting caught, which the store sets as `pendingEvent`
+  and `EventModal` renders exactly like a random event's choice. This is
+  the pattern for any future player-initiated action (not an `ageUp()`
+  draw) that needs a real choice: build a `LifeEvent` in the engine,
+  hand it back to the caller, let the store set `pendingEvent` with it —
+  don't build a second choice-UI component. `tickSentence(c)` is called
+  from inside `ageUp()`, not as a standalone action — see the
+  `c.inJail` branch there (it replaces the normal event-pool draw
+  entirely while incarcerated, and the job income step already no-ops
+  on its own since sentencing clears `c.job`).
 - `src/state/gameStore.ts` — zustand store wiring the engine to the UI,
   persists to `AsyncStorage`. **`worldState` is never reset by `restart()`**
   — it's the one field that deliberately survives a new life. `persist()`
@@ -107,7 +123,9 @@ belongs in the engine instead.
   `src/screens/tabs/`), Game Over (life summary + full life log).
 - `src/screens/tabs/` — `LifeTab` (stats, activities, this year, world
   news), `PeopleTab` (relationships), `CareerTab` (jobs), `AssetsTab`
-  (net worth, car, home). `HomeScreen` owns which tab is active and the
+  (net worth, car, home, credit, investments, retirement), `CrimeTab`
+  (crime list, or a jail sentence-countdown view when `c.inJail`).
+  `HomeScreen` owns which tab is active and the
   two modals (`EventModal`, `TextThreadModal`) since those overlay
   regardless of tab; each tab otherwise reads the store directly rather
   than being handed props. A new top-level section is a new tab here, not

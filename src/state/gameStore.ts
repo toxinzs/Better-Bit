@@ -29,6 +29,7 @@ import {
   sellStock as engineSellStock,
   setContributionRate as engineSetContributionRate,
   withdrawRetirement as engineWithdrawRetirement,
+  commitCrime as engineCommitCrime,
   Activity,
 } from "../engine/lifeEngine";
 
@@ -67,6 +68,7 @@ type GameState = {
   sellStock: (ticker: string, shares: number) => void;
   setContributionRate: (ratePercent: number) => void;
   withdrawRetirement: (amount: number) => void;
+  commitCrime: (crimeId: string) => void;
   restart: () => void;
 };
 
@@ -305,6 +307,16 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!character) return;
     engineWithdrawRetirement(character, amount);
     set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  commitCrime: (crimeId) => {
+    const character = get().character;
+    if (!character) return;
+    // if caught, this returns a synthetic arrest LifeEvent - reuse the same
+    // pendingEvent/EventModal machinery ageUp() already uses for choices
+    const arrestEvent = engineCommitCrime(character, crimeId);
+    set({ character: { ...character }, pendingEvent: arrestEvent ?? get().pendingEvent });
     persist(character, get().screen, get().worldState);
   },
 

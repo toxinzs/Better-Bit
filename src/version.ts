@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "1.0.0";
+export const APP_VERSION = "1.1.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,17 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "1.1.0",
+    title: "Crime & Punishment (v1)",
+    highlights: [
+      "A new Crime tab - eight crimes across three tiers, real success odds shaped by your smarts",
+      "Get caught and it's a real choice: pay bail and settle it, or can't pay and do real time",
+      "Prison is its own life stage - no job, no random events, a sentence countdown, and a shot at parole",
+      "A criminal record follows you - trust-based jobs (teacher, doctor, lawyer, and more) won't hire you anymore",
+      "Getting arrested dings your credit score, same as any other real-world financial consequence",
+    ],
+  },
   {
     version: "1.0.0",
     title: "The money update",

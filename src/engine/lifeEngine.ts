@@ -10,6 +10,7 @@ import { tickDebt } from "./debt";
 import { tickMarket, portfolioValue } from "./stocks";
 import { incomeTax } from "./taxes";
 import { applyContribution, tickRetirementGrowth, retirementBalance } from "./retirement";
+import { tickSentence } from "./crime";
 
 export { getLifeStage } from "./lifeStage";
 export type { LifeStage } from "./lifeStage";
@@ -21,6 +22,7 @@ export { creditScoreLabel } from "./finance";
 export { buyStock, sellStock, portfolioValue } from "./stocks";
 export { incomeTax, takeHomePay, effectiveTaxRate } from "./taxes";
 export { setContributionRate, withdrawRetirement, retirementBalance } from "./retirement";
+export { commitCrime, successChance } from "./crime";
 
 export function totalNetWorth(c: Character, world: WorldState): number {
   return netWorth(c) + portfolioValue(c, world) + retirementBalance(c);
@@ -128,6 +130,14 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
     c.stats.health = clamp(c.stats.health - randomInt(0, 4));
   }
 
+  if (c.inJail) {
+    c.stats.happiness = clamp(c.stats.happiness - randomInt(3, 8));
+    if (Math.random() < 0.1) {
+      c.stats.health = clamp(c.stats.health - randomInt(5, 15));
+      c.yearLog.push("A fight broke out on your block.");
+    }
+  }
+
   ambientMessageTick(c);
 
   // education auto-progression (doesn't override college/graduated)
@@ -170,29 +180,38 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
     return { died: true, causeOfDeath: c.causeOfDeath };
   }
 
-  // pick events: apply auto-effect ones immediately, hold at most one choice event
-  const pool = eligibleEvents(c, world);
-  const autoPool = pool.filter((e) => !e.choices);
-  const choicePool = pool.filter((e) => e.choices && e.choices.length > 0);
+  // no random civilian life events while incarcerated - a dedicated
+  // sentence tick (countdown/parole/release) replaces the event pool instead
+  let pendingEvent: LifeEvent | undefined;
+  if (c.inJail) {
+    tickSentence(c);
+  } else {
+    // pick events: apply auto-effect ones immediately, hold at most one choice event
+    const pool = eligibleEvents(c, world);
+    const autoPool = pool.filter((e) => !e.choices);
+    const choicePool = pool.filter((e) => e.choices && e.choices.length > 0);
 
-  const autoCount = Math.min(2, autoPool.length);
-  const usedIds = new Set<string>();
-  for (let i = 0; i < autoCount; i++) {
-    const remaining = autoPool.filter((e) => !usedIds.has(e.id));
-    const chosen = pickWeighted(remaining);
-    if (!chosen) break;
-    usedIds.add(chosen.id);
-    if (chosen.once) c.triggeredEvents.push(chosen.id);
-    chosen.autoEffect?.(c, world);
-    const text = chosen.text(c, world);
-    c.yearLog.push(text);
-    c.fullLog.push({ age: c.age, text });
+    const autoCount = Math.min(2, autoPool.length);
+    const usedIds = new Set<string>();
+    for (let i = 0; i < autoCount; i++) {
+      const remaining = autoPool.filter((e) => !usedIds.has(e.id));
+      const chosen = pickWeighted(remaining);
+      if (!chosen) break;
+      usedIds.add(chosen.id);
+      if (chosen.once) c.triggeredEvents.push(chosen.id);
+      chosen.autoEffect?.(c, world);
+      const text = chosen.text(c, world);
+      c.yearLog.push(text);
+      c.fullLog.push({ age: c.age, text });
+    }
+
+    pendingEvent = pickWeighted(choicePool);
   }
 
-  const pendingEvent = pickWeighted(choicePool);
-
   if (c.yearLog.length === 0) {
-    c.yearLog.push(`Another year passed. You are now ${c.age}.`);
+    c.yearLog.push(
+      c.inJail ? `Another year passed behind bars. You are now ${c.age}.` : `Another year passed. You are now ${c.age}.`,
+    );
   }
 
   return { died: false, pendingEvent };
@@ -261,6 +280,10 @@ export function haveConversation(c: Character, relationshipId: string) {
 }
 
 export function applyForJob(c: Character, job: Job) {
+  if (c.inJail) {
+    c.yearLog.push("You can't get a job from behind bars.");
+    return;
+  }
   c.job = job;
   c.yearLog.push(`You got a job as a ${job.title}!`);
 }

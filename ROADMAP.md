@@ -342,13 +342,40 @@ verify as its own unit — the "DLC" framing is purely organizational (see
 "How this roadmap is organized" above). All free, all unlocked from the
 start once built, same as everything else.
 
-### DLC: Crime & Punishment — not started
+### DLC: Crime & Punishment — v1 done, court/lawyers still open
 
-Petty crime → serious crime branches, getting caught, court/lawyers,
-prison as its own mini life-inside-a-life, parole, a criminal record that
-follows you into future job applications. Opt-in via in-fiction choices,
-never gated behind anything. See the Money & World update above for the
-planned tie-in to `WorldState` once both exist.
+**v1 (done).** A real Crime tab with eight crimes across three tiers
+(petty/moderate/serious — `src/data/crimes.ts`), each with a real success
+chance (`successChance()` in `src/engine/crime.ts` — your smarts shifts
+it, not a flat roll) and a real reward range on success. Getting caught
+doesn't auto-resolve: it produces a synthetic "arrest" `LifeEvent` reusing
+the exact same `pendingEvent`/`EventModal` machinery `ageUp()` already
+uses for random events, so no separate UI was needed for it. The choice
+is real — pay the bail amount to settle it with just a record (a real
+credit score hit, -25), or can't/won't pay and do the time (inJail=true,
+a rolled sentence, a bigger credit hit, -50, and your job is gone). Jail
+is its own branch inside `ageUp()`: no job income (naturally, since the
+job was cleared), no random civilian events, a dedicated sentence tick
+instead (`tickSentence()` — countdown, a 15% parole roll once you've
+served half, release), and real hardship (extra happiness loss every
+year, a 10% chance of a fight). A criminal record follows you for real:
+`data/jobs.ts` gained `requiresCleanRecord` on the trust-based jobs
+(teacher, nurse, doctor, lawyer, accountant, bank teller), and
+`availableJobs()` filters them out — verified end to end, including that
+non-trust jobs (software engineer, electrician, marketing manager) stay
+open. Verified exactly (deterministic `Math.random` overrides in test):
+success/failure rolls, sentence length matching the roll formula by
+hand, bail/jail credit score deltas to the point, and a full 3-year jail
+countdown to release.
+
+**Deliberately trimmed for v1, not forgotten**: no court/trial sequence
+(bail effectively resolves the case for now — "your lawyer got you a
+deal" is the unstated flavor), no lawyer-quality tradeoff, no
+`WorldState` crime-wave/crackdown condition yet (still the planned tie-in
+once this needs raising the stakes), a criminal record never expires
+(no path back to a clean record yet), and prison itself has no activities
+beyond the automatic sentence tick (no yard time/library/cellmate
+choices). All real next slices for this pack, not a different pack.
 
 ### DLC: Mind & Body — not started
 

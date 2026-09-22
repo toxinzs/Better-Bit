@@ -49,6 +49,7 @@ export type Job = {
   minAge: number;
   minSmarts?: number;
   requiresCollege?: boolean;
+  requiresCleanRecord?: boolean;
 };
 
 export type OwnedCar = {
@@ -85,6 +86,8 @@ export type Retirement = {
   balance: number;
   contributionRate: number; // 0-0.5, fraction of gross salary
 };
+
+export type CrimeTier = "petty" | "moderate" | "serious";
 
 export type LogEntry = {
   age: number;
@@ -132,6 +135,10 @@ export type Character = {
   creditScore?: number;
   portfolio?: PortfolioHolding[];
   retirement?: Retirement;
+  criminalRecord?: boolean;
+  inJail?: boolean;
+  jailYearsLeft?: number;
+  jailYearsTotal?: number;
   relationships: Relationship[];
   yearLog: string[];
   fullLog: LogEntry[];
