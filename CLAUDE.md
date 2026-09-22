@@ -114,6 +114,14 @@ belongs in the engine instead.
   react-native-web ("native animated module is missing... falling back to
   JS-based animation") — expected on web, irrelevant on a real native
   build, not a bug to chase.
+- Collapsible list rows (see `PeopleTab.tsx`'s `RelationshipRow`): expanded
+  state lives in the parent as a `Set<string>` of ids, not a single
+  "which one's open" value — that's what makes rows expand independently
+  instead of accordion-style. Each row owns its own chevron-rotate and
+  content-fade `Animated.Value`s locally (not lifted to the parent), fired
+  from a local `handleToggle` that also calls the parent's `onToggle`.
+  Reuse this pattern for the next collapsed-by-default list (e.g. a future
+  Bag/inventory or job-history list) rather than re-inventing it.
 
 ### Testing notes
 

@@ -51,15 +51,20 @@ own beat), divorce, parenting choices, siblings, grandparents — all
 dating *pool* (choosing between several potential partners at once, not
 just one candidate per event) is still open for later.
 
-**Open, not started**: the Relationships list (`PeopleTab`) currently
-shows every action for every person, all the time — fine at 5 relationships,
-already a lot at 15+. Should become collapsed rows by default (name,
-relation, level) that expand on tap to reveal the action set — same
-actions as today, just not all visible at once. Room to grow the action
-set per relation type once it expands (right now family/friends only get
-Spend Time/Talk/Messages; an expanded row is exactly where a "Give a
-gift," "Have a difficult conversation," or type-specific action later
-would go without recluttering the collapsed view).
+**Collapsible relationship rows (done).** The Relationships list
+(`PeopleTab.tsx`) used to show every action for every person, all the
+time — fine at 5 relationships, already a lot at 15+. Now each row is
+collapsed by default (icon, name, relation type, level, chevron) and
+expands independently on tap to reveal its action set — a `Set<string>`
+of expanded IDs in `PeopleTab`, not an accordion, so any number of rows
+can be open at once. A new `RelationshipRow` component owns a rotating
+chevron (`Animated.Value`, 0→180deg) and a fade-in (`Animated.timing`,
+200ms) on the revealed action row; the action buttons themselves are
+unchanged (Spend Time/Talk/Messages for most relations, Messages-only for
+exes) — only the reveal mechanism changed. Room to grow the action set
+per relation type is still exactly here: an expanded row is where a
+"Give a gift," "Have a difficult conversation," or type-specific action
+later would go without recluttering the collapsed view.
 
 **Exes + texting (done).** BitLife just deletes an ex from your life the
 moment you break up (`alive: false`) — a real bug in our own earlier code
