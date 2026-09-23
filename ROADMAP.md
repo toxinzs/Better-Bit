@@ -303,7 +303,21 @@ deliberately left thin, now scoped for a follow-up pass:
   shown on offer (salary, at-will vs. term, benefits) instead of a job
   just appearing in a list. More job variety generally. Salary and
   availability keep pulling from `effectiveSalary()`/`WorldState`, now
-  additionally shaped by the region system below once it exists.
+  additionally shaped by the region system below once it exists. If the
+  character rushed a Greek house (School, For Real below) and the
+  interviewer happens to be from the same one, a real shot at getting
+  hired on the spot, bypassing the normal odds entirely — a genuine
+  "who you know" mechanic, not just flavor.
+- **Multiple jobs, real hours** — `Character.job: Job | null` becomes
+  `Character.jobs: { job: Job; hoursPerWeek: number }[]`, a real
+  architecture change. A weekly-hours view lets a character split time
+  across more than one job (a hard cap around 80hrs/week total); stacking
+  hours past a real threshold starts draining happiness/health — the
+  "juggling three jobs is rough" experience, not just a bigger paycheck
+  for free. Minimum working age varying by *where* the character is
+  (the real child-labor-law variance by state/country) is exactly what
+  the region system below is for — this item is what actually consumes
+  that once it exists, not a separate thing to build.
 - **Real cars and homes** — actual makes/models/years replacing the
   current 5-tier abstraction, new-vs-used pricing, mileage that
   accumulates and maintenance that's a real recurring cost (and can
@@ -446,25 +460,118 @@ outcomes, and a vacation boosting family relationship levels.
 ### Update: School, For Real
 
 Education today is an abstraction — grades happen off-screen, there's no
-one to interact with. This update makes it a real place, split into
-stages, with the shape of each stage varying by the region system above:
+one to interact with. This update makes it a real place, four real
+stages each with its own event pool, plus infrastructure a few other
+systems now lean on. Deliberately scoped to K-12 + undergrad —
+professional/grad school (med school, law school) stays where it already
+lives, as its own multi-year beat inside Fame & Flashbulbs below, since
+those are career-track detours more than a base-game stage everyone goes
+through. Shape of each stage (school system, working-age gates) varies by
+the region system above once it exists.
 
-- **Elementary/middle/high school** as real menus: daily/yearly choices,
-  clubs, sports, cliques, real tracked grades (not a hidden number),
-  risky/naughty options (skip class, cheat, fight, sneak around), dances
-  and prom. **See classmates and faculty** as actual NPCs you can
-  befriend, date, clash with, or get bullied by — not background flavor.
-- **College**: choose an actual school (a real prestige/cost tier list,
-  shaped by region), pick a major, pay for it (loans, scholarships,
-  working through school — hooks into the existing debt system), pick
-  housing (dorm/apartment/commute), Greek life, sports/clubs, a real GPA
-  with consequences — can get expelled, drop out, or change majors
-  mid-way.
+**New infrastructure this update needs:**
 
-Deliberately scoped to K-12 + undergrad — professional/grad school (med
-school, law school) stays where it already lives, as its own multi-year
-beat inside the Fame & Flashbulbs DLC below, since those are
-career-track detours more than a base-game stage everyone goes through.
+- `Character.gpa` (0.0–4.0) — starts tracking once elementary begins,
+  genuinely consequential from middle school on (shifts tryout/club odds,
+  later feeds college admission and academic probation).
+- `Character.clique` — set at a specific middle-school event, can shift
+  in high school.
+- `Character.schoolActivities: string[]` — clubs/sports/teams currently
+  enrolled in; a club tied to an existing Activities-lesson skill (Band →
+  Music, Art Club → Art) actually boosts that skill, not flavor-only.
+- Two new `RelationType`s, `"classmate"` and `"teacher"` — real named
+  NPCs (2-3 classmates + 1 teacher/professor per stage), generated on
+  entering each stage. A **School tab roster** lists them separately
+  from the main People tab so they don't get lost among family/friends/
+  exes as the list grows; when a stage ends, a classmate you were close
+  to (`level` high) graduates into a regular `friend` relationship, the
+  rest just fade off the roster rather than cluttering it forever.
+  **Faculty-only actions**: Suck Up (relationship up, small chance of a
+  real grade nudge), Insult (relationship craters, real chance of
+  detention or getting reported yourself), Report — someone or something
+  (a classmate cheating/bullying, a party, a fight) — helps your standing
+  with whoever you reported to, costs you with whoever you reported and
+  their friends. A real trade, not a free action.
+- `Character.flags: string[]` — a genuinely generic "remember what
+  happened" store any event in any life stage can set or check
+  (`"rushed-kappa"`, `"expelled-once"`, `"reported-a-friend"`). This is
+  bigger than School — it's the same shape of system the Zau Region
+  project uses for its story beats — but School is what actually needs
+  it first (a rush choice echoing in a job interview years later, a
+  clique choice changing how a later event reads), so it gets built here
+  and becomes standing infrastructure for every system after it.
+- **Fighting** — a new "Attack" action on any NPC card, not School-
+  exclusive. Rolls off `health` as the physical-capability proxy (no
+  dedicated Strength stat yet); branches into a clean win, a real back-
+  and-forth (both take a health hit), or it gets broken up first.
+  Consequences scale with age and severity, and on a rare tail-end roll
+  it can escalate to real tragedy — the other person dies (a manslaughter
+  charge through Crime & Punishment, see its juvenile-justice addition
+  below) or you do (ends the life like any other death, cause "killed in
+  a fight") — handled the same plain, non-dramatized way the game
+  already treats death and jail.
+- **Design rule for this whole update**: anything a character can
+  initiate on their own (skip class, throw a party, start a fight) is
+  also something an NPC can invite/drag them into via a random event —
+  build both entry points, not one or the other.
+
+**Elementary (ages 5-10)** — 10 events: First Day of School (make a
+friend right away / stick close to the wall), Show and Tell (bring
+something cool / forget it's your day), Recess Pushed (push back / tell
+the teacher), Spelling Bee (study hard / wing it), Class Pet Duty (accept
+/ decline), Birthday Party Invite (go / can't go), The Quiz Peek (cheat,
+a real caught-or-not branch / don't), Someone's Getting Picked On (step
+in / look away), Lost Tooth (pure flavor), Field Trip (museum/zoo/farm,
+flavor plus a small stat bump).
+
+**Middle School (ages 11-13)** — 12 events: Lunch Table (the one that
+actually sets `clique` — Jocks/Nerds/Artsy/Loners), First Crush, Group
+Project Slacker, The Group Chat (speak up / stay quiet), Tryouts (sets a
+real `schoolActivities` entry on success), Pick a Club (Band/Art/Chess/
+Drama/Robotics), Growing Pains (soft, non-graphic), First Phone/First
+Account (flavor now, real infrastructure for the future social-media
+layer in Fame & Flashbulbs), Detention, Clique Pressure (go along /
+refuse), Middle School Dance, Report Card (auto-effect — this is where
+`gpa` starts being a real tracked number).
+
+**High School (ages 14-17)** — 16 events: Where You Land Freshman Year,
+Varsity Tryouts (boosted odds if the matching middle-school club/sport
+happened), Run for Student Council, Ask Someone to Prom, Prom Night,
+Homecoming, Sneaking Out, Parents Are Out of Town (a real party — a
+button, not just a random event, per the dual-entry-point rule), Cheating
+on a Test (real GPA stakes), Skip Class (button + invite, same rule),
+Bullying (escalated version, either side of it), Guidance Counselor Talk
+(foreshadows college, sets a soft preference flag), Job vs. Clubs (a real
+tradeoff against the existing part-time-job jobs), A Teacher Notices You
+(good or bad, a real `teacher` relationship), Senioritis, Graduation Day
+(`once: true`, GPA decides honors, closes the stage).
+
+**College (ages 18+)** — real menus first, not pop-ups: pick a school
+(Community/State/Private/Ivy-tier, real cost + prestige + a harder GPA
+bar to stay in the higher you go), pick a major, pick housing (dorm/
+Greek house/off-campus apartment/commute). **Multiple degrees are real**
+— `Character.degrees: { school; major; online }[]` instead of one slot,
+so going back for a second one at any adult age is a genuine option;
+**online/remote** is a real modifier, not strictly worse — cheaper, no
+housing cost, can hold a job at the same time, trades off the on-campus
+event set (no roommate/rush/dorm-life beats) instead of being purely
+inferior.
+
+14 events: Roommate Luck, Rush Week, A Hazing Moment (a real risky choice
+inside rush), All-Nighter Before Finals, Office Hours (a real mentor
+relationship with a professor), Group Project (college stakes), Spring
+Break (a real Vacations-system trip, college-flavored), Failed a Class
+(retake / drop), Change Your Major (real time/money cost), Thinking About
+Dropping Out (a genuine fork — closes `educationStage` with no degree),
+Academic Probation (low GPA — improve, or the next event is expulsion),
+Campus Party, Internship Offer (a taste of the future Career depth — see
+the Greek-house hiring edge in "Jobs and assets, made real" above),
+Graduation (`once: true`, sets `hasCollegeDegree`). Plus **Seduce/Hookup
+with a Dean or Professor** — 18+ (everyone in college is), built the same
+way the Activities Hookup already is: no graphic content, just real
+outcome-driven consequences — it can genuinely help (favoritism, a grade
+break) or become a real scandal risk depending on the roll.
+
 **Not started.**
 
 ### Update: Presentation & the native build
@@ -522,7 +629,7 @@ verify as its own unit — the "DLC" framing is purely organizational (see
 "How this roadmap is organized" above). All free, all unlocked from the
 start once built, same as everything else.
 
-### DLC: Crime & Punishment — v1 + v2 done, prison activities still open
+### DLC: Crime & Punishment — v1 + v2 done, prison activities + juvenile justice still open
 
 **v1 (done).** A real Crime tab with eight crimes across three tiers
 (petty/moderate/serious — `src/data/crimes.ts`), each with a real success
@@ -584,6 +691,22 @@ correctly outside jail.
 beyond the automatic sentence tick (no yard time/library/cellmate
 choices) — the next natural slice for this pack whenever it's picked
 back up.
+
+**Juvenile justice (not started, scoped alongside School, For Real).**
+Right now an arrest doesn't branch by age at all — a 15-year-old and a
+40-year-old go through the identical court/lawyer/prison sequence, which
+isn't how this actually works. Under 18, an arrest routes to a real
+juvenile track instead: **juvie** instead of adult prison, **probation
+with an ankle monitor** as its own status (a small event set — curfew
+checks, a real tampering-risk choice), and a record that auto-clears at
+18 instead of needing 7 clean years like the adult expungement path. The
+main on-ramp into this is the new Fighting action from School, For Real
+— a bad high school fight escalating into an assault charge is the
+intended way a player actually reaches this system, not a cold "commit a
+crime" menu pick. Fighting's rare tail-end death outcome routes through
+the *adult* manslaughter/murder branch of this same system regardless of
+the fighter's age, since that's the one outcome too serious for the
+juvenile track's lighter handling to make sense.
 
 ### DLC: Mind & Body — not started
 
