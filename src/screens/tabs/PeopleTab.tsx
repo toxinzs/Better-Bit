@@ -44,7 +44,10 @@ export default function PeopleTab({ onOpenThread }: { onOpenThread: (relationshi
   return (
     <ScrollView contentContainerStyle={tabStyles.scroll}>
       <Card>
-        <Text style={tabStyles.sectionTitle}>Relationships</Text>
+        <View style={styles.headerRow}>
+          <Ionicons name="people" size={18} color={colors.looks} />
+          <Text style={tabStyles.sectionTitle}>Relationships</Text>
+        </View>
         {relationships.length === 0 && <Text style={tabStyles.logLine}>No one in your life yet.</Text>}
         {relationships.map((r) => (
           <RelationshipRow
@@ -143,6 +146,12 @@ function RelationshipRow({
 }
 
 const styles = StyleSheet.create({
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+  },
   relBlock: {
     paddingVertical: spacing.xs + 2,
     borderBottomWidth: 1,

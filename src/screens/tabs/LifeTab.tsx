@@ -32,7 +32,10 @@ export default function LifeTab() {
       </Card>
 
       <Card>
-        <Text style={tabStyles.sectionTitle}>This year</Text>
+        <View style={styles.headerRow}>
+          <Ionicons name="pulse" size={18} color={colors.health} />
+          <Text style={tabStyles.sectionTitle}>This year</Text>
+        </View>
         {character.yearLog.length === 0 ? (
           <Text style={tabStyles.logLine}>Nothing happened yet.</Text>
         ) : (
@@ -45,7 +48,10 @@ export default function LifeTab() {
       </Card>
 
       <Card>
-        <Text style={tabStyles.sectionTitle}>World News</Text>
+        <View style={styles.headerRow}>
+          <Ionicons name="globe" size={18} color={colors.health} />
+          <Text style={tabStyles.sectionTitle}>World News</Text>
+        </View>
         {worldState.log.map((line, i) => (
           <Text key={`news-${i}`} style={tabStyles.logLine}>
             • {line}
@@ -68,6 +74,12 @@ export default function LifeTab() {
 }
 
 const styles = StyleSheet.create({
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+  },
   conditionRow: {
     flexDirection: "row",
     alignItems: "center",

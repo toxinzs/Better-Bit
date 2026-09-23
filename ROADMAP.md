@@ -336,9 +336,53 @@ deliberately left thin, now scoped for a follow-up pass:
   (apartment/condo/house, not just a price tier) with property tax pulled
   from the region system below.
 
-### Update: Where You're From — region, names, appearance, law & economy
+### Update: Where You're From — region, names, appearance, law & economy (v1 slice done)
 
-Character creation today is bare: a gender picker and two free-text name
+**v1 slice shipped**: five real regions — US, UK, Nigeria, Japan, Brazil
+(`src/data/regions.ts`) — each a real, load-bearing `RegionDef`, not
+flavor text. `src/data/names.ts` restructured from one 14-name generic
+pool into `NAME_POOLS`, a region-keyed pool of first/last names per
+culture (real, respectfully-sourced names, not invented); the same
+restructure directly fixed the "unnamed sibling/friend" bug (below), since
+those event sites now generate real names instead of a hardcoded
+placeholder phrase. A new region picker sits on `StartScreen` alongside
+gender; `Character.originRegion` (optional, so old saves default cleanly
+to `"us"` via `getRegion(undefined)`) threads through: starting family
+wealth (`startingWealthRange` per region), a real state/local tax layer
+stacked multiplicatively on top of `taxes.ts`'s federal-shaped brackets
+(Japan's real flat local inhabitant tax, the US's blended state average,
+UK/Nigeria/Brazil's real "no separate regional income tax" structure), a
+job-market multiplier stacked on top of (never replacing) `WorldState`'s
+existing boom/recession multiplier, and real regional drinking/gambling
+ages gating the Bar/Club/Casino venues in Activities (`data/activities.ts`
+already had a comment anticipating exactly this seam). Every numeric
+approximation carries an inline comment marking it as a game-flavor
+approximation, not a tax/legal citation. **Explicit decision, not an
+oversight**: each region's real age of consent is stored in the data for
+completeness but deliberately never wired into any gameplay gate — the
+lowest one in a 5-region table would otherwise open romantic/hookup
+content at an inappropriate age depending on where a character happens to
+be born, which is the wrong call regardless of factual accuracy; every
+actual age-gate in the game stays hardcoded at 18 regardless of region.
+Verified via Playwright: real region-appropriate names/starting wealth,
+identical salaries netting different take-home pay by region (local tax +
+job multiplier both landing correctly), a UK character able to drink at
+18 where a US character couldn't, and an old-format save with no
+`originRegion` field loading cleanly.
+
+**Deferred to a later slice**, matching the original scope cut below:
+moving/immigrating as an adult, region-specific school-system shape (K-12
+vs. tracked/vocational), per-region job tables in `data/jobs.ts` (the job
+multiplier is the whole lever for now), per-substance drug legality
+(single `drugsIllegal` flag today), driving-age/marriage-age retrofits
+into existing event flows (only the Activities venue gate uses legal ages
+so far), and expanding past 5 regions. A real appearance system beyond
+region-derived skin tone (the new `Avatar` component, see the Presentation
+update below) and `appearanceFlavor` text is still open too.
+
+Original ask, for reference:
+
+Character creation was bare: a gender picker and two free-text name
 fields, defaulting to one small, culturally narrow hardcoded pool
 (`src/data/names.ts` — about a dozen first names per gender, 15 last
 names total) with no concept of where a character is *from*. The ask, now
@@ -388,7 +432,7 @@ needing every country on day one. Touches character creation UI (a
 region/country picker on `StartScreen`), the `Character` model (a new
 origin field), and becomes a required input to `taxes.ts`,
 `worldState.ts`'s salary multiplier, and the Activities/School/Crime
-updates around it. **Not started.**
+updates around it. **v1 slice done, see above; full scope remains open.**
 
 ### Update: Activities — something to actually do (done)
 
@@ -468,7 +512,21 @@ this tab as its own quick action.
   of this. **Scope cut**: cost doesn't scale by destination/region yet
   (flat per tier) — real distance/cost-of-living scaling is explicitly
   blocked on the region system in "Where You're From" below, which
-  didn't exist when this was built.
+  didn't exist when this was built (it exists now as a v1 slice, but this
+  hasn't been wired up to it yet).
+- **Surrender** (done): a real, confirmed voluntary end-of-life choice —
+  a new "End of the Road" card at the bottom of Activities. Built as a
+  chained `LifeEvent` (`engine/surrender.ts`, same pattern Hookup's
+  protection choice uses): "Are you sure you want to end things here?
+  This can't be undone." with "No, keep going" / "Yes, I'm sure", and
+  only the latter sets `alive = false`. Stated plainly in the log, never
+  depicted — same tasteful register as death, jail, and pregnancy-
+  termination above. Building this surfaced a real gap: `chooseEventOption`
+  in `gameStore.ts` had no `character.alive` check after resolving a
+  choice (the only two prior death paths, `ageUp` and `attack`, each had
+  their own bespoke check) — without the fix, "Yes, I'm sure" would have
+  left a dead character stuck on the home screen instead of reaching Game
+  Over. Fixed to mirror `attack()`'s existing check exactly.
 
 Playwright-verified end to end (temporary `window.__store` driving, no
 UI-only bugs found): every venue's cost/effect, Bar's hangover branch,
@@ -682,9 +740,41 @@ version for a real fix; the current entry (1.0.0, "The money update")
 retroactively covers the whole Money & World push plus the collapsible
 relationships UI, since versioning started after those already shipped.
 
+**Next slice (done)**: the "major UI improvement" pass, part of the same
+batch that shipped the region system and Surrender above. Real character
+representation for the first time — `components/Avatar.tsx`, an original,
+simple layered SVG portrait (circle head, rounded-rect shoulders, a preset
+hair silhouette, dot eyes; deliberately geometric rather than
+photorealistic, so it needs no external art and carries no copyright risk
+— the alternative to using BitLife's actual assets, which was explicitly
+declined). Skin tone comes from the character's region's palette
+(`data/regions.ts`, flavor only, not a demographic assignment), hair
+style/color from the frozen `avatarSeed` rolled at creation, so the look
+is stable across reloads. Mounted on `HomeScreen`'s header (was just
+text), `GameOverScreen`'s badge (replacing a static flower icon), and a
+live preview on `StartScreen` that updates as the gender/region pickers
+change. New dependency `react-native-svg`, verified compatible with the
+real Expo *web export* specifically (not just the dev server) via a full
+production build + static serve + Playwright pass, per this project's own
+"a production build is worth re-checking" convention. Also: the four
+near-duplicate modals (`EventModal`/`ActionResultModal`/`NameBabyModal`/
+`WhatsNewModal`) got consolidated onto a shared `components/ModalBase.tsx`
+(one place for the overlay/card/badge/entrance-animation chrome instead of
+four copy-pasted ones — `NameBabyModal` picked up a real entrance
+animation for free as a result), the `shadow` token that had existed in
+`theme.ts` since the first restyle but was never actually applied got
+spread into `Card`/`ModalBase` for real elevation, and every tab's
+section headers were formalized onto the shared icon+title `headerRow`
+shape with a real per-tab accent color pulled from the stat-color palette
+(health/happiness/smarts/looks) instead of defaulting to primary green
+everywhere.
+
 **Still open for later in this update**: a mute/volume toggle (there's no
-settings surface at all yet to put one on), and a custom app icon/splash
-screen (still Expo's generic defaults).
+settings surface at all yet to put one on), a custom app icon/splash
+screen (still Expo's generic defaults), and a deeper visual pass beyond
+this slice — more avatar variety (only a few hair presets/skin tones
+exist per region so far), and richer per-screen layout beyond the
+mechanical headerRow/accent-color pass.
 
 ---
 

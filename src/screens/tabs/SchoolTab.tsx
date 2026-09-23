@@ -55,7 +55,7 @@ export default function SchoolTab() {
 
       <Card>
         <View style={styles.headerRow}>
-          <Ionicons name="school" size={18} color={colors.primary} />
+          <Ionicons name="school" size={18} color={colors.smarts} />
           <Text style={tabStyles.sectionTitle}>{stageLabel}</Text>
         </View>
         {gpa != null && (

@@ -78,7 +78,10 @@ export default function ActivitiesTab() {
   return (
     <ScrollView contentContainerStyle={tabStyles.scroll}>
       <Card>
-        <Text style={tabStyles.sectionTitle}>Venues</Text>
+        <View style={styles.headerRow}>
+          <Ionicons name="location" size={18} color={colors.happiness} />
+          <Text style={tabStyles.sectionTitle}>Venues</Text>
+        </View>
         <View style={styles.grid}>
           {venues.map((v) => (
             <TouchableOpacity
@@ -99,7 +102,10 @@ export default function ActivitiesTab() {
       </Card>
 
       <Card>
-        <Text style={tabStyles.sectionTitle}>Lessons</Text>
+        <View style={styles.headerRow}>
+          <Ionicons name="ribbon" size={18} color={colors.smarts} />
+          <Text style={tabStyles.sectionTitle}>Lessons</Text>
+        </View>
         {hasSkills && (
           <View style={styles.skillsWrap}>
             {(Object.keys(skills) as LessonDef["key"][]).map((key) => (
@@ -126,7 +132,7 @@ export default function ActivitiesTab() {
 
       <Card>
         <View style={styles.headerRow}>
-          <Ionicons name="heart" size={18} color={colors.primary} />
+          <Ionicons name="heart" size={18} color={colors.happiness} />
           <Text style={tabStyles.sectionTitle}>Dating</Text>
         </View>
 
@@ -183,7 +189,7 @@ export default function ActivitiesTab() {
 
       <Card>
         <View style={styles.headerRow}>
-          <Ionicons name="medkit" size={18} color={colors.primary} />
+          <Ionicons name="medkit" size={18} color={colors.health} />
           <Text style={tabStyles.sectionTitle}>Fertility</Text>
         </View>
 

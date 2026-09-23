@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "1.4.1";
+export const APP_VERSION = "1.5.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,17 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "1.5.0",
+    title: "Where You're From",
+    highlights: [
+      "A real country of origin - US, UK, Nigeria, Japan, or Brazil - with its own names, starting wealth, taxes, job market, and legal ages",
+      "Surrender - a real, confirmed way to end a life on your own terms",
+      "A real character avatar for the first time, built from your region and look",
+      "Siblings and friends who show up on their own now always get a real name",
+      "A visual pass - real elevation on cards, consolidated popups, color-coded tabs",
+    ],
+  },
   {
     version: "1.4.1",
     title: "What Just Happened",

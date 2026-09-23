@@ -23,7 +23,7 @@ export default function CareerTab() {
     <ScrollView contentContainerStyle={tabStyles.scroll}>
       <Card>
         <View style={styles.currentRow}>
-          <Ionicons name="briefcase" size={18} color={colors.primary} />
+          <Ionicons name="briefcase" size={18} color={colors.smarts} />
           <Text style={tabStyles.sectionTitle}>
             {character.inJail ? "Incarcerated" : character.job ? character.job.title : "Unemployed"}
           </Text>
