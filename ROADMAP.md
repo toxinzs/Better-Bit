@@ -376,9 +376,12 @@ vs. tracked/vocational), per-region job tables in `data/jobs.ts` (the job
 multiplier is the whole lever for now), per-substance drug legality
 (single `drugsIllegal` flag today), driving-age/marriage-age retrofits
 into existing event flows (only the Activities venue gate uses legal ages
-so far), and expanding past 5 regions. A real appearance system beyond
-region-derived skin tone (the new `Avatar` component, see the Presentation
-update below) and `appearanceFlavor` text is still open too.
+so far), and expanding past 5 regions — **next candidates: India, Mexico,
+South Korea, Germany** (picked to cover the biggest population/cultural/
+tax-structure gaps the current 5 miss, not yet started). A real
+appearance system beyond region-derived skin tone (the new `Avatar`
+component, see the Presentation update below) and `appearanceFlavor`
+text is still open too.
 
 Original ask, for reference:
 
