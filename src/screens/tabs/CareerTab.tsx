@@ -31,8 +31,8 @@ export default function CareerTab() {
         {character.job && (
           <>
             <Text style={styles.takeHomeLine}>
-              ${effectiveSalary(character.job, worldState).toLocaleString()}/yr gross · $
-              {takeHomePay(effectiveSalary(character.job, worldState)).toLocaleString()}/yr take-home
+              ${effectiveSalary(character.job, worldState, character.originRegion).toLocaleString()}/yr gross · $
+              {takeHomePay(effectiveSalary(character.job, worldState, character.originRegion), character.originRegion).toLocaleString()}/yr take-home
             </Text>
             <Button label="Quit current job" icon="exit" variant="danger" onPress={quitJob} />
           </>
@@ -54,12 +54,12 @@ export default function CareerTab() {
           <Text style={tabStyles.sectionTitle}>Open positions</Text>
           {jobs.length === 0 && <Text style={tabStyles.logLine}>No jobs available yet.</Text>}
           {jobs.map((job) => {
-            const gross = effectiveSalary(job, worldState);
+            const gross = effectiveSalary(job, worldState, character.originRegion);
             return (
               <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} key={job.title} style={styles.jobRow} onPress={() => applyForJob(job)}>
                 <View>
                   <Text style={styles.jobTitle}>{job.title}</Text>
-                  <Text style={styles.jobSub}>${takeHomePay(gross).toLocaleString()}/yr take-home</Text>
+                  <Text style={styles.jobSub}>${takeHomePay(gross, character.originRegion).toLocaleString()}/yr take-home</Text>
                 </View>
                 <Text style={styles.jobSalary}>${gross.toLocaleString()}/yr</Text>
               </TouchableOpacity>

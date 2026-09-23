@@ -68,7 +68,7 @@ export const RANDOM_EVENTS: LifeEvent[] = [
       c.stats.happiness = clamp(c.stats.happiness + 6);
       c.relationships.push({
         id: `friend-${Date.now()}`,
-        name: randomFullName(),
+        name: randomFullName(c.originRegion),
         type: "friend",
         level: 55,
         alive: true,

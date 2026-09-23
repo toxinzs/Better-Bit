@@ -1,6 +1,7 @@
-import { Character, Gender, LifeEvent, Relationship } from "../types";
+import { Character, Gender, LifeEvent, RegionKey, Relationship } from "../types";
 import { clamp, randomInt } from "./util";
 import { randomFirstName, randomLastName } from "../data/names";
+import { getRegion } from "../data/regions";
 import {
   VenueKey,
   VENUES,
@@ -34,10 +35,10 @@ function father(c: Character): Relationship | undefined {
   return c.relationships.find((r) => r.type === "father" && r.alive);
 }
 
-function randomCandidateName(): string {
+function randomCandidateName(region?: RegionKey): string {
   const genders: Gender[] = ["male", "female", "nonbinary"];
   const g = genders[randomInt(0, genders.length - 1)];
-  return `${randomFirstName(g)} ${randomLastName()}`;
+  return `${randomFirstName(g, region)} ${randomLastName(region)}`;
 }
 
 // ---------- Venues ----------
@@ -45,7 +46,10 @@ function randomCandidateName(): string {
 export function applyVenue(c: Character, key: VenueKey): void {
   const def = VENUES.find((v) => v.key === key);
   if (!def) return;
-  if (c.age < def.minAge) {
+  const legalAges = getRegion(c.originRegion).legalAges;
+  const minAge =
+    key === "bar" || key === "club" ? legalAges.drinking : key === "casino" ? legalAges.gambling : def.minAge;
+  if (c.age < minAge) {
     c.yearLog.push(`You're too young for the ${def.label.toLowerCase()}.`);
     return;
   }
@@ -195,9 +199,9 @@ const VIBES = [
   "The type to text good morning every day",
 ];
 
-export function generateDatingCandidates(): DatingCandidate[] {
+export function generateDatingCandidates(region?: RegionKey): DatingCandidate[] {
   return Array.from({ length: 3 }, () => ({
-    name: randomCandidateName(),
+    name: randomCandidateName(region),
     vibe: VIBES[randomInt(0, VIBES.length - 1)],
     appeal: randomInt(40, 95),
   }));
@@ -239,7 +243,7 @@ export function goOnBlindDate(c: Character): void {
     c.yearLog.push("You're already seeing someone.");
     return;
   }
-  const name = randomCandidateName();
+  const name = randomCandidateName(c.originRegion);
   const goesWell = Math.random() < 0.45;
   if (goesWell) {
     c.relationships.push({

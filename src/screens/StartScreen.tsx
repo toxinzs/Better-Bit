@@ -4,8 +4,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../state/gameStore";
 import Button from "../components/Button";
 import WhatsNewModal from "../components/WhatsNewModal";
-import { Gender } from "../types";
+import { Gender, RegionKey } from "../types";
 import { randomFirstName, randomLastName } from "../data/names";
+import { REGIONS } from "../data/regions";
 import { APP_VERSION } from "../version";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
 
@@ -15,22 +16,25 @@ const GENDER_OPTIONS: { key: Gender; label: string; icon: keyof typeof Ionicons.
   { key: "nonbinary", label: "Other", icon: "person" },
 ];
 
+const REGION_OPTIONS = Object.values(REGIONS);
+
 export default function StartScreen() {
   const startNewLife = useGameStore((s) => s.startNewLife);
   const [gender, setGender] = useState<Gender>("nonbinary");
+  const [region, setRegion] = useState<RegionKey>("us");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [showWhatsNew, setShowWhatsNew] = useState(false);
 
   const reroll = () => {
-    setFirstName(randomFirstName(gender));
-    setLastName(randomLastName());
+    setFirstName(randomFirstName(gender, region));
+    setLastName(randomLastName(region));
   };
 
   const begin = () => {
-    const fn = firstName.trim() || randomFirstName(gender);
-    const ln = lastName.trim() || randomLastName();
-    startNewLife(fn, ln, gender);
+    const fn = firstName.trim() || randomFirstName(gender, region);
+    const ln = lastName.trim() || randomLastName(region);
+    startNewLife(fn, ln, gender, region);
   };
 
   return (
@@ -54,6 +58,20 @@ export default function StartScreen() {
           >
             <Ionicons name={g.icon} size={20} color={gender === g.key ? colors.primaryText : colors.textSecondary} />
             <Text style={[styles.genderText, gender === g.key && styles.genderTextActive]}>{g.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <View style={styles.regionRow}>
+        {REGION_OPTIONS.map((r) => (
+          <TouchableOpacity
+            accessibilityRole="button"
+            key={r.key}
+            activeOpacity={0.7}
+            style={[styles.regionBtn, region === r.key && styles.regionBtnActive]}
+            onPress={() => setRegion(r.key)}
+          >
+            <Text style={[styles.regionText, region === r.key && styles.regionTextActive]}>{r.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -142,6 +160,34 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
   },
   genderTextActive: {
+    color: colors.primaryText,
+  },
+  regionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: spacing.xs,
+    marginBottom: spacing.lg,
+    maxWidth: 340,
+  },
+  regionBtn: {
+    paddingVertical: spacing.xs + 2,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.pill,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  regionBtnActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  regionText: {
+    color: colors.textSecondary,
+    fontFamily: fonts.semiBold,
+    fontSize: fontSize.sm,
+  },
+  regionTextActive: {
     color: colors.primaryText,
   },
   input: {

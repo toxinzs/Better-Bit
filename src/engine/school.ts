@@ -1,4 +1,4 @@
-import { Character, EducationStage, Relationship } from "../types";
+import { Character, EducationStage, RegionKey, Relationship } from "../types";
 import { clamp, randomInt } from "./util";
 import { randomFirstName, randomLastName } from "../data/names";
 import { CLUBS, ClubKey, COLLEGES, COLLEGE_HOUSING, HousingListing } from "../data/school";
@@ -30,10 +30,10 @@ const STAGE_PREFIX: Partial<Record<EducationStage, string>> = {
 const K12_TITLES = ["Mr.", "Ms.", "Mx."];
 const COLLEGE_TITLES = ["Dr.", "Professor"];
 
-function randomPersonName(): string {
+function randomPersonName(region?: RegionKey): string {
   const genders: ("male" | "female" | "nonbinary")[] = ["male", "female", "nonbinary"];
   const g = genders[randomInt(0, genders.length - 1)];
-  return `${randomFirstName(g)} ${randomLastName()}`;
+  return `${randomFirstName(g, region)} ${randomLastName(region)}`;
 }
 
 // Called whenever a character's schooling stage changes (K-12 auto-
@@ -66,7 +66,7 @@ export function onEnterSchoolStage(c: Character, stage: EducationStage): void {
   for (let i = 0; i < 3; i++) {
     c.relationships.push({
       id: `classmate-${prefix}-${i}-${Date.now()}-${i}`,
-      name: randomPersonName(),
+      name: randomPersonName(c.originRegion),
       type: "classmate",
       level: randomInt(40, 65),
       alive: true,
@@ -76,7 +76,7 @@ export function onEnterSchoolStage(c: Character, stage: EducationStage): void {
   const titles = stage === "college" ? COLLEGE_TITLES : K12_TITLES;
   c.relationships.push({
     id: `teacher-${prefix}-0-${Date.now()}`,
-    name: `${titles[randomInt(0, titles.length - 1)]} ${randomLastName()}`,
+    name: `${titles[randomInt(0, titles.length - 1)]} ${randomLastName(c.originRegion)}`,
     type: "teacher",
     level: randomInt(45, 60),
     alive: true,

@@ -1,4 +1,5 @@
 import { SkillKey } from "../types";
+import { LegalAges } from "./regions";
 
 export type VenueKey =
   | "park"
@@ -17,8 +18,9 @@ export type VenueKey =
 
 export type VenueDef = { key: VenueKey; label: string; minAge: number; cost: number };
 
-// cost 0 = free. minAge is a plain flat gate for now - real per-region drinking/
-// gambling ages land with the future "Where You're From" update (ROADMAP.md).
+// cost 0 = free. minAge is the fallback gate when no region is known;
+// bar/club use the region's real drinking age and casino its gambling age
+// (src/data/regions.ts) when one is passed to availableVenues.
 export const VENUES: VenueDef[] = [
   { key: "park", label: "Park", minAge: 3, cost: 0 },
   { key: "beach", label: "Beach", minAge: 3, cost: 0 },
@@ -35,8 +37,12 @@ export const VENUES: VenueDef[] = [
   { key: "casino", label: "Casino", minAge: 21, cost: 100 },
 ];
 
-export function availableVenues(age: number): VenueDef[] {
-  return VENUES.filter((v) => age >= v.minAge);
+export function availableVenues(age: number, legalAges?: LegalAges): VenueDef[] {
+  return VENUES.filter((v) => {
+    if (v.key === "bar" || v.key === "club") return age >= (legalAges?.drinking ?? v.minAge);
+    if (v.key === "casino") return age >= (legalAges?.gambling ?? v.minAge);
+    return age >= v.minAge;
+  });
 }
 
 export type LessonDef = { key: SkillKey; label: string; minAge: number; cost: number };

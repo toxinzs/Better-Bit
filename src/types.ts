@@ -1,5 +1,7 @@
 export type Gender = "male" | "female" | "nonbinary";
 
+export type RegionKey = "us" | "uk" | "nigeria" | "japan" | "brazil";
+
 export type Stats = {
   health: number;
   happiness: number;
@@ -170,6 +172,9 @@ export type Character = {
   flags?: string[];
   pregnant?: boolean;
   pendingBabyId?: string;
+  originRegion?: RegionKey;
+  appearanceFlavor?: string;
+  avatarSeed?: number;
   relationships: Relationship[];
   yearLog: string[];
   fullLog: LogEntry[];

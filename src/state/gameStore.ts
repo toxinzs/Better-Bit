@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Character, Gender, Job, LifeEvent, SkillKey, WorldState } from "../types";
+import { Character, Gender, Job, LifeEvent, RegionKey, SkillKey, WorldState } from "../types";
 import { CarListing, HomeListing } from "../data/assets";
 import { LoanListing, CreditCardListing } from "../data/loans";
 import { VenueKey, VacationKey, ConceptionMethod } from "../data/activities";
@@ -70,7 +70,7 @@ type GameState = {
   actionResultLines: string[] | null;
   hydrated: boolean;
   hydrate: () => Promise<void>;
-  startNewLife: (firstName: string, lastName: string, gender: Gender) => void;
+  startNewLife: (firstName: string, lastName: string, gender: Gender, region: RegionKey) => void;
   ageUp: () => void;
   chooseEventOption: (choiceIndex: number) => void;
   clearActionResult: () => void;
@@ -206,8 +206,8 @@ export const useGameStore = create<GameState>((set, get) => {
       set({ hydrated: true });
     },
 
-    startNewLife: (firstName, lastName, gender) => {
-      const character = createCharacter(firstName, lastName, gender);
+    startNewLife: (firstName, lastName, gender, region) => {
+      const character = createCharacter(firstName, lastName, gender, region);
       set({ character, screen: "home", pendingEvent: null, actionResultLines: null });
       persist(character, "home", get().worldState);
     },

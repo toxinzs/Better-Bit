@@ -1,7 +1,8 @@
-import { Character, Gender, Job, LifeEvent, WorldState } from "../types";
+import { Character, Gender, Job, LifeEvent, RegionKey, WorldState } from "../types";
 import { clamp, randomInt, pickWeighted } from "./util";
 import { EVENTS } from "../data/events";
 import { randomFirstName, randomLastName } from "../data/names";
+import { getRegion } from "../data/regions";
 import { MIN_AGE_CONVERSATION } from "./lifeStage";
 import { tickWorldState, hasActiveCondition, effectiveSalary } from "./worldState";
 import { ambientMessageTick } from "./relationships";
@@ -28,7 +29,7 @@ import { onEnterSchoolStage, tickCollegeCosts } from "./school";
 
 export { getLifeStage } from "./lifeStage";
 export type { LifeStage } from "./lifeStage";
-export { createInitialWorldState, effectiveSalary, hasActiveCondition } from "./worldState";
+export { createInitialWorldState, effectiveSalary, hasActiveCondition, regionJobMultiplier } from "./worldState";
 export { textRelationship, callRelationship, bootyCall, sendGift } from "./relationships";
 export { buyCar, sellCar, buyHome, sellHome, netWorth } from "./assets";
 export { takeOutLoan, openCreditCard, payDownLoan, chargeCard } from "./debt";
@@ -79,9 +80,11 @@ export function createCharacter(
   firstName: string,
   lastName: string,
   gender: Gender,
+  region: RegionKey,
 ): Character {
-  const motherName = `${randomFirstName("female")} ${lastName}`;
-  const fatherName = `${randomFirstName("male")} ${lastName}`;
+  const motherName = `${randomFirstName("female", region)} ${lastName}`;
+  const fatherName = `${randomFirstName("male", region)} ${lastName}`;
+  const regionDef = getRegion(region);
 
   const character: Character = {
     firstName,
@@ -95,7 +98,7 @@ export function createCharacter(
       smarts: randomInt(30, 65),
       looks: randomInt(30, 75),
     },
-    money: 0,
+    money: randomInt(regionDef.startingWealthRange[0], regionDef.startingWealthRange[1]),
     job: null,
     educationStage: "none",
     inCollege: false,
@@ -104,6 +107,9 @@ export function createCharacter(
     creditScore: 650,
     degrees: [],
     flags: [],
+    originRegion: region,
+    appearanceFlavor: regionDef.appearanceFlavor[randomInt(0, regionDef.appearanceFlavor.length - 1)],
+    avatarSeed: randomInt(0, 999999),
     relationships: [
       { id: "mother", name: motherName, type: "mother", level: randomInt(60, 90), alive: true },
       { id: "father", name: fatherName, type: "father", level: randomInt(55, 90), alive: true },
@@ -216,9 +222,9 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
 
   // income
   if (c.job) {
-    const gross = effectiveSalary(c.job, world);
+    const gross = effectiveSalary(c.job, world, c.originRegion);
     const { contribution, employerMatch, taxableIncome } = applyContribution(c, gross);
-    const tax = incomeTax(taxableIncome);
+    const tax = incomeTax(taxableIncome, c.originRegion);
     const net = taxableIncome - tax;
     c.money += net;
     const contribText =

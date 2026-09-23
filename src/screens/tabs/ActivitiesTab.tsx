@@ -7,6 +7,7 @@ import Card from "../../components/Card";
 import Button from "../../components/Button";
 import StatBar from "../../components/StatBar";
 import { availableVenues, availableLessons, VACATIONS, CONCEPTION_METHODS, STERILIZATION_COST } from "../../data/activities";
+import { getRegion } from "../../data/regions";
 import { VenueKey, LessonDef } from "../../data/activities";
 import { colors, fonts, fontSize, radii, spacing } from "../../theme";
 import { tabStyles } from "./sharedStyles";
@@ -66,7 +67,7 @@ export default function ActivitiesTab() {
 
   if (!character) return null;
 
-  const venues = availableVenues(character.age);
+  const venues = availableVenues(character.age, getRegion(character.originRegion).legalAges);
   const lessons = availableLessons(character.age);
   const skills = character.skills ?? {};
   const hasSkills = Object.keys(skills).length > 0;
@@ -142,7 +143,7 @@ export default function ActivitiesTab() {
                 icon="heart"
                 size="sm"
                 variant="secondary"
-                onPress={() => setCandidates(generateDatingCandidates())}
+                onPress={() => setCandidates(generateDatingCandidates(character.originRegion))}
               />
               <Button label="Blind Date" icon="help-circle" size="sm" variant="secondary" onPress={goOnBlindDate} />
             </View>

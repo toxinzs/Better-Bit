@@ -1,6 +1,7 @@
-import { Job, MacroCondition, MacroConditionKind, WorldState } from "../types";
+import { Job, MacroCondition, MacroConditionKind, RegionKey, WorldState } from "../types";
 import { pickWeighted, randomInt } from "./util";
 import { STOCK_DEFS } from "../data/stocks";
+import { getRegion } from "../data/regions";
 
 type MacroConditionDef = {
   kind: MacroConditionKind;
@@ -103,6 +104,10 @@ export function salaryMultiplier(world: WorldState): number {
   return 1;
 }
 
-export function effectiveSalary(job: Job, world: WorldState): number {
-  return Math.round(job.salary * salaryMultiplier(world));
+export function regionJobMultiplier(region?: RegionKey): number {
+  return getRegion(region).jobMultiplier;
+}
+
+export function effectiveSalary(job: Job, world: WorldState, region?: RegionKey): number {
+  return Math.round(job.salary * salaryMultiplier(world) * regionJobMultiplier(region));
 }

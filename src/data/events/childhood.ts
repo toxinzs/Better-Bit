@@ -133,7 +133,7 @@ export const CHILDHOOD_EVENTS: LifeEvent[] = [
       c.stats.happiness = clamp(c.stats.happiness + 6);
       c.relationships.push({
         id: `friend-${Date.now()}-${Math.random()}`,
-        name: randomFullName(),
+        name: randomFullName(c.originRegion),
         type: "friend",
         level: 60,
         alive: true,
@@ -242,7 +242,7 @@ export const CHILDHOOD_EVENTS: LifeEvent[] = [
     autoEffect: (c) => {
       c.relationships.push({
         id: `sibling-${Date.now()}`,
-        name: randomFullName(c.lastName),
+        name: randomFullName(c.originRegion, c.lastName),
         type: "sibling",
         level: 55,
         alive: true,
