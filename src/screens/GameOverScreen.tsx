@@ -6,6 +6,7 @@ import Card from "../components/Card";
 import Button from "../components/Button";
 import { colors, fonts, fontSize, spacing } from "../theme";
 import { totalNetWorth } from "../engine/lifeEngine";
+import Avatar from "../components/Avatar";
 
 export default function GameOverScreen() {
   const character = useGameStore((s) => s.character);
@@ -19,7 +20,7 @@ export default function GameOverScreen() {
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.headerWrap}>
           <View style={styles.badge}>
-            <Ionicons name="flower" size={26} color={colors.textPrimary} />
+            <Avatar character={character} size={52} />
           </View>
           <Text style={styles.title}>End of the line</Text>
           <Text style={styles.subtitle}>

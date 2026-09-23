@@ -6,6 +6,7 @@ import EventModal from "../components/EventModal";
 import TextThreadModal from "../components/TextThreadModal";
 import ActionResultModal from "../components/ActionResultModal";
 import NameBabyModal from "../components/NameBabyModal";
+import Avatar from "../components/Avatar";
 import LifeTab from "./tabs/LifeTab";
 import PeopleTab from "./tabs/PeopleTab";
 import CareerTab from "./tabs/CareerTab";
@@ -82,17 +83,20 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <View>
-          <Text style={styles.name}>
-            {character.firstName} {character.lastName}
-          </Text>
-          <View style={styles.metaRow}>
-            <Text style={styles.metaText}>Age </Text>
-            <Animated.Text style={[styles.metaText, styles.ageValue, { transform: [{ scale: ageScale }] }]}>
-              {character.age}
-            </Animated.Text>
-            <Text style={styles.metaDivider}>·</Text>
-            <Text style={styles.metaText}>{character.job ? character.job.title : "Unemployed"}</Text>
+        <View style={styles.identityRow}>
+          <Avatar character={character} size={44} />
+          <View>
+            <Text style={styles.name}>
+              {character.firstName} {character.lastName}
+            </Text>
+            <View style={styles.metaRow}>
+              <Text style={styles.metaText}>Age </Text>
+              <Animated.Text style={[styles.metaText, styles.ageValue, { transform: [{ scale: ageScale }] }]}>
+                {character.age}
+              </Animated.Text>
+              <Text style={styles.metaDivider}>·</Text>
+              <Text style={styles.metaText}>{character.job ? character.job.title : "Unemployed"}</Text>
+            </View>
           </View>
         </View>
         <View style={styles.moneyPill}>
@@ -171,6 +175,11 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  identityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm + 2,
   },
   name: {
     fontSize: fontSize.xl,

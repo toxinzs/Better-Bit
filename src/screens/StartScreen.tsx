@@ -9,6 +9,7 @@ import { randomFirstName, randomLastName } from "../data/names";
 import { REGIONS } from "../data/regions";
 import { APP_VERSION } from "../version";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
+import Avatar from "../components/Avatar";
 
 const GENDER_OPTIONS: { key: Gender; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { key: "female", label: "Female", icon: "female" },
@@ -25,10 +26,15 @@ export default function StartScreen() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [showWhatsNew, setShowWhatsNew] = useState(false);
+  // real avatarSeed doesn't exist until createCharacter() runs - this is
+  // just a temporary preview seed, re-rolled whenever gender/region/name
+  // change so the picker visibly reacts to your choices.
+  const [previewSeed, setPreviewSeed] = useState(() => Date.now());
 
   const reroll = () => {
     setFirstName(randomFirstName(gender, region));
     setLastName(randomLastName(region));
+    setPreviewSeed(Date.now());
   };
 
   const begin = () => {
@@ -47,6 +53,10 @@ export default function StartScreen() {
         <Text style={styles.subtitle}>A life, from birth.</Text>
       </View>
 
+      <View style={styles.previewWrap}>
+        <Avatar character={{ gender, originRegion: region, avatarSeed: previewSeed }} size={72} />
+      </View>
+
       <View style={styles.genderRow}>
         {GENDER_OPTIONS.map((g) => (
           <TouchableOpacity
@@ -54,7 +64,10 @@ export default function StartScreen() {
             key={g.key}
             activeOpacity={0.7}
             style={[styles.genderBtn, gender === g.key && styles.genderBtnActive]}
-            onPress={() => setGender(g.key)}
+            onPress={() => {
+              setGender(g.key);
+              setPreviewSeed(Date.now());
+            }}
           >
             <Ionicons name={g.icon} size={20} color={gender === g.key ? colors.primaryText : colors.textSecondary} />
             <Text style={[styles.genderText, gender === g.key && styles.genderTextActive]}>{g.label}</Text>
@@ -69,7 +82,10 @@ export default function StartScreen() {
             key={r.key}
             activeOpacity={0.7}
             style={[styles.regionBtn, region === r.key && styles.regionBtnActive]}
-            onPress={() => setRegion(r.key)}
+            onPress={() => {
+              setRegion(r.key);
+              setPreviewSeed(Date.now());
+            }}
           >
             <Text style={[styles.regionText, region === r.key && styles.regionTextActive]}>{r.label}</Text>
           </TouchableOpacity>
@@ -114,6 +130,17 @@ const styles = StyleSheet.create({
   logoWrap: {
     alignItems: "center",
     marginBottom: spacing.xxl,
+  },
+  previewWrap: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.lg,
   },
   logoBadge: {
     width: 56,
