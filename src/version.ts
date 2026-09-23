@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "1.3.0";
+export const APP_VERSION = "1.4.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,17 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "1.4.0",
+    title: "School, For Real",
+    highlights: [
+      "A new School tab - 4 real stages (elementary through college), 52 events, real classmates and faculty",
+      "GPA, cliques, clubs, and a real roommate/rush/Greek-house college experience with multiple degrees",
+      "Faculty actions - suck up, insult, report a classmate, and (in college) seduce a professor or dean",
+      "Fighting is real now - attack anyone, win or lose, with rare real consequences",
+      "Juvenile justice - an arrest under 18 means juvie and a real ankle monitor, not adult prison",
+    ],
+  },
   {
     version: "1.3.0",
     title: "Activities",

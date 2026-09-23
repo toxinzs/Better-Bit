@@ -4,6 +4,7 @@ import { Character, Gender, Job, LifeEvent, SkillKey, WorldState } from "../type
 import { CarListing, HomeListing } from "../data/assets";
 import { LoanListing, CreditCardListing } from "../data/loans";
 import { VenueKey, VacationKey, ConceptionMethod } from "../data/activities";
+import { ClubKey, HousingListing } from "../data/school";
 import {
   createCharacter,
   createInitialWorldState,
@@ -41,6 +42,13 @@ import {
   getSterilized as engineGetSterilized,
   tryConception as engineTryConception,
   takeVacation as engineTakeVacation,
+  joinClub as engineJoinClub,
+  facultyAction as engineFacultyAction,
+  enrollInCollege as engineEnrollInCollege,
+  changeMajor as engineChangeMajor,
+  dropOutOfCollege as engineDropOutOfCollege,
+  seduceFaculty as engineSeduceFaculty,
+  attack as engineAttack,
   DatingCandidate,
 } from "../engine/lifeEngine";
 
@@ -90,6 +98,13 @@ type GameState = {
   getSterilized: () => void;
   tryConception: (method: ConceptionMethod) => void;
   takeVacation: (vacation: VacationKey) => void;
+  joinClub: (club: ClubKey) => void;
+  facultyAction: (relationshipId: string, kind: "suckup" | "insult" | "report") => void;
+  enrollInCollege: (school: string, major: string, online: boolean, housing: HousingListing["key"]) => void;
+  changeMajor: (major: string) => void;
+  dropOutOfCollege: () => void;
+  seduceFaculty: (relationshipId: string) => void;
+  attack: (relationshipId: string) => void;
   restart: () => void;
 };
 
@@ -422,6 +437,73 @@ export const useGameStore = create<GameState>((set, get) => ({
     engineTakeVacation(character, vacation);
     set({ character: { ...character } });
     persist(character, get().screen, get().worldState);
+  },
+
+  joinClub: (club) => {
+    const character = get().character;
+    if (!character) return;
+    engineJoinClub(character, club);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  facultyAction: (relationshipId, kind) => {
+    const character = get().character;
+    if (!character) return;
+    engineFacultyAction(character, relationshipId, kind);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  enrollInCollege: (school, major, online, housing) => {
+    const character = get().character;
+    if (!character) return;
+    engineEnrollInCollege(character, school, major, online, housing);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  changeMajor: (major) => {
+    const character = get().character;
+    if (!character) return;
+    engineChangeMajor(character, major);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  dropOutOfCollege: () => {
+    const character = get().character;
+    if (!character) return;
+    engineDropOutOfCollege(character);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  seduceFaculty: (relationshipId) => {
+    const character = get().character;
+    if (!character) return;
+    engineSeduceFaculty(character, relationshipId);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  attack: (relationshipId) => {
+    const character = get().character;
+    const worldState = get().worldState;
+    if (!character) return;
+    // a rare tragic escalation can end the character's own life, same as a
+    // natural ageUp() death - check for it the same way that path does.
+    // Otherwise this can return a chained arrest LifeEvent (manslaughter/
+    // assault), reusing the exact same pendingEvent/EventModal machinery
+    // commitCrime() already does.
+    const followUp = engineAttack(character, relationshipId);
+    if (!character.alive) {
+      set({ character: { ...character }, worldState: { ...worldState }, screen: "gameover" });
+      persist(character, "gameover", worldState);
+      return;
+    }
+    set({ character: { ...character }, pendingEvent: followUp ?? get().pendingEvent });
+    persist(character, get().screen, worldState);
   },
 
   restart: () => {

@@ -9,6 +9,10 @@ import { CAREER_EVENTS } from "./career";
 import { RANDOM_EVENTS } from "./random";
 import { SENIOR_EVENTS } from "./senior";
 import { WORLD_EVENTS } from "./world";
+import { SCHOOL_ELEMENTARY_EVENTS } from "./school-elementary";
+import { SCHOOL_MIDDLE_EVENTS } from "./school-middle";
+import { SCHOOL_HIGH_EVENTS } from "./school-high";
+import { SCHOOL_COLLEGE_EVENTS } from "./school-college";
 
 export const EVENTS: LifeEvent[] = [
   ...CHILDHOOD_EVENTS,
@@ -21,4 +25,8 @@ export const EVENTS: LifeEvent[] = [
   ...RANDOM_EVENTS,
   ...SENIOR_EVENTS,
   ...WORLD_EVENTS,
+  ...SCHOOL_ELEMENTARY_EVENTS,
+  ...SCHOOL_MIDDLE_EVENTS,
+  ...SCHOOL_HIGH_EVENTS,
+  ...SCHOOL_COLLEGE_EVENTS,
 ];

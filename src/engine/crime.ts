@@ -52,13 +52,23 @@ export function commitCrime(c: Character, crimeId: string, world: WorldState): L
   }
 
   c.yearLog.push(`You got caught trying to ${crime.label.toLowerCase()}.`);
-  return buildArrestEvent(crime);
+  return buildArrestEvent(crime, c);
 }
 
-function buildArrestEvent(crime: CrimeDef): LifeEvent {
+// Exported so engine/fighting.ts can reuse this exact arrest/trial/lawyer
+// sequence for a fight that escalates into manslaughter or assault charges,
+// via a synthetic CrimeDef - the standing pattern for any player-initiated
+// action that needs a real multi-step legal consequence, not just the Crime
+// tab's own catalog.
+export function buildArrestEvent(crime: CrimeDef, character: Character): LifeEvent {
   // rolled once, shared between the guilty-plea and convicted-at-trial
-  // outcomes so they're comparable severity, not two independent rolls
-  const fullSentence = randomInt(crime.sentenceMinYears, crime.sentenceMaxYears);
+  // outcomes so they're comparable severity, not two independent rolls.
+  // Under 18, real juvenile sentencing is much shorter - capped here,
+  // before any label text is built, so what's shown always matches what's
+  // actually applied.
+  const juvenile = character.age < 18;
+  const rolledSentence = randomInt(crime.sentenceMinYears, crime.sentenceMaxYears);
+  const fullSentence = juvenile ? Math.min(rolledSentence, 3) : rolledSentence;
   const guiltySentence = Math.round(fullSentence * 0.5);
 
   return {
@@ -75,7 +85,10 @@ function buildArrestEvent(crime: CrimeDef): LifeEvent {
         effect: (ch) => {
           ch.criminalRecord = true;
           ch.recordCleanYears = 0;
-          ch.creditScore = clamp((ch.creditScore ?? 650) - GUILTY_PLEA_CREDIT_HIT, 300, 850);
+          ch.isJuvenileRecord = juvenile;
+          if (!juvenile) {
+            ch.creditScore = clamp((ch.creditScore ?? 650) - GUILTY_PLEA_CREDIT_HIT, 300, 850);
+          }
           if (guiltySentence > 0) {
             ch.inJail = true;
             ch.jailYearsLeft = guiltySentence;
@@ -85,19 +98,19 @@ function buildArrestEvent(crime: CrimeDef): LifeEvent {
         },
         resultText: () =>
           guiltySentence > 0
-            ? `You took the deal. Sentenced to ${guiltySentence} year${guiltySentence === 1 ? "" : "s"}.`
+            ? `You took the deal. Sentenced to ${guiltySentence} year${guiltySentence === 1 ? "" : "s"}${juvenile ? " in juvie" : ""}.`
             : "You took the deal — a fine and a record, no time served.",
       },
       {
         label: "Fight the charges in court",
-        effect: (ch) => buildTrialEvent(crime, fullSentence, ch),
+        effect: (ch) => buildTrialEvent(crime, fullSentence, ch, juvenile),
         resultText: () => "You decide to fight it.",
       },
     ],
   };
 }
 
-function buildTrialEvent(crime: CrimeDef, fullSentence: number, character: Character): LifeEvent {
+function buildTrialEvent(crime: CrimeDef, fullSentence: number, character: Character, juvenile: boolean): LifeEvent {
   const affordableTiers = LAWYER_TIERS.filter((tier) => tier.costByTier[crime.tier] === 0 || character.money >= tier.costByTier[crime.tier]);
 
   const choices: EventChoice[] = affordableTiers.map((tier) => {
@@ -121,7 +134,10 @@ function buildTrialEvent(crime: CrimeDef, fullSentence: number, character: Chara
         if (convicted) {
           ch.criminalRecord = true;
           ch.recordCleanYears = 0;
-          ch.creditScore = clamp((ch.creditScore ?? 650) - CONVICTED_CREDIT_HIT, 300, 850);
+          ch.isJuvenileRecord = juvenile;
+          if (!juvenile) {
+            ch.creditScore = clamp((ch.creditScore ?? 650) - CONVICTED_CREDIT_HIT, 300, 850);
+          }
           if (fullSentence > 0) {
             ch.inJail = true;
             ch.jailYearsLeft = fullSentence;
@@ -135,7 +151,7 @@ function buildTrialEvent(crime: CrimeDef, fullSentence: number, character: Chara
       resultText: () =>
         convicted
           ? fullSentence > 0
-            ? `The verdict: guilty. Sentenced to ${fullSentence} year${fullSentence === 1 ? "" : "s"}.`
+            ? `The verdict: guilty. Sentenced to ${fullSentence} year${fullSentence === 1 ? "" : "s"}${juvenile ? " in juvie" : ""}.`
             : "The verdict: guilty, but the judge went easy — just a record."
           : "The verdict: not guilty. You walked out with a clean slate.",
     };
@@ -167,9 +183,53 @@ export function tickSentence(c: Character): void {
     c.inJail = false;
     c.jailYearsLeft = undefined;
     c.jailYearsTotal = undefined;
-    c.yearLog.push("You were released from prison.");
+    // a real juvenile stay has a real shot at coming out on a monitor
+    // instead of a clean release - adults go straight out the door
+    if (c.isJuvenileRecord && Math.random() < 0.5) {
+      c.onAnkleMonitor = true;
+      c.monitorYearsLeft = randomInt(1, 2);
+      c.yearLog.push("You were released from juvie — on an ankle monitor for now.");
+    } else {
+      c.yearLog.push("You were released from prison.");
+    }
   } else {
     c.yearLog.push(`${c.jailYearsLeft} year${c.jailYearsLeft === 1 ? "" : "s"} left on your sentence.`);
+  }
+}
+
+// Called from ageUp() every year c.onAnkleMonitor is true - a real curfew
+// risk instead of the monitor being pure flavor: most years it just ticks
+// down, but a violation adds time back on.
+export function tickAnkleMonitor(c: Character): void {
+  if (!c.onAnkleMonitor) return;
+
+  if (Math.random() < 0.08) {
+    c.stats.happiness = clamp(c.stats.happiness - 8);
+    const extra = randomInt(1, 2);
+    c.monitorYearsLeft = (c.monitorYearsLeft ?? 0) + extra;
+    c.yearLog.push(`You violated curfew on the monitor. ${extra} more year${extra === 1 ? "" : "s"} added.`);
+    return;
+  }
+
+  c.monitorYearsLeft = (c.monitorYearsLeft ?? 1) - 1;
+  if (c.monitorYearsLeft <= 0) {
+    c.onAnkleMonitor = false;
+    c.monitorYearsLeft = undefined;
+    c.yearLog.push("Your ankle monitor came off. You're clear.");
+  } else {
+    c.yearLog.push(`${c.monitorYearsLeft} year${c.monitorYearsLeft === 1 ? "" : "s"} left on the monitor.`);
+  }
+}
+
+// Called from ageUp() every non-jail year - a real juvenile record seals
+// itself on the character's 18th birthday instead of needing the adult
+// path's 7 clean years.
+export function tickJuvenileRecordClear(c: Character): void {
+  if (c.criminalRecord && c.isJuvenileRecord && c.age >= 18) {
+    c.criminalRecord = false;
+    c.isJuvenileRecord = false;
+    c.recordCleanYears = 0;
+    c.yearLog.push("Your juvenile record was sealed on your 18th birthday.");
   }
 }
 

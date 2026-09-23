@@ -457,7 +457,7 @@ App and Blind Date match/no-match branches, both Hookup branches
 toggling, sterilization blocking conception, IVF spending money on both
 outcomes, and a vacation boosting family relationship levels.
 
-### Update: School, For Real
+### Update: School, For Real (done)
 
 Education today is an abstraction — grades happen off-screen, there's no
 one to interact with. This update makes it a real place, four real
@@ -515,6 +515,23 @@ the region system above once it exists.
   also something an NPC can invite/drag them into via a random event —
   build both entry points, not one or the other.
 
+All 52 events built across `src/data/events/school-elementary.ts`/
+`school-middle.ts`/`school-high.ts`/`school-college.ts`, `src/data/school.ts`
+(college/major/housing/club/greek catalogs), and `src/engine/school.ts`
+(roster generation/retirement, GPA, clubs, faculty actions, college
+enroll/change-major/drop-out/graduate, seduction). `src/engine/fighting.ts`
+holds the new Attack action. New `SchoolTab.tsx` between Activities and
+People. Playwright-verified end to end (temporary `window.__store`
+driving): elementary/middle/high/college rosters generate real named
+classmates + a teacher/professor on stage entry and correctly retire on
+exit; `clique` gets set from Lunch Table; club-join raises the tied
+skill; every fighting branch (win/lose/broken-up, plus a forced tragedy
+roll and a forced assault charge); juvenile arrest → capped sentence →
+release onto a real ankle monitor → the record auto-sealing at 18, all
+with real numbers matching by hand; college enroll/change-major/rush →
+hazing → a real `greekHouse`/seduce-faculty/multiple degrees stacking
+correctly across a second enrollment.
+
 **Elementary (ages 5-10)** — 10 events: First Day of School (make a
 friend right away / stick close to the wall), Show and Tell (bring
 something cool / forget it's your day), Recess Pushed (push back / tell
@@ -560,19 +577,42 @@ inferior.
 14 events: Roommate Luck, Rush Week, A Hazing Moment (a real risky choice
 inside rush), All-Nighter Before Finals, Office Hours (a real mentor
 relationship with a professor), Group Project (college stakes), Spring
-Break (a real Vacations-system trip, college-flavored), Failed a Class
-(retake / drop), Change Your Major (real time/money cost), Thinking About
-Dropping Out (a genuine fork — closes `educationStage` with no degree),
-Academic Probation (low GPA — improve, or the next event is expulsion),
-Campus Party, Internship Offer (a taste of the future Career depth — see
-the Greek-house hiring edge in "Jobs and assets, made real" above),
-Graduation (`once: true`, sets `hasCollegeDegree`). Plus **Seduce/Hookup
-with a Dean or Professor** — 18+ (everyone in college is), built the same
-way the Activities Hookup already is: no graphic content, just real
-outcome-driven consequences — it can genuinely help (favoritism, a grade
-break) or become a real scandal risk depending on the roll.
+Break (its own flavor trip here, not literally calling into the
+Activities module — a scope simplification, not a hookup between the
+two systems), Failed a Class (retake / drop), Change Your Major (real
+time/money cost), Thinking About Dropping Out (a genuine fork — closes
+`educationStage` with no degree), Academic Probation (low GPA — improve,
+or the next event is real expulsion, inline, distinct wording from
+voluntarily dropping out), Campus Party, Internship Offer (a taste of
+the future Career depth — a real, smaller-scale version of the
+Greek-house hiring edge lives here directly, boosting the offer's own
+odds; the bigger one described in "Jobs and assets, made real" above,
+for every real job interview, is still unbuilt), Graduation. Plus
+**Seduce/Hookup with a Dean or Professor** — 18+ (everyone in college
+is), built the same way the Activities Hookup already is: no graphic
+content, just real outcome-driven consequences — it can genuinely help
+(favoritism, a grade break) or become a real scandal risk depending on
+the roll.
 
-**Not started.**
+**A real pacing bug this update's own testing caught**: Graduation was
+originally `once: true` and gated on raw age (18+) — with multiple
+degrees now real, `once` would have silently blocked a second
+enrollment's graduation from ever firing again, and the raw-age gate let
+it win the very first eligible year almost every time, skipping most of
+the other 13 events. Fixed by gating on real years enrolled
+(`Character.collegeStartAge`, ≥3 years in) instead of age, dropping
+`once` (re-enrolling clears `inCollege`, which is what actually stops it
+from repeating within one enrollment), and tuning its weight down to
+match Rush Week's rather than dominating the draw.
+
+**Scope cuts, honestly**: Attack lives on the School tab's own roster
+for now (classmates/teachers), not yet on the People tab's family/friend
+cards — extending it there is a fast follow, not built in this pass.
+Report only ever targets a random current classmate, not a specific
+picked one or a non-person incident. Roommate Luck/Rush Week/A Hazing
+Moment stay `once: true` globally, so a second college enrollment later
+in life doesn't replay them — multiple degrees deliver on "you can go
+back," not "every beat replays identically each time."
 
 ### Update: Presentation & the native build
 
@@ -629,7 +669,7 @@ verify as its own unit — the "DLC" framing is purely organizational (see
 "How this roadmap is organized" above). All free, all unlocked from the
 start once built, same as everything else.
 
-### DLC: Crime & Punishment — v1 + v2 done, prison activities + juvenile justice still open
+### DLC: Crime & Punishment — v1, v2 + juvenile justice done, prison activities still open
 
 **v1 (done).** A real Crime tab with eight crimes across three tiers
 (petty/moderate/serious — `src/data/crimes.ts`), each with a real success
@@ -692,21 +732,31 @@ beyond the automatic sentence tick (no yard time/library/cellmate
 choices) — the next natural slice for this pack whenever it's picked
 back up.
 
-**Juvenile justice (not started, scoped alongside School, For Real).**
-Right now an arrest doesn't branch by age at all — a 15-year-old and a
-40-year-old go through the identical court/lawyer/prison sequence, which
-isn't how this actually works. Under 18, an arrest routes to a real
-juvenile track instead: **juvie** instead of adult prison, **probation
-with an ankle monitor** as its own status (a small event set — curfew
-checks, a real tampering-risk choice), and a record that auto-clears at
-18 instead of needing 7 clean years like the adult expungement path. The
-main on-ramp into this is the new Fighting action from School, For Real
-— a bad high school fight escalating into an assault charge is the
-intended way a player actually reaches this system, not a cold "commit a
-crime" menu pick. Fighting's rare tail-end death outcome routes through
-the *adult* manslaughter/murder branch of this same system regardless of
-the fighter's age, since that's the one outcome too serious for the
-juvenile track's lighter handling to make sense.
+**Juvenile justice (done, built alongside School, For Real).** An arrest
+used to be identical for a 15-year-old and a 40-year-old — same court/
+lawyer/prison sequence, same record. `buildArrestEvent()` (now exported
+from `engine/crime.ts`) caps the rolled sentence at 3 years and sets
+`isJuvenileRecord` for anyone under 18, in both the guilty-plea and the
+trial-conviction path — computed once at the top before any label text
+is built, so what's shown always matches what's applied. `tickSentence`
+gives a juvenile release a real 50% shot at coming out on an **ankle
+monitor** instead of walking free (`onAnkleMonitor`/`monitorYearsLeft`,
+ticked every non-jail year by `tickAnkleMonitor` — mostly counts down,
+an 8% curfew-violation chance adds time back on). `tickJuvenileRecordClear`
+seals the record automatically at 18, instead of needing the adult
+path's 7 clean years. The main on-ramp is the new Fighting action from
+School, For Real — a bad high school fight escalating into an assault
+charge is the intended way a player actually reaches this system, not a
+cold "commit a crime" menu pick. Fighting's rare tail-end death outcome
+(`engine/fighting.ts`) routes through the *adult* manslaughter/murder
+branch of this same system regardless of the fighter's age (via two
+synthetic `CrimeDef`s reusing the exact same arrest/trial/lawyer
+machinery, the standing pattern this file already noted for exactly this
+kind of reuse), since that's the one outcome too serious for the
+juvenile track's lighter handling to make sense. Verified exactly: a
+forced assault charge on a 16-year-old capped the sentence, flagged it
+juvenile, released onto a real ankle monitor, and sealed itself at 18 —
+all matching by hand.
 
 ### DLC: Mind & Body — not started
 

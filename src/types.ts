@@ -24,7 +24,9 @@ export type RelationType =
   | "friend"
   | "partner"
   | "child"
-  | "ex";
+  | "ex"
+  | "classmate"
+  | "teacher";
 
 export type TextMessage = {
   text: string;
@@ -90,6 +92,12 @@ export type Retirement = {
 export type SkillKey = "music" | "singing" | "art" | "martialArts" | "acting";
 export type Skills = Partial<Record<SkillKey, number>>;
 
+export type Degree = {
+  school: string;
+  major: string;
+  online: boolean;
+};
+
 export type CrimeTier = "petty" | "moderate" | "serious";
 
 export type LogEntry = {
@@ -143,9 +151,23 @@ export type Character = {
   sterilized?: boolean;
   criminalRecord?: boolean;
   recordCleanYears?: number;
+  isJuvenileRecord?: boolean;
+  onAnkleMonitor?: boolean;
+  monitorYearsLeft?: number;
   inJail?: boolean;
   jailYearsLeft?: number;
   jailYearsTotal?: number;
+  gpa?: number;
+  clique?: string;
+  schoolActivities?: string[];
+  greekHouse?: string;
+  currentSchool?: string;
+  currentMajor?: string;
+  currentOnline?: boolean;
+  currentHousing?: "dorm" | "greek" | "apartment" | "commute";
+  collegeStartAge?: number;
+  degrees?: Degree[];
+  flags?: string[];
   relationships: Relationship[];
   yearLog: string[];
   fullLog: LogEntry[];

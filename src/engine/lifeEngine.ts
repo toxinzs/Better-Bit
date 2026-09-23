@@ -10,7 +10,7 @@ import { tickDebt } from "./debt";
 import { tickMarket, portfolioValue } from "./stocks";
 import { incomeTax } from "./taxes";
 import { applyContribution, tickRetirementGrowth, retirementBalance } from "./retirement";
-import { tickSentence, tickRecordClock } from "./crime";
+import { tickSentence, tickRecordClock, tickAnkleMonitor, tickJuvenileRecordClear } from "./crime";
 import {
   applyVenue,
   visitDoctor,
@@ -24,6 +24,7 @@ import {
   tryConception,
   takeVacation,
 } from "./activities";
+import { onEnterSchoolStage, tickCollegeCosts } from "./school";
 
 export { getLifeStage } from "./lifeStage";
 export type { LifeStage } from "./lifeStage";
@@ -57,6 +58,18 @@ export {
   takeVacation,
 } from "./activities";
 export type { DatingCandidate } from "./activities";
+export {
+  hasFlag,
+  joinClub,
+  facultyAction,
+  enrollInCollege,
+  changeMajor,
+  dropOutOfCollege,
+  seduceFaculty,
+  throwParty,
+  skipClass,
+} from "./school";
+export { attack } from "./fighting";
 
 export function totalNetWorth(c: Character, world: WorldState): number {
   return netWorth(c) + portfolioValue(c, world) + retirementBalance(c);
@@ -89,6 +102,8 @@ export function createCharacter(
     hasCollegeDegree: false,
     loans: [],
     creditScore: 650,
+    degrees: [],
+    flags: [],
     relationships: [
       { id: "mother", name: motherName, type: "mother", level: randomInt(60, 90), alive: true },
       { id: "father", name: fatherName, type: "father", level: randomInt(55, 90), alive: true },
@@ -177,8 +192,12 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
   // education auto-progression (doesn't override college/graduated)
   if (!c.inCollege && c.educationStage !== "graduated") {
     const stage = educationForAge(c.age);
-    if (stage) c.educationStage = stage;
+    if (stage) {
+      c.educationStage = stage;
+      onEnterSchoolStage(c, stage);
+    }
   }
+  tickCollegeCosts(c);
 
   // income
   if (c.job) {
@@ -221,6 +240,8 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
     tickSentence(c);
   } else {
     tickRecordClock(c);
+    tickAnkleMonitor(c);
+    tickJuvenileRecordClear(c);
 
     // pick events: apply auto-effect ones immediately, hold at most one choice event
     const pool = eligibleEvents(c, world);

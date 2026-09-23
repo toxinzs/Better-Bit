@@ -26,7 +26,11 @@ export default function PeopleTab({ onOpenThread }: { onOpenThread: (relationshi
 
   if (!character) return null;
 
-  const relationships = character.relationships.filter((r) => r.alive);
+  // Classmates/faculty live in the School tab's own roster instead, so they
+  // don't get lost among family/friends/exes here - see engine/school.ts.
+  const relationships = character.relationships.filter(
+    (r) => r.alive && r.type !== "classmate" && r.type !== "teacher",
+  );
 
   const toggle = (id: string) => {
     setExpandedIds((prev) => {

@@ -128,6 +128,46 @@ belongs in the engine instead.
   no-ops on its own since sentencing clears `c.job`; the record clock
   only ticks in the non-jail branch, which is what makes it naturally
   count "years since release" without extra bookkeeping).
+- `src/data/activities.ts` / `src/engine/activities.ts` — the Activities
+  tab: venues (13, flat cost/age gates), lessons (build `Character.skills`,
+  the same `StatBar` component renders them since it already falls back to
+  a generic color/icon for an unrecognized label), dating (a real
+  generated-candidate pool via `generateDatingCandidates()`, a pure
+  function called directly from `ActivitiesTab.tsx` with no store action
+  needed since it doesn't mutate state — same reasoning `totalNetWorth`/
+  `creditScoreLabel` already use), fertility (`usingBirthControl`/
+  `sterilized`, which gate a real `unplanned-pregnancy` event in
+  `romance.ts` and the existing `have-a-kid` event), vacations (boosts
+  family relationship levels if any exist, which is what "family trips"
+  turned into rather than a separate system).
+- `src/data/school.ts` / `src/engine/school.ts` / `src/engine/fighting.ts`
+  — the School tab (see `ROADMAP.md`'s "School, For Real"). Four stages,
+  each a separate `data/events/school-*.ts` file (age-gated, same as any
+  other event pool — college's events additionally condition on
+  `c.inCollege`, since enrollment is a real player choice, not automatic
+  at 18). `onEnterSchoolStage(c, stage)` generates/retires the classmate/
+  teacher roster (`RelationType` `"classmate"`/`"teacher"`) — idempotent,
+  called every year from `ageUp()`'s K-12 auto-progression *and* directly
+  from `enrollInCollege`/`graduateCollege`/`dropOutOfCollege`, since
+  college transitions aren't age-driven. IDs are stage-prefixed
+  (`classmate-${prefix}-...`) specifically so retirement can tell which
+  roster an NPC belongs to without a separate field. `Character.flags:
+  string[]` (`hasFlag`/`setFlag`) is genuinely generic, not School-only —
+  any event anywhere can use it; School just needed it first (rush/hazing
+  state, clique tags). **Multiple degrees**: `Character.degrees[]` plus
+  `collegeStartAge` (years-enrolled, not raw age, gates
+  `graduation-college` — see that event's own comment for a real pacing
+  bug this caught: `once: true` + an age gate let it win almost every
+  eligible year immediately, skipping the rest of the college pool, and
+  would have silently blocked a second enrollment's graduation forever).
+  **Fighting** (`engine/fighting.ts`'s `attack()`) reuses `crime.ts`'s
+  `buildArrestEvent()` (now exported) with two synthetic `CrimeDef`s
+  (assault/manslaughter) instead of a real Crime-tab entry — the standing
+  chained-choice-event pattern noted below, applied to a second caller.
+  Its rare death outcome and the juvenile-justice branch it can trigger
+  (`isJuvenileRecord`/`onAnkleMonitor`/`tickAnkleMonitor`/
+  `tickJuvenileRecordClear`, all in `crime.ts`) apply to *any* arrest by a
+  character under 18, not just a fight-triggered one.
 - `src/state/gameStore.ts` — zustand store wiring the engine to the UI,
   persists to `AsyncStorage`. **`worldState` is never reset by `restart()`**
   — it's the one field that deliberately survives a new life. `persist()`
@@ -136,8 +176,12 @@ belongs in the engine instead.
 - `src/screens/` — Start (character creation), Home (main play loop,
   a thin shell: header + tab bar + persistent Age Up button — see
   `src/screens/tabs/`), Game Over (life summary + full life log).
-- `src/screens/tabs/` — `LifeTab` (stats, activities, this year, world
-  news), `PeopleTab` (relationships), `CareerTab` (jobs), `AssetsTab`
+- `src/screens/tabs/` — `LifeTab` (stats, this year, world news),
+  `ActivitiesTab` (venues/lessons/dating/fertility/vacations),
+  `SchoolTab` (stage status/clubs/classmate+faculty roster/college
+  enrollment/degrees), `PeopleTab` (relationships — filters out
+  `"classmate"`/`"teacher"` types, which live only in `SchoolTab`'s own
+  roster so they don't clutter this list), `CareerTab` (jobs), `AssetsTab`
   (net worth, car, home, credit, investments, retirement), `CrimeTab`
   (crime list, or a jail sentence-countdown view when `c.inJail`).
   `HomeScreen` owns which tab is active and the
