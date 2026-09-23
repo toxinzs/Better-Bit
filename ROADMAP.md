@@ -115,6 +115,36 @@ ambient flavor sitting in a thread you check on your own time) — that's a
 real interactive system, not just content, and needs its own design pass.
 Email, similarly — noted, not started.
 
+**Still to build in this update** (not started):
+
+- **A result screen after every effectful choice** — right now a choice
+  applies and the modal just moves on; add a mandatory "here's what
+  happened" beat (stat/money deltas, a line of flavor text) before
+  returning to the game, BitLife's actual pattern. `EventChoice` already
+  has an optional `resultText` (built for the Crime chain sequence) — the
+  work here is making every ordinary event's choices populate it and
+  making `EventModal` always show it, not just for chained events.
+- **Full stat visibility on any character**, not just your own — tapping
+  into a relationship should show their real name, age, and the same stat
+  sliders (smarts/health/looks/money/sanity/generosity/religiousness)
+  your own character has, not just a relationship-level number.
+- **Relationship action menus that actually vary by type and closeness** —
+  more options per relationship type (what you can do with a parent vs. a
+  coworker vs. a romantic partner should look different), and some actions
+  gated behind a minimum relationship level instead of everything being
+  available from day one.
+- **Friends you actually choose** — right now a friend, once implied by
+  school/work/activities, would just exist; add a real prompt ("Do you
+  want to be friends with [name]?") instead of auto-adding them.
+- **Family depth** — actually being *in* the parents' house growing up
+  (play, tend the garden, sibling interactions that matter), step-parents
+  and step-siblings when a parent remarries, and eventually extended
+  family (grandparents, aunts/uncles, cousins) once that layer of the
+  family tree exists.
+- **Teenage life content** — sleepovers, throwing/attending parties,
+  sneaking out, sneaking someone in, and a teen-pregnancy branch once
+  age-appropriate — new events in `data/events/teen.ts`.
+
 ### Update: Money & World
 
 **Cars & real estate (done).** A real net worth beyond cash-in-hand:
@@ -264,28 +294,136 @@ condition mirroring Recession/Boom), so a crime committed during a
 "crackdown" carries different stakes than the same crime in an ordinary
 year.
 
-### Update: Identity — regional names & appearance
+**Jobs and assets, made real (not started).** Two things this update
+deliberately left thin, now scoped for a follow-up pass:
+
+- **Real hiring** — an actual short interview scene (a few dialogue-style
+  choices, odds shaped by smarts/looks/the relevant skill from an
+  Activities lesson) instead of a flat success roll, and a real contract
+  shown on offer (salary, at-will vs. term, benefits) instead of a job
+  just appearing in a list. More job variety generally. Salary and
+  availability keep pulling from `effectiveSalary()`/`WorldState`, now
+  additionally shaped by the region system below once it exists.
+- **Real cars and homes** — actual makes/models/years replacing the
+  current 5-tier abstraction, new-vs-used pricing, mileage that
+  accumulates and maintenance that's a real recurring cost (and can
+  trigger a breakdown event), and actually taking a car out for a drive
+  as its own Activities entry. Housing gets more real variety
+  (apartment/condo/house, not just a price tier) with property tax pulled
+  from the region system below.
+
+### Update: Where You're From — region, names, appearance, law & economy
 
 Character creation today is bare: a gender picker and two free-text name
 fields, defaulting to one small, culturally narrow hardcoded pool
 (`src/data/names.ts` — about a dozen first names per gender, 15 last
-names total) with no concept of where a character is *from*. The ask:
-add a real **country/region of origin** to character creation, then make
-two things actually depend on it —
+names total) with no concept of where a character is *from*. The ask, now
+broadened past just cosmetics: add a real **country/region of origin** to
+character creation, and make it a load-bearing piece of the sim, not
+flavor —
+
 - **Names**: hundreds of real, region-appropriate first/last names per
   culture, not one pool reused for everyone regardless of origin.
 - **Appearance**: `Stats.looks` is currently just a 0-100 number with no
   description behind it at all — no appearance system exists yet, visual
   or textual. Whatever gets built (starting with descriptive flavor text
-  tied to origin, since there's no avatar/portrait system to hang a visual
-  version on yet) needs to be demographically plausible for the chosen
-  region, not randomized independent of it.
+  tied to origin, since there's no avatar/portrait system yet) needs to
+  be demographically plausible for the chosen region, not randomized
+  independent of it.
+- **Cost of living & starting wealth** — the region a character is born
+  into sets a cost-of-living tier (cheap/mid/expensive) that shapes
+  starting family wealth and everyday prices; being born into a poor
+  region and a rich one shouldn't feel the same.
+- **Taxes** — a real jurisdiction layer on top of `src/engine/taxes.ts`'s
+  existing federal-style brackets: a state/region tax rate stacked on top
+  (some regions genuinely have none), and eventually sales tax on
+  activities/shopping. US-shaped first (federal + state), generalized to
+  other countries' flat/different systems as more regions get built out.
+- **Law** — drinking age, smoking age, gambling age, driving age, age of
+  consent, marriage age, and what's even illegal (drug legality
+  especially) all vary by region — this is the piece that makes the
+  Crime & Punishment DLC and the Activities update below (bars, casinos)
+  region-aware instead of one hardcoded ruleset for everyone.
+- **Job market** — average income and job availability shift by region,
+  layered on top of (not replacing) `WorldState`'s existing boom/
+  recession multiplier, so a recession hits a poor region harder than a
+  rich one.
+- **School system shape** — feeds directly into the "School, For Real"
+  update below: US-style K-12 + 4-year college vs. other countries'
+  tracked/vocational structures.
+- Later: actually **moving/immigrating** as an adult — a visa/citizenship
+  process, a new region's cost-of-living and laws applying going forward,
+  leaving family behind.
 
 This is a real content-research phase, not a quick data add — doing
-regional naming conventions and appearance respectfully means actually
-sourcing accurate per-region data, not guessing. Touches character
-creation UI (a region/country picker on `StartScreen`) and the `Character`
-model (a new origin field). **Not started.**
+regional naming, appearance, tax, and legal data respectfully means
+actually sourcing accurate per-region information, not guessing, and it
+can genuinely ship in slices (start with 4-5 real regions covering a
+range of cost-of-living/tax/law, expand the list over time) rather than
+needing every country on day one. Touches character creation UI (a
+region/country picker on `StartScreen`), the `Character` model (a new
+origin field), and becomes a required input to `taxes.ts`,
+`worldState.ts`'s salary multiplier, and the Activities/School/Crime
+updates around it. **Not started.**
+
+### Update: Activities — something to actually do
+
+The single biggest fix for "it's boring": a real panel of places to go
+and things to do on a given year, instead of Age Up being close to the
+only button that matters. Each activity costs some mix of time/money, has
+real stat effects, and can roll its own small event on top (met someone,
+got hurt, got scammed) — the same "visible, not hidden" philosophy
+`WorldState` already established.
+
+- **Venues**: gym, library, bar, club, casino, movies, mall, park, beach,
+  spa, museum, a concert, a place of worship (ties into the
+  `religiousness` stat).
+- **Lessons**: music, singing, art, martial arts, acting — builds a skill
+  stat that becomes the actual gate into Fame & Flashbulbs' special
+  careers later, not flavor with no payoff.
+- **Dating**: dating apps (a real pool of generated candidates to choose
+  between, not one candidate per event), blind dates, hookups — each with
+  its own real risk/reward (an STD, an unplanned pregnancy tanking
+  sanity, or genuinely meeting someone worth dating).
+- **Fertility**: birth control, IVF, insemination, using a donor, a
+  vasectomy/tubal ligation — real reproductive choices as their own
+  activity category, not just "have a baby, yes/no" tied to a random
+  event.
+- **Vacations**: pick a destination (cost scales with distance and both
+  the home and destination regions' cost of living, once the region
+  system above exists), optionally bring a partner/family, real random
+  events on the trip itself.
+- **Family trips**: the childhood and adult version of vacations — as a
+  kid, going where your parents decide; as an adult with your own family,
+  planning it yourself.
+
+New `src/data/activities.ts` (catalog) / `src/engine/activities.ts`
+(engine logic) split, same pattern as `assets.ts`/`jobs.ts` — a new
+"Activities" tab or a card on the Life tab. **Not started.**
+
+### Update: School, For Real
+
+Education today is an abstraction — grades happen off-screen, there's no
+one to interact with. This update makes it a real place, split into
+stages, with the shape of each stage varying by the region system above:
+
+- **Elementary/middle/high school** as real menus: daily/yearly choices,
+  clubs, sports, cliques, real tracked grades (not a hidden number),
+  risky/naughty options (skip class, cheat, fight, sneak around), dances
+  and prom. **See classmates and faculty** as actual NPCs you can
+  befriend, date, clash with, or get bullied by — not background flavor.
+- **College**: choose an actual school (a real prestige/cost tier list,
+  shaped by region), pick a major, pay for it (loans, scholarships,
+  working through school — hooks into the existing debt system), pick
+  housing (dorm/apartment/commute), Greek life, sports/clubs, a real GPA
+  with consequences — can get expelled, drop out, or change majors
+  mid-way.
+
+Deliberately scoped to K-12 + undergrad — professional/grad school (med
+school, law school) stays where it already lives, as its own multi-year
+beat inside the Fame & Flashbulbs DLC below, since those are
+career-track detours more than a base-game stage everyone goes through.
+**Not started.**
 
 ### Update: Presentation & the native build
 
@@ -422,20 +560,64 @@ event choices are available, how fast skills grow, and how a character
 reacts to trauma, not just be a label. This is a genuine gap in the
 current build.
 
-### DLC: Career & Fame — not started
+### DLC: Fame & Flashbulbs (formerly "Career & Fame") — not started
 
 The Career tab and job ladder already exist as part of the base game —
 this pack is the depth pass on top: full ladders with real
-promotions/demotions/firing, starting your own business, a military path,
-fame-track careers (pro athlete, musician, actor, influencer), and school
-arcs that are their own multi-year beat (med school, law school, grad
-school) instead of one "college" checkbox.
+promotions/demotions/firing, starting your own business, and school arcs
+that are their own multi-year beat (med school, law school, grad school)
+instead of one "college" checkbox (the base-game "School, For Real"
+update covers K-12 and undergrad; this is where the professional-track
+detours live). The military path that used to live in this list is now
+its own pack, **Enlisted**, below.
 
-### DLC: Pets & Hobbies — not started
+The renamed half of this pack is the fame track: real special careers —
+actor, musician, pro fighter/boxer, athlete, influencer, gamer,
+streamer — each built out with its own progression when its turn comes,
+not just a job title with a bigger paycheck. Built on top of the
+Activities update's lessons (a music/acting/art lesson skill is the real
+gate into the matching fame career, not a coin flip). **Social media**
+slots in here too, as its own slow-build layer once picked up: posting,
+follower counts, going viral (good or bad), feeding back into the fame
+track rather than existing on its own.
 
-Adoptable pets with their own care loop; hobbies (instrument, sport, art)
-that build a skill and can turn into a career path (ties into Career &
-Fame above).
+### DLC: Enlisted — not started
+
+A real military path: enlisting, ranking up, deployment, and the
+consequences of a full-length service career — pulled out of Fame &
+Flashbulbs into its own pack since it's a different shape of career
+(rank/duty/deployment beats promotion/firing), and it already has a real
+hook to build on: the War/Draft `WorldState` condition (Money & World
+update above) currently only produces a single draft-notice event — this
+pack is what actually gives enlisting somewhere to go once you're in.
+
+### DLC: The Hill — not started
+
+Politics as a real career track: city council, mayor, state/national
+office, all the way up — campaigns, scandals, approval rating, the
+works. A genuinely different shape of career from a normal job ladder
+(you're elected, not hired/fired), which is why it's its own pack rather
+than a line item in Fame & Flashbulbs.
+
+### DLC: Paws (formerly "Pets & Hobbies") — not started
+
+Adoptable pets with their own real care loop (feeding, vet visits,
+breeding, losing them) — rescoped down to just pets now that hobbies has
+a home elsewhere: building a skill through a lesson lives in the base
+Activities update, and turning that skill into a career lives in Fame &
+Flashbulbs. Renamed so the pack name actually says what it is.
+
+### DLC: 'Til Death — not started
+
+The deeper relationship-lifecycle pack: weddings as their own real beat
+(not just a "you got married" line), a divorce that can actually turn
+into a custody battle over the kids, and a real will/inheritance system
+for when a character dies — who gets the money and the house, and
+whether that's contested. (Fertility — birth control, IVF, insemination,
+a donor, vasectomy/tubal ligation — already lives in the base Activities
+update, not here, since it's a during-life choice rather than an
+end-of-life one.) Connects directly into Legacy below: a will is what a
+next generation actually inherits.
 
 ### DLC: Legacy — not started
 
@@ -444,3 +626,6 @@ achievements/records screen, stats worth bragging about ("longest life,"
 "richest," "most kids"). Depends on `WorldState` already surviving across
 lives (done, see Money & World above) — that was built specifically so a
 new generation inherits the same ongoing world instead of a fresh one.
+Also depends on 'Til Death's will/inheritance system above — what your
+character leaves behind is what the next generation actually starts
+with.
