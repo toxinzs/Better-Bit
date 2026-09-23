@@ -8,7 +8,7 @@ export const FAMILY_EVENTS: LifeEvent[] = [
     minAge: 23,
     maxAge: 45,
     weight: 2,
-    condition: (c) => hasPartner(c),
+    condition: (c) => hasPartner(c) && !c.sterilized,
     text: () => "You and your partner have been talking about starting a family.",
     choices: [
       {

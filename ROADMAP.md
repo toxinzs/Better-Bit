@@ -366,40 +366,82 @@ origin field), and becomes a required input to `taxes.ts`,
 `worldState.ts`'s salary multiplier, and the Activities/School/Crime
 updates around it. **Not started.**
 
-### Update: Activities — something to actually do
+### Update: Activities — something to actually do (done)
 
 The single biggest fix for "it's boring": a real panel of places to go
 and things to do on a given year, instead of Age Up being close to the
-only button that matters. Each activity costs some mix of time/money, has
-real stat effects, and can roll its own small event on top (met someone,
-got hurt, got scammed) — the same "visible, not hidden" philosophy
-`WorldState` already established.
+only button that matters. `src/data/activities.ts` (catalog) /
+`src/engine/activities.ts` (engine logic) split, same pattern as
+`assets.ts`/`jobs.ts`, surfaced as a new "Activities" tab
+(`ActivitiesTab.tsx`) between Life and People. The old 3-button Gym/
+Library/Doctor row on the Life tab is gone — Gym and Library are now two
+of the real venues below (same numbers as before), and Doctor moved into
+this tab as its own quick action.
 
-- **Venues**: gym, library, bar, club, casino, movies, mall, park, beach,
-  spa, museum, a concert, a place of worship (ties into the
-  `religiousness` stat).
-- **Lessons**: music, singing, art, martial arts, acting — builds a skill
-  stat that becomes the actual gate into Fame & Flashbulbs' special
-  careers later, not flavor with no payoff.
-- **Dating**: dating apps (a real pool of generated candidates to choose
-  between, not one candidate per event), blind dates, hookups — each with
-  its own real risk/reward (an STD, an unplanned pregnancy tanking
-  sanity, or genuinely meeting someone worth dating).
-- **Fertility**: birth control, IVF, insemination, using a donor, a
-  vasectomy/tubal ligation — real reproductive choices as their own
-  activity category, not just "have a baby, yes/no" tied to a random
-  event.
-- **Vacations**: pick a destination (cost scales with distance and both
-  the home and destination regions' cost of living, once the region
-  system above exists), optionally bring a partner/family, real random
-  events on the trip itself.
-- **Family trips**: the childhood and adult version of vacations — as a
-  kid, going where your parents decide; as an adult with your own family,
-  planning it yourself.
+- **Venues (13)**: Park, Beach, Place of Worship, Library, Museum, Gym,
+  Movies, Mall, Concert, Spa, Bar, Club, Casino — each with a flat age
+  gate and real stat effects (health/happiness/smarts/looks, whichever
+  fit), most free or a flat cost. Bar has a 15% rough-hangover chance on
+  top of its base effect; Casino is a real gamble (45% win, payout
+  1.2-3x the buy-in, 55% lose it all) — both resolve their random branch
+  immediately, no separate event needed. Age gates are a flat number for
+  now (`VENUES` in the catalog), same placeholder-until-real-regions
+  reasoning as `lifeStage.ts` always used — real per-region drinking/
+  gambling ages land with "Where You're From." **Scope cut**: no new
+  `religiousness`/`sanity`/`generosity` stats yet (Worship's effect is
+  happiness-only, described narratively) — those are a bigger surgery
+  touching `StatBar`/`GameOverScreen`/every event, belongs to a
+  dedicated stat-expansion pass, not bundled into this one.
+- **Lessons (5)**: Music, Singing, Art, Martial Arts, Acting — each adds
+  to a new `Character.skills` map (`SkillKey` in `types.ts`), shown with
+  the existing `StatBar` component (it already falls back to a generic
+  color/icon for a label it doesn't recognize, so no new UI component
+  was needed). A 10% chance per lesson of a bonus "breakthrough" for
+  extra skill. These skills don't do anything yet beyond display — they're
+  real infrastructure for Fame & Flashbulbs' special careers, not wired
+  to a payoff until that pack exists.
+- **Dating**: "Browse Dating App" generates a real pool of 3 candidates
+  (`generateDatingCandidates()` — random name, a flavor "vibe" line, an
+  appeal score) to choose between, finally landing the "a real multi-
+  option dating pool" item Foundations had flagged as deferred; pursuing
+  one rolls a match chance off their appeal and creates a real partner
+  relationship on success. Blind Date is the same single-candidate coin
+  flip the old random event used, now player-initiated instead of waiting
+  on the dice. Hookup works differently depending on relationship status
+  — single, it's a small happiness swing either way; partnered, it *is*
+  the existing cheating mechanic (50/50 caught-or-not), just reachable on
+  demand instead of only from a random event. All three gate at 18+.
+  **Scope cut**: no STD risk modeled — noted, not built.
+- **Fertility**: a real `usingBirthControl` toggle and a permanent
+  `sterilized` flag (vasectomy/tubal ligation, $800, one-time), both on
+  `Character`. IVF/Insemination/Donor are three assisted-conception
+  options with real cost and success chance, blocked once sterilized.
+  Birth control and sterilization aren't just flavor — a new
+  `unplanned-pregnancy` event in `romance.ts` can now only fire when
+  *neither* is active, and the existing `have-a-kid` event now also
+  checks `!sterilized`. The unplanned-pregnancy event deliberately keeps
+  both choices ending in a baby (embrace it vs. it's overwhelming) rather
+  than modeling termination — a real surprise-pregnancy beat without
+  taking on that specific topic.
+- **Vacations**: three tiers (Weekend Getaway/Beach/International) with
+  real cost and a happiness/health boost scaled to tier; if the
+  character has any alive family (partner, kids, or parents), the trip
+  boosts their relationship levels too, which is what "family trips"
+  from the original ask turned into — a variant of the same system
+  rather than a separate one, since there's no parents'-house/childhood-
+  activity system yet for a kid-taking-a-trip-with-their-parents version
+  of this. **Scope cut**: cost doesn't scale by destination/region yet
+  (flat per tier) — real distance/cost-of-living scaling is explicitly
+  blocked on the region system in "Where You're From" below, which
+  didn't exist when this was built.
 
-New `src/data/activities.ts` (catalog) / `src/engine/activities.ts`
-(engine logic) split, same pattern as `assets.ts`/`jobs.ts` — a new
-"Activities" tab or a card on the Life tab. **Not started.**
+Playwright-verified end to end (temporary `window.__store` driving, no
+UI-only bugs found): every venue's cost/effect, Bar's hangover branch,
+Casino's win and lose branches, a lesson raising `skills`, both Dating
+App and Blind Date match/no-match branches, both Hookup branches
+(single and the cheating caught/not-caught split), birth control
+toggling, sterilization blocking conception, IVF spending money on both
+outcomes, and a vacation boosting family relationship levels.
 
 ### Update: School, For Real
 

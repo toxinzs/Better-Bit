@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "1.2.0";
+export const APP_VERSION = "1.3.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,17 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "1.3.0",
+    title: "Activities",
+    highlights: [
+      "A new Activities tab - 13 real venues from the library to the casino, each with its own effects",
+      "Lessons build real skills (music, singing, art, martial arts, acting) for future fame careers",
+      "Dating apps now show a real pool of matches to choose between, plus blind dates and hookups",
+      "Birth control, IVF, insemination, donors, and sterilization - real reproductive choices",
+      "Vacations, three tiers, that boost your family's relationships too if you bring them along",
+    ],
+  },
   {
     version: "1.2.0",
     title: "Court & Lawyers",

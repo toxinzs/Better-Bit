@@ -87,6 +87,9 @@ export type Retirement = {
   contributionRate: number; // 0-0.5, fraction of gross salary
 };
 
+export type SkillKey = "music" | "singing" | "art" | "martialArts" | "acting";
+export type Skills = Partial<Record<SkillKey, number>>;
+
 export type CrimeTier = "petty" | "moderate" | "serious";
 
 export type LogEntry = {
@@ -135,6 +138,9 @@ export type Character = {
   creditScore?: number;
   portfolio?: PortfolioHolding[];
   retirement?: Retirement;
+  skills?: Skills;
+  usingBirthControl?: boolean;
+  sterilized?: boolean;
   criminalRecord?: boolean;
   recordCleanYears?: number;
   inJail?: boolean;

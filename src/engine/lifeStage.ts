@@ -8,6 +8,4 @@ export function getLifeStage(age: number): LifeStage {
   return "senior";
 }
 
-export const MIN_AGE_GYM = 10;
-export const MIN_AGE_LIBRARY = 5;
 export const MIN_AGE_CONVERSATION = 5;

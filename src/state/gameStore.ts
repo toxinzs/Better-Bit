@@ -1,14 +1,14 @@
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Character, Gender, Job, LifeEvent, WorldState } from "../types";
+import { Character, Gender, Job, LifeEvent, SkillKey, WorldState } from "../types";
 import { CarListing, HomeListing } from "../data/assets";
 import { LoanListing, CreditCardListing } from "../data/loans";
+import { VenueKey, VacationKey, ConceptionMethod } from "../data/activities";
 import {
   createCharacter,
   createInitialWorldState,
   ageUp as engineAgeUp,
   resolveEvent as engineResolveEvent,
-  applyActivity as engineApplyActivity,
   applyForJob as engineApplyForJob,
   quitJob as engineQuitJob,
   spendTimeWith as engineSpendTimeWith,
@@ -31,7 +31,17 @@ import {
   withdrawRetirement as engineWithdrawRetirement,
   commitCrime as engineCommitCrime,
   petitionExpungement as enginePetitionExpungement,
-  Activity,
+  applyVenue as engineApplyVenue,
+  visitDoctor as engineVisitDoctor,
+  takeLesson as engineTakeLesson,
+  pursueDatingCandidate as enginePursueDatingCandidate,
+  goOnBlindDate as engineGoOnBlindDate,
+  hookup as engineHookup,
+  toggleBirthControl as engineToggleBirthControl,
+  getSterilized as engineGetSterilized,
+  tryConception as engineTryConception,
+  takeVacation as engineTakeVacation,
+  DatingCandidate,
 } from "../engine/lifeEngine";
 
 const STORAGE_KEY = "@better-bit/save/v1";
@@ -50,7 +60,6 @@ type GameState = {
   chooseEventOption: (choiceIndex: number) => void;
   applyForJob: (job: Job) => void;
   quitJob: () => void;
-  doActivity: (activity: Activity) => void;
   spendTimeWith: (relationshipId: string) => void;
   haveConversation: (relationshipId: string) => void;
   textRelationship: (relationshipId: string) => void;
@@ -71,6 +80,16 @@ type GameState = {
   withdrawRetirement: (amount: number) => void;
   commitCrime: (crimeId: string) => void;
   petitionExpungement: () => void;
+  doVenue: (venue: VenueKey) => void;
+  visitDoctor: () => void;
+  takeLesson: (skill: SkillKey) => void;
+  pursueDatingCandidate: (candidate: DatingCandidate) => void;
+  goOnBlindDate: () => void;
+  hookup: () => void;
+  toggleBirthControl: () => void;
+  getSterilized: () => void;
+  tryConception: (method: ConceptionMethod) => void;
+  takeVacation: (vacation: VacationKey) => void;
   restart: () => void;
 };
 
@@ -156,14 +175,6 @@ export const useGameStore = create<GameState>((set, get) => ({
     const character = get().character;
     if (!character) return;
     engineQuitJob(character);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  doActivity: (activity) => {
-    const character = get().character;
-    if (!character) return;
-    engineApplyActivity(character, activity);
     set({ character: { ...character } });
     persist(character, get().screen, get().worldState);
   },
@@ -329,6 +340,86 @@ export const useGameStore = create<GameState>((set, get) => ({
     const character = get().character;
     if (!character) return;
     enginePetitionExpungement(character);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  doVenue: (venue) => {
+    const character = get().character;
+    if (!character) return;
+    engineApplyVenue(character, venue);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  visitDoctor: () => {
+    const character = get().character;
+    if (!character) return;
+    engineVisitDoctor(character);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  takeLesson: (skill) => {
+    const character = get().character;
+    if (!character) return;
+    engineTakeLesson(character, skill);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  pursueDatingCandidate: (candidate) => {
+    const character = get().character;
+    if (!character) return;
+    enginePursueDatingCandidate(character, candidate);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  goOnBlindDate: () => {
+    const character = get().character;
+    if (!character) return;
+    engineGoOnBlindDate(character);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  hookup: () => {
+    const character = get().character;
+    if (!character) return;
+    engineHookup(character);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  toggleBirthControl: () => {
+    const character = get().character;
+    if (!character) return;
+    engineToggleBirthControl(character);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  getSterilized: () => {
+    const character = get().character;
+    if (!character) return;
+    engineGetSterilized(character);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  tryConception: (method) => {
+    const character = get().character;
+    if (!character) return;
+    engineTryConception(character, method);
+    set({ character: { ...character } });
+    persist(character, get().screen, get().worldState);
+  },
+
+  takeVacation: (vacation) => {
+    const character = get().character;
+    if (!character) return;
+    engineTakeVacation(character, vacation);
     set({ character: { ...character } });
     persist(character, get().screen, get().worldState);
   },

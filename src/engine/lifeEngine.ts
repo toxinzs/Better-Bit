@@ -2,7 +2,7 @@ import { Character, Gender, Job, LifeEvent, WorldState } from "../types";
 import { clamp, randomInt, pickWeighted } from "./util";
 import { EVENTS } from "../data/events";
 import { randomFirstName, randomLastName } from "../data/names";
-import { MIN_AGE_GYM, MIN_AGE_LIBRARY, MIN_AGE_CONVERSATION } from "./lifeStage";
+import { MIN_AGE_CONVERSATION } from "./lifeStage";
 import { tickWorldState, hasActiveCondition, effectiveSalary } from "./worldState";
 import { ambientMessageTick } from "./relationships";
 import { tickAssets, netWorth } from "./assets";
@@ -11,6 +11,19 @@ import { tickMarket, portfolioValue } from "./stocks";
 import { incomeTax } from "./taxes";
 import { applyContribution, tickRetirementGrowth, retirementBalance } from "./retirement";
 import { tickSentence, tickRecordClock } from "./crime";
+import {
+  applyVenue,
+  visitDoctor,
+  takeLesson,
+  generateDatingCandidates,
+  pursueDatingCandidate,
+  goOnBlindDate,
+  hookup,
+  toggleBirthControl,
+  getSterilized,
+  tryConception,
+  takeVacation,
+} from "./activities";
 
 export { getLifeStage } from "./lifeStage";
 export type { LifeStage } from "./lifeStage";
@@ -30,6 +43,20 @@ export {
   EXPUNGEMENT_FEE,
   EXPUNGEMENT_ELIGIBLE_YEARS,
 } from "./crime";
+export {
+  applyVenue,
+  visitDoctor,
+  takeLesson,
+  generateDatingCandidates,
+  pursueDatingCandidate,
+  goOnBlindDate,
+  hookup,
+  toggleBirthControl,
+  getSterilized,
+  tryConception,
+  takeVacation,
+} from "./activities";
+export type { DatingCandidate } from "./activities";
 
 export function totalNetWorth(c: Character, world: WorldState): number {
   return netWorth(c) + portfolioValue(c, world) + retirementBalance(c);
@@ -239,37 +266,6 @@ export function resolveEvent(c: Character, world: WorldState, event: LifeEvent, 
   c.yearLog.push(resultText ? `${baseText} ${resultText}` : baseText);
   c.fullLog.push({ age: c.age, text: c.yearLog[c.yearLog.length - 1] });
   return next || undefined;
-}
-
-export type Activity = "gym" | "library" | "doctor";
-
-export function applyActivity(c: Character, activity: Activity) {
-  if (activity === "gym") {
-    if (c.age < MIN_AGE_GYM) {
-      c.yearLog.push("You're too young for the gym.");
-      return;
-    }
-    c.stats.health = clamp(c.stats.health + 5);
-    c.stats.looks = clamp(c.stats.looks + 2);
-    c.stats.happiness = clamp(c.stats.happiness - 1);
-    c.yearLog.push("You hit the gym.");
-  } else if (activity === "library") {
-    if (c.age < MIN_AGE_LIBRARY) {
-      c.yearLog.push("You're too young to study at the library yet.");
-      return;
-    }
-    c.stats.smarts = clamp(c.stats.smarts + 5);
-    c.stats.happiness = clamp(c.stats.happiness - 1);
-    c.yearLog.push("You spent the afternoon at the library.");
-  } else {
-    if (c.money >= 150) {
-      c.money -= 150;
-      c.stats.health = clamp(c.stats.health + 8);
-      c.yearLog.push("You visited the doctor for a checkup. -$150");
-    } else {
-      c.yearLog.push("You couldn't afford a doctor's visit.");
-    }
-  }
 }
 
 export function spendTimeWith(c: Character, relationshipId: string) {

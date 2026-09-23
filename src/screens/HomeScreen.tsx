@@ -9,13 +9,15 @@ import PeopleTab from "./tabs/PeopleTab";
 import CareerTab from "./tabs/CareerTab";
 import AssetsTab from "./tabs/AssetsTab";
 import CrimeTab from "./tabs/CrimeTab";
+import ActivitiesTab from "./tabs/ActivitiesTab";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
 import { playSound } from "../sound";
 
-type Tab = "life" | "people" | "career" | "assets" | "crime";
+type Tab = "life" | "activities" | "people" | "career" | "assets" | "crime";
 
 const TABS: { key: Tab; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { key: "life", label: "Life", icon: "pulse" },
+  { key: "activities", label: "Activities", icon: "sparkles" },
   { key: "people", label: "People", icon: "people" },
   { key: "career", label: "Career", icon: "briefcase" },
   { key: "assets", label: "Money", icon: "wallet" },
@@ -94,6 +96,7 @@ export default function HomeScreen() {
 
       <Animated.View style={[styles.tabContent, { opacity: fadeAnim }]}>
         {tab === "life" && <LifeTab />}
+        {tab === "activities" && <ActivitiesTab />}
         {tab === "people" && <PeopleTab onOpenThread={setViewingThreadId} />}
         {tab === "career" && <CareerTab />}
         {tab === "assets" && <AssetsTab />}
