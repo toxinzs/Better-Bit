@@ -290,38 +290,25 @@ export const ROMANCE_EVENTS: LifeEvent[] = [
     minAge: 18,
     maxAge: 42,
     weight: 0.3,
-    condition: (c) => hasPartner(c) && !c.usingBirthControl && !c.sterilized,
-    text: () => "You weren't planning on this, but you and your partner are having a baby.",
+    condition: (c) => hasPartner(c) && !c.usingBirthControl && !c.sterilized && !c.pregnant,
+    text: () => "You weren't planning on this, but you're pregnant.",
     choices: [
       {
-        label: "Embrace it",
+        label: "Keep it",
         effect: (c) => {
-          c.relationships.push({
-            id: `child-${Date.now()}`,
-            name: "Your child",
-            type: "child",
-            level: 80,
-            alive: true,
-          });
+          c.pregnant = true;
           const p = partner(c);
           if (p) p.level = clamp(p.level + 10);
-          c.stats.happiness = clamp(c.stats.happiness + 15);
-          c.money = Math.max(0, c.money - 2000);
+          c.stats.happiness = clamp(c.stats.happiness + 10);
         },
+        resultText: () => "You're keeping it. A real change is coming.",
       },
       {
-        label: "It's overwhelming, but you'll make it work",
+        label: "It's not the right time",
         effect: (c) => {
-          c.relationships.push({
-            id: `child-${Date.now()}`,
-            name: "Your child",
-            type: "child",
-            level: 65,
-            alive: true,
-          });
-          c.stats.happiness = clamp(c.stats.happiness - 5);
-          c.money = Math.max(0, c.money - 2000);
+          c.stats.happiness = clamp(c.stats.happiness - 10);
         },
+        resultText: () => "It's not the right time. The pregnancy doesn't continue.",
       },
     ],
   },

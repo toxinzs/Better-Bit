@@ -1,4 +1,4 @@
-import { Character, Gender, Relationship } from "../types";
+import { Character, Gender, LifeEvent, Relationship } from "../types";
 import { clamp, randomInt } from "./util";
 import { randomFirstName, randomLastName } from "../data/names";
 import {
@@ -257,31 +257,107 @@ export function goOnBlindDate(c: Character): void {
   }
 }
 
-export function hookup(c: Character): void {
+const PREGNANCY_CHANCE = 0.14; // per unprotected encounter, real enough to matter
+
+// A real "use protection?" screen first, chained the same way crime.ts's
+// arrest/trial sequence is - the standing pattern for any player-initiated
+// action needing a real multi-step choice. The outcome (caught/not, messy/
+// not) is rolled once inside effect() and read back by resultText via a
+// closure variable, same reasoning as buildTrialEvent's `convicted`.
+export function hookup(c: Character): LifeEvent | null {
   if (c.age < 18) {
     c.yearLog.push("You're too young for that.");
-    return;
+    return null;
   }
-  if (hasPartner(c)) {
-    const caught = Math.random() < 0.5;
-    const p = partner(c);
-    if (caught) {
-      if (p) {
-        p.type = "ex";
-        p.married = false;
-        p.engaged = false;
+  return buildHookupProtectionEvent(hasPartner(c));
+}
+
+function buildHookupProtectionEvent(partnered: boolean): LifeEvent {
+  let caught = false;
+  let messy = false;
+
+  const resolve = (c: Character, useProtection: boolean): LifeEvent | undefined => {
+    if (partnered) {
+      caught = Math.random() < 0.5;
+      const p = partner(c);
+      if (caught) {
+        if (p) {
+          p.type = "ex";
+          p.married = false;
+          p.engaged = false;
+        }
+        c.stats.happiness = clamp(c.stats.happiness - 25);
+      } else {
+        c.stats.happiness = clamp(c.stats.happiness + 8);
       }
-      c.stats.happiness = clamp(c.stats.happiness - 25);
-      c.yearLog.push("You cheated, and got caught. It's over.");
     } else {
-      c.stats.happiness = clamp(c.stats.happiness + 8);
-      c.yearLog.push("You cheated and got away with it. For now.");
+      messy = Math.random() < 0.25;
+      c.stats.happiness = clamp(c.stats.happiness + (messy ? -2 : 6));
     }
-    return;
-  }
-  const messy = Math.random() < 0.25;
-  c.stats.happiness = clamp(c.stats.happiness + (messy ? -2 : 6));
-  c.yearLog.push(messy ? "Last night was a mistake." : "No strings attached. Exactly what you needed.");
+
+    if (!useProtection && !c.sterilized && !c.pregnant && Math.random() < PREGNANCY_CHANCE) {
+      return buildPregnancyRevealEvent();
+    }
+    return undefined;
+  };
+
+  const outcomeText = () =>
+    partnered
+      ? caught
+        ? "You cheated, and got caught. It's over."
+        : "You cheated and got away with it. For now."
+      : messy
+        ? "Last night was a mistake."
+        : "No strings attached. Exactly what you needed.";
+
+  return {
+    id: `hookup-protection-${Date.now()}`,
+    minAge: 0,
+    maxAge: 200,
+    text: () => "Before anything happens...",
+    choices: [
+      {
+        label: "Use protection",
+        effect: (c) => resolve(c, true),
+        resultText: outcomeText,
+      },
+      {
+        label: "Don't use protection",
+        effect: (c) => resolve(c, false),
+        resultText: outcomeText,
+      },
+    ],
+  };
+}
+
+// A real pregnancy is now its own reveal moment with a genuine choice,
+// instead of a baby appearing the instant a choice is made - see
+// tryConception/have-a-kid/unplanned-pregnancy, which all funnel into the
+// same c.pregnant flag; the actual birth (and naming) happens next ageUp().
+function buildPregnancyRevealEvent(): LifeEvent {
+  return {
+    id: `pregnancy-reveal-${Date.now()}`,
+    minAge: 0,
+    maxAge: 200,
+    text: () => "You're pregnant.",
+    choices: [
+      {
+        label: "Keep it",
+        effect: (c) => {
+          c.pregnant = true;
+          c.stats.happiness = clamp(c.stats.happiness + 10);
+        },
+        resultText: () => "You're keeping it. A real change is coming.",
+      },
+      {
+        label: "It's not the right time",
+        effect: (c) => {
+          c.stats.happiness = clamp(c.stats.happiness - 10);
+        },
+        resultText: () => "It's not the right time. The pregnancy doesn't continue.",
+      },
+    ],
+  };
 }
 
 // ---------- Fertility ----------
@@ -316,6 +392,10 @@ export function tryConception(c: Character, method: ConceptionMethod): void {
     c.yearLog.push("That's not possible after being sterilized.");
     return;
   }
+  if (c.pregnant) {
+    c.yearLog.push("You're already expecting.");
+    return;
+  }
   if (c.money < def.cost) {
     c.yearLog.push(`You couldn't afford ${def.label}.`);
     return;
@@ -323,15 +403,9 @@ export function tryConception(c: Character, method: ConceptionMethod): void {
   c.money -= def.cost;
   const success = Math.random() < def.successChance;
   if (success) {
-    c.relationships.push({
-      id: `child-${Date.now()}`,
-      name: "Your child",
-      type: "child",
-      level: 80,
-      alive: true,
-    });
+    c.pregnant = true;
     c.stats.happiness = clamp(c.stats.happiness + 20);
-    c.yearLog.push(`${def.label} worked. You're having a baby. -$${def.cost.toLocaleString()}`);
+    c.yearLog.push(`${def.label} worked. You're expecting. -$${def.cost.toLocaleString()}`);
   } else {
     c.stats.happiness = clamp(c.stats.happiness - 6);
     c.yearLog.push(`${def.label} didn't work this time. -$${def.cost.toLocaleString()}`);

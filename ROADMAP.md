@@ -115,15 +115,25 @@ ambient flavor sitting in a thread you check on your own time) — that's a
 real interactive system, not just content, and needs its own design pass.
 Email, similarly — noted, not started.
 
+**A result popup after every effectful action (done).** Not just event
+choices — every button-press action in the game. `gameStore.ts`'s
+`applyToCharacter()`/`applyToCharacterWithWorld()`/`applyChained()` wrap
+every action (venues, lessons, dating, jobs, crime, assets, relationship
+actions, School's roster actions, all of it): each captures whatever new
+lines the engine call pushed to `yearLog` and surfaces them via a new
+`actionResultLines` store field, rendered by `ActionResultModal.tsx` — a
+dismissible "here's what happened" popup, instead of the player having to
+go check the Life tab's log. `chooseEventOption` shows the same popup for
+an ordinary (non-chained) event's `resultText`, which already existed but
+was only ever shown for the Crime chain sequence before — every event
+choice gets it now. Deliberately **not** shown after `ageUp()` itself
+(the "This year" card already covers a natural year passing) or while a
+`pendingEvent` chain continues (the next `EventModal` screen covers that
+instead) — `applyChained()` is what several actions beyond crime now use
+for a real multi-step choice, see Activities' Hookup redesign below.
+
 **Still to build in this update** (not started):
 
-- **A result screen after every effectful choice** — right now a choice
-  applies and the modal just moves on; add a mandatory "here's what
-  happened" beat (stat/money deltas, a line of flavor text) before
-  returning to the game, BitLife's actual pattern. `EventChoice` already
-  has an optional `resultText` (built for the Crime chain sequence) — the
-  work here is making every ordinary event's choices populate it and
-  making `EventModal` always show it, not just for chained events.
 - **Full stat visibility on any character**, not just your own — tapping
   into a relationship should show their real name, age, and the same stat
   sliders (smarts/health/looks/money/sanity/generosity/religiousness)
@@ -421,22 +431,33 @@ this tab as its own quick action.
   one rolls a match chance off their appeal and creates a real partner
   relationship on success. Blind Date is the same single-candidate coin
   flip the old random event used, now player-initiated instead of waiting
-  on the dice. Hookup works differently depending on relationship status
-  — single, it's a small happiness swing either way; partnered, it *is*
-  the existing cheating mechanic (50/50 caught-or-not), just reachable on
-  demand instead of only from a random event. All three gate at 18+.
-  **Scope cut**: no STD risk modeled — noted, not built.
-- **Fertility**: a real `usingBirthControl` toggle and a permanent
-  `sterilized` flag (vasectomy/tubal ligation, $800, one-time), both on
-  `Character`. IVF/Insemination/Donor are three assisted-conception
-  options with real cost and success chance, blocked once sterilized.
-  Birth control and sterilization aren't just flavor — a new
-  `unplanned-pregnancy` event in `romance.ts` can now only fire when
-  *neither* is active, and the existing `have-a-kid` event now also
-  checks `!sterilized`. The unplanned-pregnancy event deliberately keeps
-  both choices ending in a baby (embrace it vs. it's overwhelming) rather
-  than modeling termination — a real surprise-pregnancy beat without
-  taking on that specific topic.
+  on the dice. All three gate at 18+. **Scope cut**: no STD risk modeled
+  — noted, not built.
+- **Hookup (revised)**: now a real two-step choice instead of resolving
+  instantly — "Use protection" or not comes first (`buildHookupProtectionEvent`
+  in `engine/activities.ts`, the same chained-`LifeEvent` pattern
+  `commitCrime`'s arrest sequence set the precedent for), *then* the
+  existing outcome (single: a small happiness swing either way; partnered:
+  the real cheating mechanic, 50/50 caught-or-not). Going unprotected
+  while fertile rolls a real 14% pregnancy chance per encounter.
+- **Fertility and pregnancy, made real**. A real `usingBirthControl`
+  toggle and a permanent `sterilized` flag (vasectomy/tubal ligation,
+  $800, one-time), both on `Character`. Every path that can start a
+  pregnancy — Hookup going unprotected, the `have-a-kid`/`unplanned-
+  pregnancy` events, and IVF/Insemination/Donor (`tryConception`) — now
+  funnels into one shared `Character.pregnant` flag instead of a baby
+  appearing the instant a choice is made. `unplanned-pregnancy` is a
+  real reveal moment with a genuine choice, **"Keep it" or "It's not the
+  right time"** — the latter ends the pregnancy with a real, non-graphic
+  emotional consequence (no baby), handled the same plain, stated-not-
+  dramatized way the game already treats death and jail; termination
+  itself isn't depicted, matching how nothing else sensitive in this game
+  gets graphic either. The birth itself happens the *following* `ageUp()`
+  — a real child relationship is created immediately (so events that look
+  for a kid don't break) with a placeholder name, and `Character.pendingBabyId`
+  holds up a new `NameBabyModal` (a real text-input prompt, blocking
+  further play the same way `EventModal` does) before the game continues
+  — no more nameless "Your child" appearing out of nowhere.
 - **Vacations**: three tiers (Weekend Getaway/Beach/International) with
   real cost and a happiness/health boost scaled to tier; if the
   character has any alive family (partner, kids, or parents), the trip
@@ -452,10 +473,15 @@ this tab as its own quick action.
 Playwright-verified end to end (temporary `window.__store` driving, no
 UI-only bugs found): every venue's cost/effect, Bar's hangover branch,
 Casino's win and lose branches, a lesson raising `skills`, both Dating
-App and Blind Date match/no-match branches, both Hookup branches
-(single and the cheating caught/not-caught split), birth control
-toggling, sterilization blocking conception, IVF spending money on both
-outcomes, and a vacation boosting family relationship levels.
+App and Blind Date match/no-match branches, birth control toggling,
+sterilization blocking conception, and a vacation boosting family
+relationship levels. Re-verified after the pregnancy revision: the full
+protection-choice → pregnancy-reveal → "Keep it" chain through the real
+UI, `tryConception` setting `pregnant` on success instead of an instant
+child, `have-a-kid`'s result now showing "You're expecting" as a popup
+instead of resolving silently, and the birth → `pendingBabyId` →
+`NameBabyModal` → a real chosen name landing on the child relationship,
+also through the real UI end to end.
 
 ### Update: School, For Real (done)
 

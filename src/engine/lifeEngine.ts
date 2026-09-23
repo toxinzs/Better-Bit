@@ -163,6 +163,21 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
   c.age += 1;
   c.yearLog = [];
 
+  // a pregnancy kept from the year before comes to term now - the baby
+  // exists as a real relationship right away (so parenting-style/kid-
+  // school-play/etc. events can already see them), but with a placeholder
+  // name; c.pendingBabyId tells the UI to hold up an actual naming prompt
+  // before anything else, same "block on a real answer" precedent as
+  // pendingEvent/EventModal.
+  if (c.pregnant) {
+    c.pregnant = false;
+    const babyId = `child-${Date.now()}`;
+    c.relationships.push({ id: babyId, name: "Baby", type: "child", level: 80, alive: true });
+    c.pendingBabyId = babyId;
+    c.stats.happiness = clamp(c.stats.happiness + 15);
+    c.yearLog.push("Your baby was born!");
+  }
+
   // natural stat drift
   c.stats.happiness = clamp(c.stats.happiness + randomInt(-2, 2));
   c.stats.looks = clamp(c.stats.looks + randomInt(-1, 1));

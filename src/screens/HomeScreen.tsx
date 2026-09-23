@@ -4,6 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../state/gameStore";
 import EventModal from "../components/EventModal";
 import TextThreadModal from "../components/TextThreadModal";
+import ActionResultModal from "../components/ActionResultModal";
+import NameBabyModal from "../components/NameBabyModal";
 import LifeTab from "./tabs/LifeTab";
 import PeopleTab from "./tabs/PeopleTab";
 import CareerTab from "./tabs/CareerTab";
@@ -30,6 +32,9 @@ export default function HomeScreen() {
   const character = useGameStore((s) => s.character);
   const worldState = useGameStore((s) => s.worldState);
   const pendingEvent = useGameStore((s) => s.pendingEvent);
+  const actionResultLines = useGameStore((s) => s.actionResultLines);
+  const clearActionResult = useGameStore((s) => s.clearActionResult);
+  const nameBaby = useGameStore((s) => s.nameBaby);
   const ageUp = useGameStore((s) => s.ageUp);
   const chooseEventOption = useGameStore((s) => s.chooseEventOption);
   const textRelationship = useGameStore((s) => s.textRelationship);
@@ -129,9 +134,13 @@ export default function HomeScreen() {
         </Pressable>
       </View>
 
-      {pendingEvent && (
+      {character.pendingBabyId ? (
+        <NameBabyModal onSubmit={nameBaby} />
+      ) : pendingEvent ? (
         <EventModal key={pendingEvent.id} event={pendingEvent} character={character} world={worldState} onChoose={handleChoose} />
-      )}
+      ) : actionResultLines ? (
+        <ActionResultModal lines={actionResultLines} onClose={clearActionResult} />
+      ) : null}
 
       {viewingThread && (
         <TextThreadModal

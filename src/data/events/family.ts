@@ -8,22 +8,17 @@ export const FAMILY_EVENTS: LifeEvent[] = [
     minAge: 23,
     maxAge: 45,
     weight: 2,
-    condition: (c) => hasPartner(c) && !c.sterilized,
+    condition: (c) => hasPartner(c) && !c.sterilized && !c.pregnant,
     text: () => "You and your partner have been talking about starting a family.",
     choices: [
       {
-        label: "Have a baby",
+        label: "Try for a baby",
         effect: (c) => {
-          c.relationships.push({
-            id: `child-${Date.now()}`,
-            name: "Your child",
-            type: "child",
-            level: 80,
-            alive: true,
-          });
+          c.pregnant = true;
           c.stats.happiness = clamp(c.stats.happiness + 15);
           c.money = Math.max(0, c.money - 3000);
         },
+        resultText: () => "You're expecting.",
       },
       {
         label: "Not yet",

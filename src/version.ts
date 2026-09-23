@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "1.4.0";
+export const APP_VERSION = "1.4.1";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,16 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "1.4.1",
+    title: "What Just Happened",
+    highlights: [
+      "Every real action now shows a result popup - no more guessing what changed or digging through the yearly recap",
+      "Hookups are a real choice now - use protection or don't, right before it happens",
+      "Skip protection and there's a real chance of pregnancy - a real reveal popup, and a real choice to keep it or not",
+      "Having a baby is a real moment now - born at the start of your next year, and you name them yourself",
+    ],
+  },
   {
     version: "1.4.0",
     title: "School, For Real",

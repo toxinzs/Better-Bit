@@ -168,6 +168,8 @@ export type Character = {
   collegeStartAge?: number;
   degrees?: Degree[];
   flags?: string[];
+  pregnant?: boolean;
+  pendingBabyId?: string;
   relationships: Relationship[];
   yearLog: string[];
   fullLog: LogEntry[];

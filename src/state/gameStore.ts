@@ -61,11 +61,20 @@ type GameState = {
   character: Character | null;
   worldState: WorldState;
   pendingEvent: LifeEvent | null;
+  // The new lines an action just added to the year's log, shown as a
+  // dismissible result popup (ActionResultModal) instead of the player
+  // having to check the Life tab's log to see what happened - see
+  // applyToCharacter() below. Never set by ageUp() itself (the "This year"
+  // card already covers a natural year passing) or while a pendingEvent
+  // chain continues (the next EventModal screen covers it instead).
+  actionResultLines: string[] | null;
   hydrated: boolean;
   hydrate: () => Promise<void>;
   startNewLife: (firstName: string, lastName: string, gender: Gender) => void;
   ageUp: () => void;
   chooseEventOption: (choiceIndex: number) => void;
+  clearActionResult: () => void;
+  nameBaby: (name: string) => void;
   applyForJob: (job: Job) => void;
   quitJob: () => void;
   spendTimeWith: (relationshipId: string) => void;
@@ -114,400 +123,212 @@ function persist(character: Character | null, screen: Screen, worldState: WorldS
   });
 }
 
-export const useGameStore = create<GameState>((set, get) => ({
-  screen: "start",
-  character: null,
-  worldState: createInitialWorldState(),
-  pendingEvent: null,
-  hydrated: false,
-
-  hydrate: async () => {
-    try {
-      const raw = await AsyncStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as {
-          character: Character | null;
-          screen: Screen;
-          worldState?: WorldState;
-        };
-        const worldState = parsed.worldState ?? createInitialWorldState();
-        if (parsed.character) {
-          set({ character: parsed.character, screen: parsed.screen, worldState, hydrated: true });
-          return;
-        }
-        set({ worldState, hydrated: true });
-        return;
-      }
-    } catch {
-      // ignore corrupt/missing save
-    }
-    set({ hydrated: true });
-  },
-
-  startNewLife: (firstName, lastName, gender) => {
-    const character = createCharacter(firstName, lastName, gender);
-    set({ character, screen: "home", pendingEvent: null });
-    persist(character, "home", get().worldState);
-  },
-
-  ageUp: () => {
+export const useGameStore = create<GameState>((set, get) => {
+  // Shared by every simple action below: mutate the character, capture
+  // whatever new lines that mutation pushed to yearLog, and surface them
+  // as the result popup. This is what makes every one of these actions
+  // show "here's what happened" without each one wiring that up by hand -
+  // add a new action by calling this, not by hand-rolling get/set/persist.
+  function applyToCharacter(mutate: (c: Character) => void) {
     const character = get().character;
-    const worldState = get().worldState;
-    if (!character || !character.alive) return;
-    const result = engineAgeUp(character, worldState);
-    if (result.died) {
-      set({ character: { ...character }, worldState: { ...worldState }, screen: "gameover" });
-      persist(character, "gameover", worldState);
-      return;
-    }
+    if (!character) return;
+    const before = character.yearLog.length;
+    mutate(character);
+    const newLines = character.yearLog.slice(before);
     set({
       character: { ...character },
-      worldState: { ...worldState },
-      pendingEvent: result.pendingEvent ?? null,
+      actionResultLines: newLines.length > 0 ? newLines : get().actionResultLines,
     });
-    persist(character, "home", worldState);
-  },
-
-  chooseEventOption: (choiceIndex) => {
-    const { character, pendingEvent, worldState } = get();
-    if (!character || !pendingEvent) return;
-    // a chained follow-up (e.g. the court sequence) becomes the next
-    // pendingEvent instead of clearing it - same EventModal, next screen
-    const next = engineResolveEvent(character, worldState, pendingEvent, choiceIndex);
-    set({ character: { ...character }, pendingEvent: next ?? null });
-    persist(character, get().screen, worldState);
-  },
-
-  applyForJob: (job) => {
-    const character = get().character;
-    if (!character) return;
-    engineApplyForJob(character, job);
-    set({ character: { ...character } });
     persist(character, get().screen, get().worldState);
-  },
+  }
 
-  quitJob: () => {
-    const character = get().character;
-    if (!character) return;
-    engineQuitJob(character);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  spendTimeWith: (relationshipId) => {
-    const character = get().character;
-    if (!character) return;
-    engineSpendTimeWith(character, relationshipId);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  haveConversation: (relationshipId) => {
-    const character = get().character;
-    if (!character) return;
-    engineHaveConversation(character, relationshipId);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  textRelationship: (relationshipId) => {
-    const character = get().character;
-    if (!character) return;
-    engineTextRelationship(character, relationshipId);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  callRelationship: (relationshipId) => {
-    const character = get().character;
-    if (!character) return;
-    engineCallRelationship(character, relationshipId);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  bootyCall: (relationshipId) => {
-    const character = get().character;
-    if (!character) return;
-    engineBootyCall(character, relationshipId);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  sendGift: (relationshipId, amount) => {
-    const character = get().character;
-    if (!character) return;
-    engineSendGift(character, relationshipId, amount);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  buyCar: (listing) => {
-    const character = get().character;
-    if (!character) return;
-    engineBuyCar(character, listing);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  sellCar: () => {
-    const character = get().character;
-    if (!character) return;
-    engineSellCar(character);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  buyHome: (listing) => {
-    const character = get().character;
-    if (!character) return;
-    engineBuyHome(character, listing);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  sellHome: () => {
-    const character = get().character;
-    if (!character) return;
-    engineSellHome(character);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  takeOutLoan: (listing) => {
-    const character = get().character;
-    if (!character) return;
-    engineTakeOutLoan(character, listing);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  openCreditCard: (listing) => {
-    const character = get().character;
-    if (!character) return;
-    engineOpenCreditCard(character, listing);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  payDownLoan: (loanId, amount) => {
-    const character = get().character;
-    if (!character) return;
-    enginePayDownLoan(character, loanId, amount);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  chargeCard: (loanId, amount) => {
-    const character = get().character;
-    if (!character) return;
-    engineChargeCard(character, loanId, amount);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  buyStock: (ticker, shares) => {
+  function applyToCharacterWithWorld(mutate: (c: Character, world: WorldState) => void) {
     const character = get().character;
     const worldState = get().worldState;
     if (!character) return;
-    engineBuyStock(character, worldState, ticker, shares);
-    set({ character: { ...character } });
+    const before = character.yearLog.length;
+    mutate(character, worldState);
+    const newLines = character.yearLog.slice(before);
+    set({
+      character: { ...character },
+      actionResultLines: newLines.length > 0 ? newLines : get().actionResultLines,
+    });
     persist(character, get().screen, worldState);
-  },
+  }
 
-  sellStock: (ticker, shares) => {
+  // For an action that can chain a pendingEvent (a real multi-step choice,
+  // e.g. hookup's protection screen or a caught crime's arrest sequence):
+  // show the next EventModal screen instead of the result popup while the
+  // chain continues, and only surface the popup once it actually resolves.
+  function applyChained(mutate: (c: Character, world: WorldState) => LifeEvent | null | undefined) {
     const character = get().character;
     const worldState = get().worldState;
     if (!character) return;
-    engineSellStock(character, worldState, ticker, shares);
-    set({ character: { ...character } });
+    const before = character.yearLog.length;
+    const next = mutate(character, worldState);
+    const newLines = character.yearLog.slice(before);
+    set({
+      character: { ...character },
+      pendingEvent: next ?? get().pendingEvent,
+      actionResultLines: !next && newLines.length > 0 ? newLines : get().actionResultLines,
+    });
     persist(character, get().screen, worldState);
-  },
+  }
 
-  setContributionRate: (ratePercent) => {
-    const character = get().character;
-    if (!character) return;
-    engineSetContributionRate(character, ratePercent);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
+  return {
+    screen: "start",
+    character: null,
+    worldState: createInitialWorldState(),
+    pendingEvent: null,
+    actionResultLines: null,
+    hydrated: false,
 
-  withdrawRetirement: (amount) => {
-    const character = get().character;
-    if (!character) return;
-    engineWithdrawRetirement(character, amount);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
+    hydrate: async () => {
+      try {
+        const raw = await AsyncStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw) as {
+            character: Character | null;
+            screen: Screen;
+            worldState?: WorldState;
+          };
+          const worldState = parsed.worldState ?? createInitialWorldState();
+          if (parsed.character) {
+            set({ character: parsed.character, screen: parsed.screen, worldState, hydrated: true });
+            return;
+          }
+          set({ worldState, hydrated: true });
+          return;
+        }
+      } catch {
+        // ignore corrupt/missing save
+      }
+      set({ hydrated: true });
+    },
 
-  commitCrime: (crimeId) => {
-    const character = get().character;
-    const worldState = get().worldState;
-    if (!character) return;
-    // if caught, this returns a synthetic arrest LifeEvent - reuse the same
-    // pendingEvent/EventModal machinery ageUp() already uses for choices
-    const arrestEvent = engineCommitCrime(character, crimeId, worldState);
-    set({ character: { ...character }, pendingEvent: arrestEvent ?? get().pendingEvent });
-    persist(character, get().screen, worldState);
-  },
+    startNewLife: (firstName, lastName, gender) => {
+      const character = createCharacter(firstName, lastName, gender);
+      set({ character, screen: "home", pendingEvent: null, actionResultLines: null });
+      persist(character, "home", get().worldState);
+    },
 
-  petitionExpungement: () => {
-    const character = get().character;
-    if (!character) return;
-    enginePetitionExpungement(character);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
+    ageUp: () => {
+      const character = get().character;
+      const worldState = get().worldState;
+      if (!character || !character.alive) return;
+      const result = engineAgeUp(character, worldState);
+      if (result.died) {
+        set({ character: { ...character }, worldState: { ...worldState }, screen: "gameover", actionResultLines: null });
+        persist(character, "gameover", worldState);
+        return;
+      }
+      set({
+        character: { ...character },
+        worldState: { ...worldState },
+        pendingEvent: result.pendingEvent ?? null,
+        actionResultLines: null,
+      });
+      persist(character, "home", worldState);
+    },
 
-  doVenue: (venue) => {
-    const character = get().character;
-    if (!character) return;
-    engineApplyVenue(character, venue);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
+    chooseEventOption: (choiceIndex) => {
+      const { character, pendingEvent, worldState } = get();
+      if (!character || !pendingEvent) return;
+      const before = character.yearLog.length;
+      // a chained follow-up (e.g. the court sequence) becomes the next
+      // pendingEvent instead of clearing it - same EventModal, next screen
+      const next = engineResolveEvent(character, worldState, pendingEvent, choiceIndex);
+      const newLines = character.yearLog.slice(before);
+      set({
+        character: { ...character },
+        pendingEvent: next ?? null,
+        actionResultLines: !next && newLines.length > 0 ? newLines : get().actionResultLines,
+      });
+      persist(character, get().screen, worldState);
+    },
 
-  visitDoctor: () => {
-    const character = get().character;
-    if (!character) return;
-    engineVisitDoctor(character);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
+    clearActionResult: () => set({ actionResultLines: null }),
 
-  takeLesson: (skill) => {
-    const character = get().character;
-    if (!character) return;
-    engineTakeLesson(character, skill);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
+    nameBaby: (name) => {
+      const character = get().character;
+      if (!character || !character.pendingBabyId) return;
+      const baby = character.relationships.find((r) => r.id === character.pendingBabyId);
+      const trimmed = name.trim();
+      if (baby && trimmed) baby.name = trimmed;
+      character.pendingBabyId = undefined;
+      set({ character: { ...character } });
+      persist(character, get().screen, get().worldState);
+    },
 
-  pursueDatingCandidate: (candidate) => {
-    const character = get().character;
-    if (!character) return;
-    enginePursueDatingCandidate(character, candidate);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
+    applyForJob: (job) => applyToCharacter((c) => engineApplyForJob(c, job)),
+    quitJob: () => applyToCharacter((c) => engineQuitJob(c)),
+    spendTimeWith: (relationshipId) => applyToCharacter((c) => engineSpendTimeWith(c, relationshipId)),
+    haveConversation: (relationshipId) => applyToCharacter((c) => engineHaveConversation(c, relationshipId)),
+    textRelationship: (relationshipId) => applyToCharacter((c) => engineTextRelationship(c, relationshipId)),
+    callRelationship: (relationshipId) => applyToCharacter((c) => engineCallRelationship(c, relationshipId)),
+    bootyCall: (relationshipId) => applyToCharacter((c) => engineBootyCall(c, relationshipId)),
+    sendGift: (relationshipId, amount) => applyToCharacter((c) => engineSendGift(c, relationshipId, amount)),
+    buyCar: (listing) => applyToCharacter((c) => engineBuyCar(c, listing)),
+    sellCar: () => applyToCharacter((c) => engineSellCar(c)),
+    buyHome: (listing) => applyToCharacter((c) => engineBuyHome(c, listing)),
+    sellHome: () => applyToCharacter((c) => engineSellHome(c)),
+    takeOutLoan: (listing) => applyToCharacter((c) => engineTakeOutLoan(c, listing)),
+    openCreditCard: (listing) => applyToCharacter((c) => engineOpenCreditCard(c, listing)),
+    payDownLoan: (loanId, amount) => applyToCharacter((c) => enginePayDownLoan(c, loanId, amount)),
+    chargeCard: (loanId, amount) => applyToCharacter((c) => engineChargeCard(c, loanId, amount)),
+    buyStock: (ticker, shares) => applyToCharacterWithWorld((c, world) => engineBuyStock(c, world, ticker, shares)),
+    sellStock: (ticker, shares) => applyToCharacterWithWorld((c, world) => engineSellStock(c, world, ticker, shares)),
+    setContributionRate: (ratePercent) => applyToCharacter((c) => engineSetContributionRate(c, ratePercent)),
+    withdrawRetirement: (amount) => applyToCharacter((c) => engineWithdrawRetirement(c, amount)),
+    petitionExpungement: () => applyToCharacter((c) => enginePetitionExpungement(c)),
+    doVenue: (venue) => applyToCharacter((c) => engineApplyVenue(c, venue)),
+    visitDoctor: () => applyToCharacter((c) => engineVisitDoctor(c)),
+    takeLesson: (skill) => applyToCharacter((c) => engineTakeLesson(c, skill)),
+    pursueDatingCandidate: (candidate) => applyToCharacter((c) => enginePursueDatingCandidate(c, candidate)),
+    goOnBlindDate: () => applyToCharacter((c) => engineGoOnBlindDate(c)),
+    toggleBirthControl: () => applyToCharacter((c) => engineToggleBirthControl(c)),
+    getSterilized: () => applyToCharacter((c) => engineGetSterilized(c)),
+    tryConception: (method) => applyToCharacter((c) => engineTryConception(c, method)),
+    takeVacation: (vacation) => applyToCharacter((c) => engineTakeVacation(c, vacation)),
+    joinClub: (club) => applyToCharacter((c) => engineJoinClub(c, club)),
+    facultyAction: (relationshipId, kind) => applyToCharacter((c) => engineFacultyAction(c, relationshipId, kind)),
+    enrollInCollege: (school, major, online, housing) =>
+      applyToCharacter((c) => engineEnrollInCollege(c, school, major, online, housing)),
+    changeMajor: (major) => applyToCharacter((c) => engineChangeMajor(c, major)),
+    dropOutOfCollege: () => applyToCharacter((c) => engineDropOutOfCollege(c)),
+    seduceFaculty: (relationshipId) => applyToCharacter((c) => engineSeduceFaculty(c, relationshipId)),
 
-  goOnBlindDate: () => {
-    const character = get().character;
-    if (!character) return;
-    engineGoOnBlindDate(character);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
+    // hookup/commitCrime/attack can all chain a real multi-step choice
+    // (protection screen, arrest/trial, manslaughter charge) - see
+    // applyChained() above.
+    hookup: () => applyChained((c) => engineHookup(c)),
+    commitCrime: (crimeId) => applyChained((c, world) => engineCommitCrime(c, crimeId, world)),
 
-  hookup: () => {
-    const character = get().character;
-    if (!character) return;
-    engineHookup(character);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
+    attack: (relationshipId) => {
+      const character = get().character;
+      const worldState = get().worldState;
+      if (!character) return;
+      const before = character.yearLog.length;
+      // a rare tragic escalation can end the character's own life, same as
+      // a natural ageUp() death - check for it the same way that path does.
+      const followUp = engineAttack(character, relationshipId);
+      if (!character.alive) {
+        set({ character: { ...character }, worldState: { ...worldState }, screen: "gameover", actionResultLines: null });
+        persist(character, "gameover", worldState);
+        return;
+      }
+      const newLines = character.yearLog.slice(before);
+      set({
+        character: { ...character },
+        pendingEvent: followUp ?? get().pendingEvent,
+        actionResultLines: !followUp && newLines.length > 0 ? newLines : get().actionResultLines,
+      });
+      persist(character, get().screen, worldState);
+    },
 
-  toggleBirthControl: () => {
-    const character = get().character;
-    if (!character) return;
-    engineToggleBirthControl(character);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  getSterilized: () => {
-    const character = get().character;
-    if (!character) return;
-    engineGetSterilized(character);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  tryConception: (method) => {
-    const character = get().character;
-    if (!character) return;
-    engineTryConception(character, method);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  takeVacation: (vacation) => {
-    const character = get().character;
-    if (!character) return;
-    engineTakeVacation(character, vacation);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  joinClub: (club) => {
-    const character = get().character;
-    if (!character) return;
-    engineJoinClub(character, club);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  facultyAction: (relationshipId, kind) => {
-    const character = get().character;
-    if (!character) return;
-    engineFacultyAction(character, relationshipId, kind);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  enrollInCollege: (school, major, online, housing) => {
-    const character = get().character;
-    if (!character) return;
-    engineEnrollInCollege(character, school, major, online, housing);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  changeMajor: (major) => {
-    const character = get().character;
-    if (!character) return;
-    engineChangeMajor(character, major);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  dropOutOfCollege: () => {
-    const character = get().character;
-    if (!character) return;
-    engineDropOutOfCollege(character);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  seduceFaculty: (relationshipId) => {
-    const character = get().character;
-    if (!character) return;
-    engineSeduceFaculty(character, relationshipId);
-    set({ character: { ...character } });
-    persist(character, get().screen, get().worldState);
-  },
-
-  attack: (relationshipId) => {
-    const character = get().character;
-    const worldState = get().worldState;
-    if (!character) return;
-    // a rare tragic escalation can end the character's own life, same as a
-    // natural ageUp() death - check for it the same way that path does.
-    // Otherwise this can return a chained arrest LifeEvent (manslaughter/
-    // assault), reusing the exact same pendingEvent/EventModal machinery
-    // commitCrime() already does.
-    const followUp = engineAttack(character, relationshipId);
-    if (!character.alive) {
-      set({ character: { ...character }, worldState: { ...worldState }, screen: "gameover" });
-      persist(character, "gameover", worldState);
-      return;
-    }
-    set({ character: { ...character }, pendingEvent: followUp ?? get().pendingEvent });
-    persist(character, get().screen, worldState);
-  },
-
-  restart: () => {
-    set({ screen: "start", character: null, pendingEvent: null });
-    persist(null, "start", get().worldState);
-  },
-}));
+    restart: () => {
+      set({ screen: "start", character: null, pendingEvent: null, actionResultLines: null });
+      persist(null, "start", get().worldState);
+    },
+  };
+});
