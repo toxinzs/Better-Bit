@@ -1,8 +1,9 @@
-import React, { useEffect, useRef } from "react";
-import { Animated, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Character, LifeEvent, WorldState } from "../types";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
+import ModalBase from "./ModalBase";
 
 export default function EventModal({
   event,
@@ -15,70 +16,28 @@ export default function EventModal({
   world: WorldState;
   onChoose: (choiceIndex: number) => void;
 }) {
-  const scale = useRef(new Animated.Value(0.85)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.spring(scale, { toValue: 1, friction: 7, tension: 60, useNativeDriver: true }),
-      Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
-    ]).start();
-  }, [scale, opacity]);
-
   return (
-    <Modal transparent animationType="fade">
-      <View style={styles.overlay}>
-        <Animated.View style={[styles.card, { opacity, transform: [{ scale }] }]}>
-          <View style={styles.badge}>
-            <Ionicons name="sparkles" size={20} color={colors.gold} />
-          </View>
-          <Text style={styles.text}>{event.text(character, world)}</Text>
-          <View style={styles.choices}>
-            {event.choices?.map((choice, i) => (
-              <TouchableOpacity
-                accessibilityRole="button"
-                activeOpacity={0.7}
-                key={i}
-                style={styles.choiceBtn}
-                onPress={() => onChoose(i)}
-              >
-                <Text style={styles.choiceText}>{choice.label}</Text>
-                <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
-              </TouchableOpacity>
-            ))}
-          </View>
-        </Animated.View>
+    <ModalBase icon="sparkles">
+      <Text style={styles.text}>{event.text(character, world)}</Text>
+      <View style={styles.choices}>
+        {event.choices?.map((choice, i) => (
+          <TouchableOpacity
+            accessibilityRole="button"
+            activeOpacity={0.7}
+            key={i}
+            style={styles.choiceBtn}
+            onPress={() => onChoose(i)}
+          >
+            <Text style={styles.choiceText}>{choice.label}</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
+          </TouchableOpacity>
+        ))}
       </View>
-    </Modal>
+    </ModalBase>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: spacing.xl,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.xl,
-    padding: spacing.xl,
-    width: "100%",
-    maxWidth: 420,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  badge: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.surfaceRaised,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: spacing.md,
-  },
   text: {
     color: colors.textPrimary,
     fontFamily: fonts.semiBold,
