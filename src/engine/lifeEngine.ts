@@ -71,6 +71,7 @@ export {
   skipClass,
 } from "./school";
 export { attack } from "./fighting";
+export { surrender } from "./surrender";
 
 export function totalNetWorth(c: Character, world: WorldState): number {
   return netWorth(c) + portfolioValue(c, world) + retirementBalance(c);

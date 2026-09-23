@@ -62,6 +62,7 @@ export default function ActivitiesTab() {
   const getSterilized = useGameStore((s) => s.getSterilized);
   const tryConception = useGameStore((s) => s.tryConception);
   const takeVacation = useGameStore((s) => s.takeVacation);
+  const surrender = useGameStore((s) => s.surrender);
 
   const [candidates, setCandidates] = useState<DatingCandidate[] | null>(null);
 
@@ -253,6 +254,15 @@ export default function ActivitiesTab() {
           </TouchableOpacity>
         ))}
       </Card>
+
+      <Card>
+        <View style={styles.headerRow}>
+          <Ionicons name="alert-circle" size={18} color={colors.danger} />
+          <Text style={tabStyles.sectionTitle}>End of the Road</Text>
+        </View>
+        <Text style={tabStyles.logLine}>If it's become too much, you can choose to end things here.</Text>
+        <Button label="Surrender" icon="flag" variant="danger" onPress={surrender} style={styles.surrenderBtn} />
+      </Card>
     </ScrollView>
   );
 }
@@ -268,6 +278,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.sm,
+  },
+  surrenderBtn: {
+    marginTop: spacing.sm,
   },
   gridBtn: {
     width: "31%",

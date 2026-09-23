@@ -49,6 +49,7 @@ import {
   dropOutOfCollege as engineDropOutOfCollege,
   seduceFaculty as engineSeduceFaculty,
   attack as engineAttack,
+  surrender as engineSurrender,
   DatingCandidate,
 } from "../engine/lifeEngine";
 
@@ -114,6 +115,7 @@ type GameState = {
   dropOutOfCollege: () => void;
   seduceFaculty: (relationshipId: string) => void;
   attack: (relationshipId: string) => void;
+  surrender: () => void;
   restart: () => void;
 };
 
@@ -238,6 +240,14 @@ export const useGameStore = create<GameState>((set, get) => {
       // a chained follow-up (e.g. the court sequence) becomes the next
       // pendingEvent instead of clearing it - same EventModal, next screen
       const next = engineResolveEvent(character, worldState, pendingEvent, choiceIndex);
+      // an event choice can end the character's own life (Surrender's
+      // confirm step) - check the same way attack()'s direct action does,
+      // since nothing else here would otherwise notice and route to gameover.
+      if (!character.alive) {
+        set({ character: { ...character }, worldState: { ...worldState }, screen: "gameover", pendingEvent: null, actionResultLines: null });
+        persist(character, "gameover", worldState);
+        return;
+      }
       const newLines = character.yearLog.slice(before);
       set({
         character: { ...character },
@@ -298,11 +308,12 @@ export const useGameStore = create<GameState>((set, get) => {
     dropOutOfCollege: () => applyToCharacter((c) => engineDropOutOfCollege(c)),
     seduceFaculty: (relationshipId) => applyToCharacter((c) => engineSeduceFaculty(c, relationshipId)),
 
-    // hookup/commitCrime/attack can all chain a real multi-step choice
-    // (protection screen, arrest/trial, manslaughter charge) - see
-    // applyChained() above.
+    // hookup/commitCrime/surrender/attack can all chain a real multi-step
+    // choice (protection screen, arrest/trial, manslaughter charge, the
+    // surrender confirm) - see applyChained() above.
     hookup: () => applyChained((c) => engineHookup(c)),
     commitCrime: (crimeId) => applyChained((c, world) => engineCommitCrime(c, crimeId, world)),
+    surrender: () => applyChained((c) => engineSurrender(c)),
 
     attack: (relationshipId) => {
       const character = get().character;
