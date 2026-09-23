@@ -31,3 +31,9 @@ export function randomFirstName(gender: "male" | "female" | "nonbinary"): string
 export function randomLastName(): string {
   return LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
 }
+
+export function randomFullName(lastName?: string): string {
+  const genders: Array<"male" | "female" | "nonbinary"> = ["male", "female", "nonbinary"];
+  const gender = genders[Math.floor(Math.random() * genders.length)];
+  return `${randomFirstName(gender)} ${lastName ?? randomLastName()}`;
+}

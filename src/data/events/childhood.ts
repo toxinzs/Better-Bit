@@ -1,6 +1,7 @@
 import { LifeEvent } from "../../types";
 import { clamp, randomInt } from "../../engine/util";
 import { mother, father } from "./helpers";
+import { randomFullName } from "../../data/names";
 
 export const CHILDHOOD_EVENTS: LifeEvent[] = [
   {
@@ -132,7 +133,7 @@ export const CHILDHOOD_EVENTS: LifeEvent[] = [
       c.stats.happiness = clamp(c.stats.happiness + 6);
       c.relationships.push({
         id: `friend-${Date.now()}-${Math.random()}`,
-        name: "A close friend",
+        name: randomFullName(),
         type: "friend",
         level: 60,
         alive: true,
@@ -241,7 +242,7 @@ export const CHILDHOOD_EVENTS: LifeEvent[] = [
     autoEffect: (c) => {
       c.relationships.push({
         id: `sibling-${Date.now()}`,
-        name: "Your sibling",
+        name: randomFullName(c.lastName),
         type: "sibling",
         level: 55,
         alive: true,

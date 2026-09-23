@@ -1,5 +1,6 @@
 import { LifeEvent } from "../../types";
 import { clamp } from "../../engine/util";
+import { randomFullName } from "../../data/names";
 
 export const RANDOM_EVENTS: LifeEvent[] = [
   {
@@ -67,7 +68,7 @@ export const RANDOM_EVENTS: LifeEvent[] = [
       c.stats.happiness = clamp(c.stats.happiness + 6);
       c.relationships.push({
         id: `friend-${Date.now()}`,
-        name: "An old friend",
+        name: randomFullName(),
         type: "friend",
         level: 55,
         alive: true,
