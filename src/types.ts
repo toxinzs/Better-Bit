@@ -107,6 +107,12 @@ export type LogEntry = {
   text: string;
 };
 
+// One archived year of the life story: everything that happened at `age`.
+export type YearRecord = {
+  age: number;
+  lines: string[];
+};
+
 export type MacroConditionKind = "recession" | "boom" | "war" | "pandemic" | "crackdown";
 
 export type MacroCondition = {
@@ -177,6 +183,7 @@ export type Character = {
   avatarSeed?: number;
   relationships: Relationship[];
   yearLog: string[];
+  lifeLog?: YearRecord[];
   fullLog: LogEntry[];
   triggeredEvents: string[];
 };

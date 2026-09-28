@@ -167,6 +167,12 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
   tickMarket(world);
   tickRetirementGrowth(c, world);
 
+  // archive the year that's ending into the life story before it's wiped,
+  // so the Life tab can show a real by-age history, not just event lines
+  if (c.yearLog.length > 0) {
+    (c.lifeLog ??= []).push({ age: c.age, lines: c.yearLog });
+  }
+
   c.age += 1;
   c.yearLog = [];
 

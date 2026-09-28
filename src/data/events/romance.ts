@@ -1,6 +1,7 @@
 import { LifeEvent } from "../../types";
 import { clamp } from "../../engine/util";
 import { partner, hasPartner } from "./helpers";
+import { randomFullName } from "../../data/names";
 
 export const ROMANCE_EVENTS: LifeEvent[] = [
   {
@@ -16,7 +17,7 @@ export const ROMANCE_EVENTS: LifeEvent[] = [
         effect: (c) => {
           c.relationships.push({
             id: `partner-${Date.now()}`,
-            name: "Your partner",
+            name: randomFullName(c.originRegion),
             type: "partner",
             level: 65,
             alive: true,
@@ -47,7 +48,7 @@ export const ROMANCE_EVENTS: LifeEvent[] = [
           if (goes_well) {
             c.relationships.push({
               id: `partner-${Date.now()}`,
-              name: "Your partner",
+              name: randomFullName(c.originRegion),
               type: "partner",
               level: 60,
               alive: true,

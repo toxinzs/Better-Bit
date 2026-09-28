@@ -7,26 +7,25 @@ import TextThreadModal from "../components/TextThreadModal";
 import ActionResultModal from "../components/ActionResultModal";
 import NameBabyModal from "../components/NameBabyModal";
 import Avatar from "../components/Avatar";
+import GradientBg from "../components/GradientBg";
+import StatStrip from "../components/StatStrip";
 import LifeTab from "./tabs/LifeTab";
 import PeopleTab from "./tabs/PeopleTab";
-import CareerTab from "./tabs/CareerTab";
 import AssetsTab from "./tabs/AssetsTab";
-import CrimeTab from "./tabs/CrimeTab";
-import ActivitiesTab from "./tabs/ActivitiesTab";
-import SchoolTab from "./tabs/SchoolTab";
+import WorkTab from "./tabs/WorkTab";
+import DoTab from "./tabs/DoTab";
+import { getRegion } from "../data/regions";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
 import { playSound } from "../sound";
 
-type Tab = "life" | "activities" | "school" | "people" | "career" | "assets" | "crime";
+type Tab = "life" | "do" | "people" | "work" | "money";
 
-const TABS: { key: Tab; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { key: "life", label: "Life", icon: "pulse" },
-  { key: "activities", label: "Activities", icon: "sparkles" },
-  { key: "school", label: "School", icon: "school" },
-  { key: "people", label: "People", icon: "people" },
-  { key: "career", label: "Career", icon: "briefcase" },
-  { key: "assets", label: "Money", icon: "wallet" },
-  { key: "crime", label: "Crime", icon: "skull" },
+const TABS: { key: Tab; label: string; icon: keyof typeof Ionicons.glyphMap; color: string }[] = [
+  { key: "life", label: "Life", icon: "pulse", color: colors.health },
+  { key: "do", label: "Activities", icon: "sparkles", color: colors.happiness },
+  { key: "people", label: "People", icon: "people", color: colors.looks },
+  { key: "work", label: "Work", icon: "briefcase", color: colors.smarts },
+  { key: "money", label: "Money", icon: "wallet", color: colors.primary },
 ];
 
 export default function HomeScreen() {
@@ -79,14 +78,18 @@ export default function HomeScreen() {
   if (!character) return null;
 
   const viewingThread = character.relationships.find((r) => r.id === viewingThreadId);
+  const region = getRegion(character.originRegion);
+  const activeTab = TABS.find((t) => t.key === tab)!;
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      <GradientBg id="homeHeader" from="#1f2140" to={colors.surface} radius={0} vertical style={styles.header}>
         <View style={styles.identityRow}>
-          <Avatar character={character} size={44} />
-          <View>
-            <Text style={styles.name}>
+          <View style={styles.avatarRing}>
+            <Avatar character={character} size={50} />
+          </View>
+          <View style={styles.identityText}>
+            <Text style={styles.name} numberOfLines={1}>
               {character.firstName} {character.lastName}
             </Text>
             <View style={styles.metaRow}>
@@ -95,47 +98,61 @@ export default function HomeScreen() {
                 {character.age}
               </Animated.Text>
               <Text style={styles.metaDivider}>·</Text>
-              <Text style={styles.metaText}>{character.job ? character.job.title : "Unemployed"}</Text>
+              <Text style={styles.metaText} numberOfLines={1}>
+                {character.inJail ? "Incarcerated" : character.job ? character.job.title : character.inCollege ? "Student" : "Unemployed"}
+              </Text>
             </View>
+            <Text style={styles.regionText}>{region.label}</Text>
+          </View>
+          <View style={styles.moneyPill}>
+            <Ionicons name="cash" size={14} color={colors.primary} />
+            <Text style={styles.moneyText}>${character.money.toLocaleString()}</Text>
           </View>
         </View>
-        <View style={styles.moneyPill}>
-          <Ionicons name="cash" size={14} color={colors.primary} />
-          <Text style={styles.moneyText}>${character.money.toLocaleString()}</Text>
-        </View>
-      </View>
+      </GradientBg>
+      <StatStrip stats={character.stats} />
 
       <Animated.View style={[styles.tabContent, { opacity: fadeAnim }]}>
         {tab === "life" && <LifeTab />}
-        {tab === "activities" && <ActivitiesTab />}
-        {tab === "school" && <SchoolTab />}
+        {tab === "do" && <DoTab />}
         {tab === "people" && <PeopleTab onOpenThread={setViewingThreadId} />}
-        {tab === "career" && <CareerTab />}
-        {tab === "assets" && <AssetsTab />}
-        {tab === "crime" && <CrimeTab />}
+        {tab === "work" && <WorkTab initial={character.inCollege || character.age < 18 ? "school" : "job"} />}
+        {tab === "money" && <AssetsTab />}
       </Animated.View>
 
       <View style={styles.bottomArea}>
-        <View style={styles.tabBar}>
-          {TABS.map((t) => (
-            <TouchableOpacity
-              key={t.key}
-              accessibilityRole="button"
-              activeOpacity={0.7}
-              style={[styles.tabBtn, tab === t.key && styles.tabBtnActive]}
-              onPress={() => setTab(t.key)}
-            >
-              <Ionicons name={t.icon} size={18} color={tab === t.key ? colors.primary : colors.textMuted} />
-              <Text style={[styles.tabLabel, tab === t.key && styles.tabLabelActive]}>{t.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
         <Pressable accessibilityRole="button" onPress={handleAgeUp} onPressIn={ageBtnPressIn} onPressOut={ageBtnPressOut}>
-          <Animated.View style={[styles.ageBtn, { transform: [{ scale: ageBtnScale }] }]}>
-            <Text style={styles.ageBtnText}>Age Up</Text>
-            <Ionicons name="arrow-forward" size={16} color={colors.primaryText} />
+          <Animated.View style={{ transform: [{ scale: ageBtnScale }] }}>
+            <GradientBg id="ageBtn" from="#35d67d" to="#1fa85a" radius={radii.lg} style={styles.ageBtn}>
+              <View style={styles.ageBtnInner}>
+                <Text style={styles.ageBtnText}>Age Up</Text>
+                <View style={styles.ageBtnPill}>
+                  <Text style={styles.ageBtnPillText}>{character.age + 1}</Text>
+                  <Ionicons name="arrow-forward" size={14} color={colors.primaryText} />
+                </View>
+              </View>
+            </GradientBg>
           </Animated.View>
         </Pressable>
+        <View style={styles.tabBar}>
+          {TABS.map((t) => {
+            const active = tab === t.key;
+            return (
+              <TouchableOpacity
+                key={t.key}
+                accessibilityRole="button"
+                activeOpacity={0.7}
+                style={styles.tabBtn}
+                onPress={() => setTab(t.key)}
+              >
+                <View style={[styles.tabIcon, active && { backgroundColor: t.color + "26" }]}>
+                  <Ionicons name={t.icon} size={22} color={active ? t.color : colors.textMuted} />
+                </View>
+                <Text style={[styles.tabLabel, active && { color: activeTab.color }]}>{t.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
 
       {character.pendingBabyId ? (
@@ -167,19 +184,28 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm + 2,
+    paddingTop: spacing.md,
     paddingBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   identityRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm + 2,
+    gap: spacing.md,
+  },
+  avatarRing: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: colors.surfaceRaised,
+    borderWidth: 2,
+    borderColor: colors.primary + "88",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  identityText: {
+    flex: 1,
   },
   name: {
     fontSize: fontSize.xl,
@@ -189,34 +215,44 @@ const styles = StyleSheet.create({
   metaRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 2,
+    marginTop: 1,
   },
   metaText: {
     fontSize: fontSize.md,
-    fontFamily: fonts.regular,
+    fontFamily: fonts.semiBold,
     color: colors.textSecondary,
+    flexShrink: 1,
   },
   ageValue: {
-    fontFamily: fonts.bold,
+    fontFamily: fonts.extraBold,
     color: colors.textPrimary,
   },
   metaDivider: {
     color: colors.textMuted,
     marginHorizontal: 6,
   },
+  regionText: {
+    fontSize: fontSize.xs,
+    fontFamily: fonts.semiBold,
+    color: colors.textMuted,
+    marginTop: 1,
+    letterSpacing: 0.4,
+  },
   moneyPill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: colors.surfaceRaised,
-    paddingHorizontal: spacing.sm + 2,
-    paddingVertical: 6,
+    backgroundColor: colors.primaryDark,
+    borderWidth: 1,
+    borderColor: colors.primary + "55",
+    paddingHorizontal: spacing.md,
+    paddingVertical: 7,
     borderRadius: radii.pill,
   },
   moneyText: {
     color: colors.primary,
-    fontFamily: fonts.bold,
-    fontSize: fontSize.md,
+    fontFamily: fonts.extraBold,
+    fontSize: fontSize.base,
   },
   tabContent: {
     flex: 1,
@@ -225,46 +261,59 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.md,
     paddingHorizontal: spacing.md,
-    paddingBottom: spacing.sm + 2,
+    paddingBottom: spacing.xs,
+  },
+  ageBtn: {
+    paddingVertical: spacing.md + 2,
+    paddingHorizontal: spacing.lg,
+    ...{ shadowColor: colors.primary, shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 4 } },
+  },
+  ageBtnInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  ageBtnText: {
+    color: colors.primaryText,
+    fontSize: fontSize.xl,
+    fontFamily: fonts.extraBold,
+  },
+  ageBtnPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(6,23,14,0.18)",
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 5,
+  },
+  ageBtnPillText: {
+    color: colors.primaryText,
+    fontFamily: fonts.extraBold,
+    fontSize: fontSize.lg,
   },
   tabBar: {
     flexDirection: "row",
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
+    marginTop: spacing.sm,
   },
   tabBtn: {
     flex: 1,
     alignItems: "center",
-    paddingVertical: spacing.sm,
-    borderRadius: radii.md,
-    backgroundColor: "transparent",
+    paddingVertical: spacing.xs,
   },
-  tabBtnActive: {
-    backgroundColor: colors.surfaceRaised,
+  tabIcon: {
+    width: 46,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
   },
   tabLabel: {
     fontSize: fontSize.xs,
     color: colors.textMuted,
-    marginTop: 3,
-    fontFamily: fonts.semiBold,
-  },
-  tabLabelActive: {
-    color: colors.primary,
-  },
-  ageBtn: {
-    flexDirection: "row",
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
-    borderRadius: radii.md,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-  },
-  ageBtnText: {
-    color: colors.primaryText,
-    fontSize: fontSize.lg,
-    fontFamily: fonts.extraBold,
+    marginTop: 2,
+    fontFamily: fonts.bold,
   },
 });
