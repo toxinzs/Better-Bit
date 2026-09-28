@@ -1,6 +1,7 @@
 import { LifeEvent } from "../../types";
 import { clamp } from "../../engine/util";
-import { mother, father, hasPartner, children, hasChild } from "./helpers";
+import { mother, father, hasPartner, children, hasChild, hasMinorChild, sibling } from "./helpers";
+import { ageOf, markDeceased } from "../../engine/people";
 
 export const FAMILY_EVENTS: LifeEvent[] = [
   {
@@ -31,7 +32,7 @@ export const FAMILY_EVENTS: LifeEvent[] = [
     minAge: 24,
     maxAge: 55,
     weight: 1.3,
-    condition: (c) => hasChild(c),
+    condition: (c) => hasMinorChild(c),
     text: () => "Your kid is asking for something you're not sure they should have.",
     choices: [
       {
@@ -55,7 +56,7 @@ export const FAMILY_EVENTS: LifeEvent[] = [
     minAge: 26,
     maxAge: 55,
     weight: 1,
-    condition: (c) => hasChild(c),
+    condition: (c) => hasMinorChild(c),
     text: () => "Your kid has a school play and really wants you there.",
     choices: [
       {
@@ -84,7 +85,7 @@ export const FAMILY_EVENTS: LifeEvent[] = [
       {
         label: "Be there for them",
         effect: (c) => {
-          const sib = c.relationships.find((r) => r.type === "sibling");
+          const sib = sibling(c);
           if (sib) sib.level = clamp(sib.level + 8);
           c.stats.happiness = clamp(c.stats.happiness + 2);
         },
@@ -92,7 +93,7 @@ export const FAMILY_EVENTS: LifeEvent[] = [
       {
         label: "Let it go to voicemail",
         effect: (c) => {
-          const sib = c.relationships.find((r) => r.type === "sibling");
+          const sib = sibling(c);
           if (sib) sib.level = clamp(sib.level - 8);
         },
       },
@@ -133,19 +134,21 @@ export const FAMILY_EVENTS: LifeEvent[] = [
     minAge: 30,
     maxAge: 80,
     weight: 0.35,
-    condition: (c) => mother(c) !== undefined || father(c) !== undefined,
+    // only a parent who is actually old enough to die of old age - a 45-year-old
+    // mother can't "pass away" because the dice said so (see Phase 3: real
+    // parent mortality + funerals replace this event)
+    condition: (c) => [mother(c), father(c)].some((p) => p && ageOf(c, p) >= 58),
     text: (c) => {
-      const m = mother(c);
-      const f = father(c);
-      const name = m?.name ?? f?.name ?? "Your parent";
-      return `${name} passed away this year.`;
+      // autoEffect has already run by the time this is read, so the parent
+      // who just died is the one marked deceased this very year
+      const gone = c.relationships.find((r) => (r.type === "mother" || r.type === "father") && !r.alive && r.diedAge !== undefined && c.age - (r.bornOffset ?? 0) === r.diedAge);
+      return `${gone?.name ?? "Your parent"} passed away this year.`;
     },
     autoEffect: (c) => {
-      const m = mother(c);
-      const f = father(c);
-      const parentGone = m && Math.random() > 0.5 ? m : f ?? m;
+      const old = [mother(c), father(c)].filter((p): p is NonNullable<typeof p> => !!p && ageOf(c, p) >= 58);
+      const parentGone = old[Math.floor(Math.random() * old.length)];
       if (parentGone) {
-        parentGone.alive = false;
+        markDeceased(c, parentGone, "natural causes");
         c.stats.happiness = clamp(c.stats.happiness - 25);
         c.money += 5000;
       }

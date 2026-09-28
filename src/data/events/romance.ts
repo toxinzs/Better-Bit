@@ -1,7 +1,8 @@
 import { LifeEvent } from "../../types";
 import { clamp } from "../../engine/util";
 import { partner, hasPartner } from "./helpers";
-import { randomFullName } from "../../data/names";
+import { addPerson } from "../../engine/people";
+import { randomInt } from "../../engine/util";
 
 export const ROMANCE_EVENTS: LifeEvent[] = [
   {
@@ -15,13 +16,7 @@ export const ROMANCE_EVENTS: LifeEvent[] = [
       {
         label: "Ask them out",
         effect: (c) => {
-          c.relationships.push({
-            id: `partner-${Date.now()}`,
-            name: randomFullName(c.originRegion),
-            type: "partner",
-            level: 65,
-            alive: true,
-          });
+          addPerson(c, { type: "partner", age: Math.max(18, c.age + randomInt(-5, 6)), level: 65 });
           c.stats.happiness = clamp(c.stats.happiness + 12);
         },
       },
@@ -46,13 +41,7 @@ export const ROMANCE_EVENTS: LifeEvent[] = [
         effect: (c) => {
           const goes_well = Math.random() > 0.5;
           if (goes_well) {
-            c.relationships.push({
-              id: `partner-${Date.now()}`,
-              name: randomFullName(c.originRegion),
-              type: "partner",
-              level: 60,
-              alive: true,
-            });
+            addPerson(c, { type: "partner", age: Math.max(18, c.age + randomInt(-5, 6)), level: 60 });
             c.stats.happiness = clamp(c.stats.happiness + 10);
           } else {
             c.stats.happiness = clamp(c.stats.happiness - 3);

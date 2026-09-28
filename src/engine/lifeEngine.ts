@@ -6,6 +6,9 @@ import { getRegion } from "../data/regions";
 import { MIN_AGE_CONVERSATION, getLifeStage } from "./lifeStage";
 import { tickWorldState, hasActiveCondition, effectiveSalary } from "./worldState";
 import { ambientMessageTick } from "./relationships";
+import { addPerson, ensurePeople, newPerson } from "./people";
+import { deathChance } from "./mortality";
+import { nextDecisionEvent } from "./decisionQueue";
 import { tickAssets, netWorth } from "./assets";
 import { tickDebt } from "./debt";
 import { tickMarket, portfolioValue } from "./stocks";
@@ -111,14 +114,17 @@ export function createCharacter(
     originRegion: region,
     appearanceFlavor: regionDef.appearanceFlavor[randomInt(0, regionDef.appearanceFlavor.length - 1)],
     avatarSeed: randomInt(0, 999999),
-    relationships: [
-      { id: "mother", name: motherName, type: "mother", level: randomInt(60, 90), alive: true },
-      { id: "father", name: fatherName, type: "father", level: randomInt(55, 90), alive: true },
-    ],
+    relationships: [],
     yearLog: [`You were born! ${motherName} and ${fatherName} welcomed you into the world.`],
     fullLog: [{ age: 0, text: "You were born." }],
     triggeredEvents: [],
   };
+
+  character.relationships.push(
+    newPerson(character, { id: "mother", type: "mother", name: motherName, gender: "female", age: randomInt(22, 36), level: randomInt(60, 90) }),
+    newPerson(character, { id: "father", type: "father", name: fatherName, gender: "male", age: randomInt(22, 40), level: randomInt(55, 90) }),
+  );
+  ensurePeople(character);
 
   return character;
 }
@@ -128,23 +134,6 @@ function educationForAge(age: number): Character["educationStage"] | null {
   if (age >= 11) return "middle";
   if (age >= 5) return "elementary";
   return "none";
-}
-
-function deathChance(age: number, health: number): number {
-  let base: number;
-  if (age < 45) base = 0.0005;
-  else if (age < 60) base = 0.004;
-  else if (age < 70) base = 0.015;
-  else if (age < 80) base = 0.04;
-  else if (age < 90) base = 0.1;
-  else if (age < 100) base = 0.25;
-  else base = 0.5;
-
-  if (health <= 0) base += 0.35;
-  else if (health < 15) base += 0.12;
-  else if (health < 30) base += 0.04;
-
-  return Math.min(base, 0.95);
 }
 
 // How many years before a non-`once` event is allowed to come up again -
@@ -210,6 +199,7 @@ export type AgeUpResult = {
 };
 
 export function ageUp(c: Character, world: WorldState): AgeUpResult {
+  ensurePeople(c);
   tickWorldState(world);
   tickMarket(world);
   tickRetirementGrowth(c, world);
@@ -231,9 +221,14 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
   // pendingEvent/EventModal.
   if (c.pregnant) {
     c.pregnant = false;
-    const babyId = `child-${Date.now()}`;
-    c.relationships.push({ id: babyId, name: "Baby", type: "child", level: 80, alive: true });
-    c.pendingBabyId = babyId;
+    const baby = addPerson(c, {
+      type: "child",
+      age: 0,
+      name: "Baby",
+      gender: Math.random() < 0.5 ? "male" : "female",
+      level: 80,
+    });
+    c.pendingBabyId = baby.id;
     c.stats.happiness = clamp(c.stats.happiness + 15);
     c.yearLog.push("Your baby was born!");
   }
@@ -338,9 +333,12 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
       c.fullLog.push({ age: c.age, text });
     }
 
-    const quiet = Math.random() < (c.quietLastYear ? QUIET_AFTER_QUIET_CHANCE : QUIET_YEAR_CHANCE);
+    const decision = nextDecisionEvent(c, world);
+    const quiet = !decision && Math.random() < (c.quietLastYear ? QUIET_AFTER_QUIET_CHANCE : QUIET_YEAR_CHANCE);
     c.quietLastYear = quiet;
-    if (quiet) {
+    if (decision) {
+      pendingEvent = decision;
+    } else if (quiet) {
       const lines = QUIET_LINES[getLifeStage(c.age)] ?? QUIET_LINES.adult;
       c.yearLog.push(lines[randomInt(0, lines.length - 1)]);
     } else {
@@ -366,11 +364,15 @@ export function resolveEvent(c: Character, world: WorldState, event: LifeEvent, 
   if (event.once) c.triggeredEvents.push(event.id);
   rememberEvent(c, event.id);
   const next = choice.effect(c, world);
-  const baseText = event.text(c, world);
+  const baseText = event.logText ? event.logText(c, world) : event.text(c, world);
   const resultText = choice.resultText?.(c, world);
-  c.yearLog.push(resultText ? `${baseText} ${resultText}` : baseText);
-  c.fullLog.push({ age: c.age, text: c.yearLog[c.yearLog.length - 1] });
-  return next || undefined;
+  const line = resultText ? `${baseText} ${resultText}`.trim() : baseText;
+  if (line) {
+    c.yearLog.push(line);
+    c.fullLog.push({ age: c.age, text: line });
+  }
+  // a chained follow-up wins; otherwise the next queued decision (if any)
+  return next || nextDecisionEvent(c, world) || undefined;
 }
 
 export function spendTimeWith(c: Character, relationshipId: string) {

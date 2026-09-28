@@ -6,8 +6,9 @@ import Card from "../../components/Card";
 import Chip from "../../components/Chip";
 import { FadeInUp } from "../../motion";
 import { PersonAvatar } from "../../components/Avatar";
-import { Relationship, RelationType, RegionKey } from "../../types";
+import { Character, Relationship, RelationType, RegionKey } from "../../types";
 import { MIN_AGE_CONVERSATION } from "../../engine/lifeStage";
+import { jobLine } from "../../engine/people";
 import { colors, fonts, fontSize, radii, spacing } from "../../theme";
 import { tabStyles } from "./sharedStyles";
 
@@ -78,6 +79,7 @@ export default function PeopleTab({ onOpenThread }: { onOpenThread: (relationshi
             {members.map((r, idx) => (
               <FadeInUp key={r.id} delay={Math.min(idx, 8) * 50}>
               <PersonCard
+                c={character}
                 r={r}
                 region={character.originRegion}
                 expanded={expandedIds.has(r.id)}
@@ -97,6 +99,7 @@ export default function PeopleTab({ onOpenThread }: { onOpenThread: (relationshi
 }
 
 function PersonCard({
+  c,
   r,
   region,
   expanded,
@@ -106,6 +109,7 @@ function PersonCard({
   onTalk,
   onOpenThread,
 }: {
+  c: Character;
   r: Relationship;
   region?: RegionKey;
   expanded: boolean;
@@ -134,7 +138,7 @@ function PersonCard({
     <Card style={styles.person}>
       <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.personRow} onPress={handleToggle}>
         <View style={[styles.avatarWrap, { borderColor: meta.color + "88" }]}>
-          <PersonAvatar name={r.name} type={r.type} region={region} size={46} />
+          <PersonAvatar name={r.name} id={r.id} type={r.type} gender={r.gender} region={region} size={46} />
         </View>
         <View style={styles.personBody}>
           <View style={styles.nameRow}>
@@ -144,7 +148,12 @@ function PersonCard({
             {r.married ? <Chip label="MARRIED" color={colors.love} /> : r.engaged ? <Chip label="ENGAGED" color={colors.love} /> : null}
           </View>
           <View style={styles.metaRow}>
-            <Chip label={meta.label.toUpperCase()} color={meta.color} />
+            <View style={styles.metaLeft}>
+              <Chip label={meta.label.toUpperCase()} color={meta.color} />
+              <Text style={styles.subline} numberOfLines={1}>
+                {jobLine(c, r)}
+              </Text>
+            </View>
             <Text style={[styles.levelText, { color: lc }]}>{Math.round(r.level)}</Text>
           </View>
           <View style={styles.track}>
@@ -258,6 +267,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+  },
+  metaLeft: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  subline: {
+    flexShrink: 1,
+    color: colors.textSecondary,
+    fontFamily: fonts.semiBold,
+    fontSize: fontSize.sm,
   },
   levelText: {
     fontFamily: fonts.extraBold,

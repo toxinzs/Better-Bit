@@ -1,6 +1,6 @@
 import { LifeEvent } from "../../types";
-import { clamp } from "../../engine/util";
-import { randomFullName } from "../../data/names";
+import { clamp, randomInt } from "../../engine/util";
+import { addPerson } from "../../engine/people";
 
 export const RANDOM_EVENTS: LifeEvent[] = [
   {
@@ -66,13 +66,7 @@ export const RANDOM_EVENTS: LifeEvent[] = [
     text: () => "Someone you haven't talked to in years messaged you out of nowhere.",
     autoEffect: (c) => {
       c.stats.happiness = clamp(c.stats.happiness + 6);
-      c.relationships.push({
-        id: `friend-${Date.now()}`,
-        name: randomFullName(c.originRegion),
-        type: "friend",
-        level: 55,
-        alive: true,
-      });
+      addPerson(c, { type: "friend", age: Math.max(18, c.age + randomInt(-6, 6)), level: 55 });
     },
   },
   {

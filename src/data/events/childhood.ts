@@ -1,7 +1,7 @@
 import { LifeEvent } from "../../types";
 import { clamp, randomInt } from "../../engine/util";
-import { mother, father } from "./helpers";
-import { randomFullName } from "../../data/names";
+import { mother, father, sibling } from "./helpers";
+import { addPerson } from "../../engine/people";
 
 export const CHILDHOOD_EVENTS: LifeEvent[] = [
   {
@@ -131,13 +131,7 @@ export const CHILDHOOD_EVENTS: LifeEvent[] = [
     text: () => "You made a new best friend at school.",
     autoEffect: (c) => {
       c.stats.happiness = clamp(c.stats.happiness + 6);
-      c.relationships.push({
-        id: `friend-${Date.now()}-${Math.random()}`,
-        name: randomFullName(c.originRegion),
-        type: "friend",
-        level: 60,
-        alive: true,
-      });
+      addPerson(c, { type: "friend", age: Math.max(5, c.age + randomInt(-1, 1)), level: 60 });
     },
   },
   {
@@ -217,7 +211,7 @@ export const CHILDHOOD_EVENTS: LifeEvent[] = [
       {
         label: "Stand your ground",
         effect: (c) => {
-          const sib = c.relationships.find((r) => r.type === "sibling");
+          const sib = sibling(c);
           if (sib) sib.level = clamp(sib.level - 6);
           c.stats.happiness = clamp(c.stats.happiness + 3);
         },
@@ -225,7 +219,7 @@ export const CHILDHOOD_EVENTS: LifeEvent[] = [
       {
         label: "Let them have it",
         effect: (c) => {
-          const sib = c.relationships.find((r) => r.type === "sibling");
+          const sib = sibling(c);
           if (sib) sib.level = clamp(sib.level + 6);
         },
       },
@@ -240,13 +234,7 @@ export const CHILDHOOD_EVENTS: LifeEvent[] = [
     condition: (c) => !c.relationships.some((r) => r.type === "sibling"),
     text: (c) => `${mother(c)?.name ?? "Your mother"} came home with a new baby.`,
     autoEffect: (c) => {
-      c.relationships.push({
-        id: `sibling-${Date.now()}`,
-        name: randomFullName(c.originRegion, c.lastName),
-        type: "sibling",
-        level: 55,
-        alive: true,
-      });
+      addPerson(c, { type: "sibling", age: 0, lastName: c.lastName, level: 55 });
       c.stats.happiness = clamp(c.stats.happiness + randomInt(-4, 6));
     },
   },

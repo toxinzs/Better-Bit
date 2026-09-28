@@ -829,6 +829,29 @@ Bugs the tests caught: an SVG `origin` prop that isn't valid on web, and a
 milestone banner that stranded itself on screen when aging again cancelled
 its timer.
 
+**Relationships expansion — Phase 0, Foundations (done, v1.7.1)** — first
+step of the approved plan (see the plan file / "people who feel real"). Every
+person in your life now goes through one factory, `engine/people.ts`
+`newPerson()`/`addPerson()` (age via `bornOffset`, real `gender`, `traits`,
+`job`, `health`, hidden `favor`/`fertility`, `status`), and old saves are
+backfilled deterministically on load (`ensurePeople()`, seeded by person id
++ avatar seed, so a reload never rerolls anyone). New `engine/mortality.ts`
+(the player's `deathChance` moved here), `engine/decisionQueue.ts` (a
+serializable `Character.decisions` queue of descriptors that outranks random
+events in `ageUp()` and is restored on reload — nothing queues into it yet).
+`Character.sanity` (hidden, default 75) and `fertility` exist. Modal upgrade:
+`EventModal` scrolls, shows a `who` header, and supports `sublabel`/
+`disabled`/`tone` on choices; `LifeEvent.logText` controls what lands in the
+log. `PersonAvatar` uses the person's real gender (seeded by id), People tab
+rows show age · job. Bug fixes: `parent-passes` named the wrong parent and
+ignored age; `sendGift` accepted negative amounts; sibling lookups ignored
+`alive`; `children()` counted placed/adult kids for minor-kid events; exes
+drifted into a relationship on the first warm text (now rarer, needs level
+85); `bootyCall` had no age or contact guard (18+ for both, hardcoded);
+ambient texts ignored blocked/estranged people; faded-out classmates/teachers
+were marked `alive: false` (that flag now only ever means a real death — they
+are removed instead); `getSterilized` copy assumed a gender.
+
 **Still open for later in this update**: a mute/volume toggle (there's no
 settings surface at all yet to put one on), a custom app icon/splash
 screen (still Expo's generic defaults), and a deeper visual pass beyond

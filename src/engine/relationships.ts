@@ -1,5 +1,6 @@
 import { Character, Relationship, TextMessage } from "../types";
 import { clamp } from "./util";
+import { ageOf } from "./people";
 import {
   ExchangePair,
   randomLine,
@@ -18,11 +19,16 @@ import {
 } from "../data/textLines";
 
 const MAX_MESSAGES = 40;
-const RECONCILE_THRESHOLD = 75;
+const RECONCILE_THRESHOLD = 85;
 const AMBIENT_CHANCE = 0.12;
 
 function findRelationship(c: Character, relationshipId: string): Relationship | undefined {
   return c.relationships.find((r) => r.id === relationshipId && r.alive);
+}
+
+// somebody you (or they) cut off doesn't text or call on their own
+function inContact(r: Relationship): boolean {
+  return !r.blocked && r.status !== "estranged" && r.status !== "placed";
 }
 
 function pushMessage(r: Relationship, msg: TextMessage) {
@@ -37,7 +43,10 @@ function hasPartner(c: Character): boolean {
 }
 
 function maybeReconcile(c: Character, r: Relationship) {
-  if (r.type === "ex" && r.level >= RECONCILE_THRESHOLD && !hasPartner(c)) {
+  // drifting back together is rare and takes real warmth - it used to fire on
+  // the first text past 75; asking to get back together is a deliberate
+  // action now (Phase 5)
+  if (r.type === "ex" && inContact(r) && r.level >= RECONCILE_THRESHOLD && !hasPartner(c) && Math.random() < 0.25) {
     r.type = "partner";
     r.engaged = false;
     r.married = false;
@@ -81,6 +90,15 @@ export function callRelationship(c: Character, relationshipId: string) {
 export function bootyCall(c: Character, relationshipId: string) {
   const r = findRelationship(c, relationshipId);
   if (!r || r.type !== "ex") return;
+  // adults only, both of you - hardcoded, never a regional setting
+  if (c.age < 18 || ageOf(c, r) < 18) {
+    c.yearLog.push("That's not something you can do.");
+    return;
+  }
+  if (!inContact(r)) {
+    c.yearLog.push(`${r.name} isn't taking your calls.`);
+    return;
+  }
 
   const messy = Math.random() < 0.4;
   pushMessage(r, { text: randomLine(messy ? EX_BOOTYCALL_MESSY : EX_BOOTYCALL_YES), fromPlayer: false, age: c.age });
@@ -93,6 +111,8 @@ export function bootyCall(c: Character, relationshipId: string) {
 export function sendGift(c: Character, relationshipId: string, amount: number) {
   const r = findRelationship(c, relationshipId);
   if (!r) return;
+  amount = Math.floor(amount);
+  if (!(amount > 0)) return; // no negative or empty gifts
 
   if (c.money < amount) {
     c.yearLog.push(`You couldn't afford to send ${r.name} anything.`);
@@ -108,7 +128,7 @@ export function sendGift(c: Character, relationshipId: string, amount: number) {
 
 export function ambientMessageTick(c: Character) {
   for (const r of c.relationships) {
-    if (!r.alive) continue;
+    if (!r.alive || !inContact(r)) continue;
     if (Math.random() > AMBIENT_CHANCE) continue;
 
     let pool: ExchangePair[] | null = null;

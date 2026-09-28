@@ -1,5 +1,6 @@
 import { Character, Gender, LifeEvent, RegionKey, Relationship } from "../types";
 import { clamp, randomInt } from "./util";
+import { addPerson, randomGender } from "./people";
 import { randomFirstName, randomLastName } from "../data/names";
 import { getRegion } from "../data/regions";
 import {
@@ -35,10 +36,8 @@ function father(c: Character): Relationship | undefined {
   return c.relationships.find((r) => r.type === "father" && r.alive);
 }
 
-function randomCandidateName(region?: RegionKey): string {
-  const genders: Gender[] = ["male", "female", "nonbinary"];
-  const g = genders[randomInt(0, genders.length - 1)];
-  return `${randomFirstName(g, region)} ${randomLastName(region)}`;
+function randomCandidateName(region: RegionKey | undefined, gender: Gender): string {
+  return `${randomFirstName(gender, region)} ${randomLastName(region)}`;
 }
 
 // ---------- Venues ----------
@@ -184,7 +183,12 @@ export function takeLesson(c: Character, key: LessonDef["key"]): void {
 
 // ---------- Dating ----------
 
-export type DatingCandidate = { name: string; vibe: string; appeal: number };
+export type DatingCandidate = { name: string; vibe: string; appeal: number; gender: Gender };
+
+// Adult dating apps/blind dates only ever produce adults, close in age.
+function partnerAgeFor(c: Character): number {
+  return Math.max(18, c.age + randomInt(-5, 6));
+}
 
 const VIBES = [
   "Funny and a little chaotic",
@@ -200,11 +204,15 @@ const VIBES = [
 ];
 
 export function generateDatingCandidates(region?: RegionKey): DatingCandidate[] {
-  return Array.from({ length: 3 }, () => ({
-    name: randomCandidateName(region),
+  return Array.from({ length: 3 }, () => {
+    const gender = randomGender();
+    return {
+    name: randomCandidateName(region, gender),
+    gender,
     vibe: VIBES[randomInt(0, VIBES.length - 1)],
     appeal: randomInt(40, 95),
-  }));
+    };
+  });
 }
 
 export function pursueDatingCandidate(c: Character, candidate: DatingCandidate): void {
@@ -219,12 +227,12 @@ export function pursueDatingCandidate(c: Character, candidate: DatingCandidate):
   const chance = clamp(0.3 + candidate.appeal / 150, 0.2, 0.85);
   const matched = Math.random() < chance;
   if (matched) {
-    c.relationships.push({
-      id: `partner-${Date.now()}`,
-      name: candidate.name,
+    addPerson(c, {
       type: "partner",
+      name: candidate.name,
+      age: partnerAgeFor(c),
+      gender: candidate.gender,
       level: randomInt(55, 75),
-      alive: true,
     });
     c.stats.happiness = clamp(c.stats.happiness + 12);
     c.yearLog.push(`You matched with ${candidate.name}, and it actually went somewhere.`);
@@ -243,16 +251,11 @@ export function goOnBlindDate(c: Character): void {
     c.yearLog.push("You're already seeing someone.");
     return;
   }
-  const name = randomCandidateName(c.originRegion);
+  const blindGender = randomGender();
+  const name = randomCandidateName(c.originRegion, blindGender);
   const goesWell = Math.random() < 0.45;
   if (goesWell) {
-    c.relationships.push({
-      id: `partner-${Date.now()}`,
-      name,
-      type: "partner",
-      level: 60,
-      alive: true,
-    });
+    addPerson(c, { type: "partner", name, age: partnerAgeFor(c), gender: blindGender, level: 60 });
     c.stats.happiness = clamp(c.stats.happiness + 10);
     c.yearLog.push(`Your blind date with ${name} actually clicked.`);
   } else {
@@ -382,7 +385,9 @@ export function getSterilized(c: Character): void {
   }
   c.money -= STERILIZATION_COST;
   c.sterilized = true;
-  c.yearLog.push("You got a vasectomy/tubal ligation. A permanent decision, and you're at peace with it.");
+  c.yearLog.push(
+    `You got ${c.gender === "male" ? "a vasectomy" : c.gender === "female" ? "a tubal ligation" : "a sterilization procedure"}. A permanent decision, and you're at peace with it.`,
+  );
 }
 
 export function tryConception(c: Character, method: ConceptionMethod): void {

@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "1.7.0";
+export const APP_VERSION = "1.7.1";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,17 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "1.7.1",
+    title: "Real People",
+    highlights: [
+      "Everyone in your life now has an age, a job and a face that matches who they are",
+      "Fixed a parent's passing naming the wrong parent - and it can now only happen to a parent who's actually old enough",
+      "Popups can now hold lots of choices - they scroll, and can show who they're about",
+      "Exes no longer drift back into a relationship after a single friendly text",
+      "Groundwork for a big relationships update: talking, gifts, money, funerals and more",
+    ],
+  },
   {
     version: "1.7.0",
     title: "Alive",

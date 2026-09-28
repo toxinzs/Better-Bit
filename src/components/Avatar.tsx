@@ -93,17 +93,24 @@ function hash(str: string): number {
 // role so the same person always looks the same, with no extra saved data.
 export function PersonAvatar({
   name,
+  id,
   type,
+  gender: knownGender,
   region,
   size = 40,
 }: {
   name: string;
+  id?: string;
   type: RelationType;
+  gender?: Gender;
   region?: RegionKey;
   size?: number;
 }) {
-  const h = hash(name);
+  // seeded by id when we have it, so renaming (a newborn getting a real
+  // name) never changes someone's face
+  const h = hash(id ?? name);
   const gender: Gender =
-    type === "mother" ? "female" : type === "father" ? "male" : (["female", "male", "nonbinary"] as Gender[])[h % 3];
+    knownGender ??
+    (type === "mother" ? "female" : type === "father" ? "male" : (["female", "male", "nonbinary"] as Gender[])[h % 3]);
   return <Avatar character={{ gender, originRegion: region, avatarSeed: h % 999983 }} size={size} />;
 }

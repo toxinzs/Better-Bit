@@ -257,8 +257,8 @@ export function randomLastName(region: RegionKey = "us"): string {
   return names[Math.floor(Math.random() * names.length)];
 }
 
-export function randomFullName(region: RegionKey = "us", lastName?: string): string {
+export function randomFullName(region: RegionKey = "us", lastName?: string, gender?: Gender): string {
   const genders: Gender[] = ["male", "female", "nonbinary"];
-  const gender = genders[Math.floor(Math.random() * genders.length)];
+  gender ??= genders[Math.floor(Math.random() * genders.length)];
   return `${randomFirstName(gender, region)} ${lastName ?? randomLastName(region)}`;
 }

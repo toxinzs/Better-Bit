@@ -28,13 +28,20 @@ export type RelationType =
   | "child"
   | "ex"
   | "classmate"
-  | "teacher";
+  | "teacher"
+  | "coworker"
+  | "grandchild";
 
 export type TextMessage = {
   text: string;
   fromPlayer: boolean;
   age: number;
 };
+
+// How the relationship is going in the big picture, separate from `level`:
+// "distant" = drifted apart from neglect, "estranged" = cut off (blocked, a
+// falling-out), "placed" = a child placed for adoption.
+export type PersonStatus = "active" | "distant" | "estranged" | "placed";
 
 export type Relationship = {
   id: string;
@@ -45,6 +52,25 @@ export type Relationship = {
   engaged?: boolean;
   married?: boolean;
   messages?: TextMessage[];
+
+  // ---- people-who-feel-real fields; all optional so old saves still load
+  // (engine/people.ts backfillPeople() fills them in lazily) ----
+  gender?: Gender;
+  // The person's birth year relative to the player's: age = player.age -
+  // bornOffset while alive (negative = born before the player). Nothing
+  // ticks; see ageOf() in engine/people.ts.
+  bornOffset?: number;
+  traits?: string[];
+  job?: string; // display only ("Nurse", "Retired", "Student")
+  health?: number; // 0-100, hidden-ish; shown as a dot/chip
+  conditions?: string[];
+  favor?: number; // hidden 0-100: how much this person would do for you
+  fertility?: number; // hidden 0-100
+  status?: PersonStatus;
+  diedAge?: number; // the person's own age when they died (set with alive:false)
+  causeOfDeath?: string;
+  funeral?: string; // how they were laid to rest
+  blocked?: boolean; // you or they cut contact off
 };
 
 export type Job = {
@@ -111,6 +137,26 @@ export type LogEntry = {
 export type YearRecord = {
   age: number;
   lines: string[];
+  news?: NewsItem[]; // "Around you": what happened to other people
+};
+
+export type NewsKind = "job" | "wedding" | "baby" | "health" | "death" | "move" | "breakup" | "milestone";
+
+export type NewsItem = {
+  kind: NewsKind;
+  text: string;
+  relId?: string;
+};
+
+// A small serializable descriptor of a decision the player still owes an
+// answer to (a funeral, a pregnancy choice, ...). Stored on the character,
+// not held as a live LifeEvent, so a reload can't lose it and two of them
+// in one year can queue up. engine/decisionQueue.ts turns these into events.
+export type PendingDecision = {
+  id: string;
+  kind: string;
+  relId?: string;
+  data?: Record<string, unknown>;
 };
 
 export type MacroConditionKind = "recession" | "boom" | "war" | "pandemic" | "crackdown";
@@ -178,6 +224,11 @@ export type Character = {
   flags?: string[];
   pregnant?: boolean;
   pendingBabyId?: string;
+  // hidden stats (never shown as a number)
+  sanity?: number; // 0-100, default 75; "craziness" = 100 - sanity
+  fertility?: number; // 0-100
+  decisions?: PendingDecision[];
+  yearNews?: NewsItem[];
   originRegion?: RegionKey;
   appearanceFlavor?: string;
   avatarSeed?: number;
@@ -198,6 +249,12 @@ export type EventChoice = {
   // choices that return nothing are unaffected.
   effect: (c: Character, world: WorldState) => void | LifeEvent;
   resultText?: (c: Character, world: WorldState) => string;
+  // a smaller second line under the label (e.g. "$2,000")
+  sublabel?: string;
+  // shown greyed out and not tappable (e.g. "can't afford it")
+  disabled?: boolean;
+  // colours the choice: "danger" for a drastic/irreversible option
+  tone?: "default" | "danger" | "good";
 };
 
 export type LifeEvent = {
@@ -208,6 +265,12 @@ export type LifeEvent = {
   once?: boolean;
   condition?: (c: Character, world: WorldState) => boolean;
   text: (c: Character, world: WorldState) => string;
+  // What goes in the life log once resolved, when it should differ from the
+  // popup text (return "" to log nothing).
+  logText?: (c: Character, world: WorldState) => string;
+  // the relationship this popup is about - EventModal shows their portrait
+  // and name above the text
+  who?: string;
   choices?: EventChoice[];
   autoEffect?: (c: Character, world: WorldState) => void;
 };

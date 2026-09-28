@@ -1,6 +1,7 @@
 import { Character, EducationStage, RegionKey, Relationship } from "../types";
 import { clamp, randomInt } from "./util";
-import { randomFirstName, randomLastName } from "../data/names";
+import { randomLastName } from "../data/names";
+import { addPerson, randomGender, uid } from "./people";
 import { CLUBS, ClubKey, COLLEGES, COLLEGE_HOUSING, HousingListing } from "../data/school";
 
 // ---------- generic "remember what happened" flags ----------
@@ -30,12 +31,6 @@ const STAGE_PREFIX: Partial<Record<EducationStage, string>> = {
 const K12_TITLES = ["Mr.", "Ms.", "Mx."];
 const COLLEGE_TITLES = ["Dr.", "Professor"];
 
-function randomPersonName(region?: RegionKey): string {
-  const genders: ("male" | "female" | "nonbinary")[] = ["male", "female", "nonbinary"];
-  const g = genders[randomInt(0, genders.length - 1)];
-  return `${randomFirstName(g, region)} ${randomLastName(region)}`;
-}
-
 // Called whenever a character's schooling stage changes (K-12 auto-
 // progression inside ageUp(), or college enroll/graduate/drop-out). Retires
 // whatever roster belonged to a previous stage - a classmate you were
@@ -46,16 +41,17 @@ function randomPersonName(region?: RegionKey): string {
 export function onEnterSchoolStage(c: Character, stage: EducationStage): void {
   const prefix = STAGE_PREFIX[stage];
 
-  c.relationships.forEach((r) => {
-    if (r.type !== "classmate" && r.type !== "teacher") return;
-    if (!r.alive) return;
+  // people who fade off the roster are removed outright - `alive: false` now
+  // means "actually died" (memorial list, funerals), never "moved on"
+  c.relationships = c.relationships.filter((r) => {
+    if (r.type !== "classmate" && r.type !== "teacher") return true;
     const belongsToCurrentStage = prefix != null && r.id.startsWith(`${r.type}-${prefix}-`);
-    if (belongsToCurrentStage) return;
+    if (belongsToCurrentStage) return true;
     if (r.type === "classmate" && r.level >= 55) {
       r.type = "friend";
-    } else {
-      r.alive = false;
+      return true;
     }
+    return false;
   });
 
   if (!prefix) return;
@@ -64,22 +60,31 @@ export function onEnterSchoolStage(c: Character, stage: EducationStage): void {
   if (alreadyHasRoster) return;
 
   for (let i = 0; i < 3; i++) {
-    c.relationships.push({
-      id: `classmate-${prefix}-${i}-${Date.now()}-${i}`,
-      name: randomPersonName(c.originRegion),
+    addPerson(c, {
+      id: uid(`classmate-${prefix}-${i}`),
       type: "classmate",
+      age: stage === "college" ? c.age + randomInt(-2, 4) : c.age + randomInt(-1, 1),
       level: randomInt(40, 65),
-      alive: true,
     });
   }
 
   const titles = stage === "college" ? COLLEGE_TITLES : K12_TITLES;
-  c.relationships.push({
-    id: `teacher-${prefix}-0-${Date.now()}`,
-    name: `${titles[randomInt(0, titles.length - 1)]} ${randomLastName(c.originRegion)}`,
+  const teacherGender = randomGender();
+  const title =
+    stage === "college"
+      ? titles[randomInt(0, titles.length - 1)]
+      : teacherGender === "male"
+        ? "Mr."
+        : teacherGender === "female"
+          ? "Ms."
+          : "Mx.";
+  addPerson(c, {
+    id: uid(`teacher-${prefix}-0`),
     type: "teacher",
+    name: `${title} ${randomLastName(c.originRegion)}`,
+    gender: teacherGender,
+    age: randomInt(28, 58),
     level: randomInt(45, 60),
-    alive: true,
   });
 }
 

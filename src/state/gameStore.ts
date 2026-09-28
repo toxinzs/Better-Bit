@@ -53,6 +53,9 @@ import {
   DatingCandidate,
 } from "../engine/lifeEngine";
 
+import { ensurePeople } from "../engine/people";
+import { nextDecisionEvent } from "../engine/decisionQueue";
+
 const STORAGE_KEY = "@better-bit/save/v1";
 
 export type Screen = "start" | "home" | "gameover";
@@ -196,7 +199,12 @@ export const useGameStore = create<GameState>((set, get) => {
           };
           const worldState = parsed.worldState ?? createInitialWorldState();
           if (parsed.character) {
-            set({ character: parsed.character, screen: parsed.screen, worldState, hydrated: true });
+            // saves from before people had ages/genders/etc. get them
+            // backfilled deterministically; a decision the player still owed
+            // an answer to when they closed the app comes back too
+            ensurePeople(parsed.character);
+            const pendingEvent = parsed.screen === "home" ? nextDecisionEvent(parsed.character, worldState) : null;
+            set({ character: parsed.character, screen: parsed.screen, worldState, pendingEvent, hydrated: true });
             return;
           }
           set({ worldState, hydrated: true });

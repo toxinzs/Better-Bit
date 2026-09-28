@@ -1,7 +1,7 @@
 import { LifeEvent } from "../../types";
-import { clamp } from "../../engine/util";
+import { clamp, randomInt } from "../../engine/util";
 import { hasChild } from "./helpers";
-import { randomFullName } from "../../data/names";
+import { addPerson } from "../../engine/people";
 
 export const SENIOR_EVENTS: LifeEvent[] = [
   {
@@ -164,13 +164,7 @@ export const SENIOR_EVENTS: LifeEvent[] = [
     text: () => "There's a social club that meets weekly at the community center. A few neighbors keep inviting you.",
     autoEffect: (c) => {
       c.stats.happiness = clamp(c.stats.happiness + 5);
-      c.relationships.push({
-        id: `friend-${Date.now()}`,
-        name: randomFullName(c.originRegion),
-        type: "friend",
-        level: 50,
-        alive: true,
-      });
+      addPerson(c, { type: "friend", age: c.age + randomInt(-8, 6), level: 50 });
     },
   },
   {
