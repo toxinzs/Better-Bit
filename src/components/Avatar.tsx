@@ -14,6 +14,24 @@ import { getRegion } from "../data/regions";
 
 type HairKind = "bald" | "short" | "long";
 
+// The face reacts to how the character is doing.
+export type Mood = "happy" | "neutral" | "sad";
+export function moodFor(happiness: number): Mood {
+  return happiness >= 60 ? "happy" : happiness >= 32 ? "neutral" : "sad";
+}
+
+const MOUTH: Record<Mood, string> = {
+  happy: "M27.5 32 Q32 36.5 36.5 32",
+  neutral: "M28.5 33.5 L35.5 33.5",
+  sad: "M27.5 35.5 Q32 31.5 36.5 35.5",
+};
+
+const BROWS: Record<Mood, { left: string; right: string }> = {
+  happy: { left: "M23.5 22.3 L29.5 22.3", right: "M34.5 22.3 L40.5 22.3" },
+  neutral: { left: "M23.5 22.5 L29.5 22.5", right: "M34.5 22.5 L40.5 22.5" },
+  sad: { left: "M23.5 23.6 L29.5 21", right: "M34.5 21 L40.5 23.6" },
+};
+
 const HAIR_KINDS: Record<Gender, HairKind[]> = {
   male: ["short", "bald", "long"],
   female: ["long", "short", "long"],
@@ -27,10 +45,12 @@ export default function Avatar({
   character,
   size = 64,
   ring,
+  mood = "happy",
 }: {
   character: Pick<Character, "gender" | "originRegion" | "avatarSeed">;
   size?: number;
   ring?: string;
+  mood?: Mood;
 }) {
   const seed = character.avatarSeed ?? 0;
   const region = getRegion(character.originRegion);
@@ -54,11 +74,11 @@ export default function Avatar({
       {/* hair cap */}
       {hairKind !== "bald" && <Ellipse cx={32} cy={16} rx={15} ry={hairKind === "short" ? 10 : 12} fill={hairColor} />}
       {/* brows, eyes, smile */}
-      <Rect x={23.5} y={22} width={6} height={1.6} rx={0.8} fill="#241a14" opacity={0.7} />
-      <Rect x={34.5} y={22} width={6} height={1.6} rx={0.8} fill="#241a14" opacity={0.7} />
+      <Path d={BROWS[mood].left} stroke="#241a14" strokeWidth={1.6} strokeLinecap="round" opacity={0.7} />
+      <Path d={BROWS[mood].right} stroke="#241a14" strokeWidth={1.6} strokeLinecap="round" opacity={0.7} />
       <Circle cx={27} cy={26.5} r={1.7} fill="#241a14" />
       <Circle cx={37} cy={26.5} r={1.7} fill="#241a14" />
-      <Path d="M27.5 32 Q32 36 36.5 32" stroke="#241a14" strokeWidth={1.6} fill="none" strokeLinecap="round" opacity={0.75} />
+      <Path d={MOUTH[mood]} stroke="#241a14" strokeWidth={1.6} fill="none" strokeLinecap="round" opacity={0.75} />
     </Svg>
   );
 }

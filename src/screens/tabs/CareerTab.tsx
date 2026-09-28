@@ -6,6 +6,7 @@ import Card from "../../components/Card";
 import Button from "../../components/Button";
 import Chip from "../../components/Chip";
 import GradientBg from "../../components/GradientBg";
+import { FadeInUp } from "../../motion";
 import { availableJobs } from "../../data/jobs";
 import { effectiveSalary, takeHomePay } from "../../engine/lifeEngine";
 import { colors, fonts, fontSize, radii, spacing } from "../../theme";
@@ -26,7 +27,7 @@ export default function CareerTab() {
 
   return (
     <ScrollView contentContainerStyle={tabStyles.scroll}>
-      <GradientBg id="careerHero" from="#173a63" to="#171726" radius={radii.lg} style={styles.hero}>
+      <GradientBg id="careerHero" from={colors.gradCareer} to={colors.surface} radius={radii.lg} style={styles.hero}>
         <View style={styles.heroTop}>
           <View style={styles.heroIcon}>
             <Ionicons name={character.inJail ? "lock-closed" : "briefcase"} size={22} color={colors.smarts} />
@@ -75,14 +76,14 @@ export default function CareerTab() {
           <Text style={tabStyles.logLine}>No jobs available yet.</Text>
         </Card>
       ) : (
-        jobs.map((job) => {
+        jobs.map((job, idx) => {
           const g = effectiveSalary(job, worldState, region);
           const current = character.job?.title === job.title;
           return (
+            <FadeInUp key={job.title} delay={Math.min(idx, 8) * 45}>
             <TouchableOpacity
               accessibilityRole="button"
               activeOpacity={0.75}
-              key={job.title}
               style={[styles.jobCard, current && styles.jobCardCurrent]}
               onPress={() => applyForJob(job)}
             >
@@ -102,6 +103,7 @@ export default function CareerTab() {
                 <Text style={styles.jobPer}>/yr</Text>
               </View>
             </TouchableOpacity>
+            </FadeInUp>
           );
         })
       )}
@@ -154,7 +156,7 @@ const styles = StyleSheet.create({
   },
   tile: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.22)",
+    backgroundColor: colors.shade,
     borderRadius: radii.md,
     padding: spacing.md,
   },

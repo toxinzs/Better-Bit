@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Stats } from "../types";
+import { FloatingDelta, Pop } from "../motion";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
 
 const META: { key: keyof Stats; label: string; color: string; icon: keyof typeof Ionicons.glyphMap }[] = [
@@ -47,7 +48,12 @@ function Meter({
       <View style={styles.topRow}>
         <Ionicons name={icon} size={12} color={color} />
         <Text style={styles.label}>{label}</Text>
-        <Text style={styles.value}>{v}</Text>
+        <View>
+          <Pop trigger={v} strength={1.3}>
+            <Text style={styles.value}>{v}</Text>
+          </Pop>
+          <FloatingDelta value={v} style={styles.delta} />
+        </View>
       </View>
       <View style={styles.track}>
         <Animated.View
@@ -90,6 +96,11 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontFamily: fonts.extraBold,
     fontSize: fontSize.sm,
+  },
+  delta: {
+    right: 0,
+    top: -14,
+    fontSize: 11,
   },
   track: {
     height: 6,

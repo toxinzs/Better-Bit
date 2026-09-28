@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../../state/gameStore";
 import Card from "../../components/Card";
 import Chip from "../../components/Chip";
+import { FadeInUp } from "../../motion";
 import { PersonAvatar } from "../../components/Avatar";
 import { Relationship, RelationType, RegionKey } from "../../types";
 import { MIN_AGE_CONVERSATION } from "../../engine/lifeStage";
@@ -15,13 +16,13 @@ const RELATION_META: Record<string, { label: string; color: string }> = {
   father: { label: "Father", color: colors.looks },
   sibling: { label: "Sibling", color: colors.looks },
   friend: { label: "Friend", color: colors.happiness },
-  partner: { label: "Partner", color: "#ff6b9d" },
+  partner: { label: "Partner", color: colors.love },
   child: { label: "Child", color: colors.smarts },
   ex: { label: "Ex", color: colors.danger },
 };
 
 const GROUPS: { title: string; icon: keyof typeof Ionicons.glyphMap; color: string; types: RelationType[] }[] = [
-  { title: "Partner", icon: "heart", color: "#ff6b9d", types: ["partner"] },
+  { title: "Partner", icon: "heart", color: colors.love, types: ["partner"] },
   { title: "Family", icon: "home", color: colors.looks, types: ["mother", "father", "sibling", "child"] },
   { title: "Friends", icon: "happy", color: colors.happiness, types: ["friend"] },
   { title: "Exes", icon: "flame", color: colors.danger, types: ["ex"] },
@@ -74,9 +75,9 @@ export default function PeopleTab({ onOpenThread }: { onOpenThread: (relationshi
               <Text style={styles.groupTitle}>{g.title}</Text>
               <Text style={styles.groupCount}>{members.length}</Text>
             </View>
-            {members.map((r) => (
+            {members.map((r, idx) => (
+              <FadeInUp key={r.id} delay={Math.min(idx, 8) * 50}>
               <PersonCard
-                key={r.id}
                 r={r}
                 region={character.originRegion}
                 expanded={expandedIds.has(r.id)}
@@ -86,6 +87,7 @@ export default function PeopleTab({ onOpenThread }: { onOpenThread: (relationshi
                 onTalk={() => haveConversation(r.id)}
                 onOpenThread={() => onOpenThread(r.id)}
               />
+              </FadeInUp>
             ))}
           </View>
         );
@@ -139,7 +141,7 @@ function PersonCard({
             <Text style={styles.personName} numberOfLines={1}>
               {r.name}
             </Text>
-            {r.married ? <Chip label="MARRIED" color="#ff6b9d" /> : r.engaged ? <Chip label="ENGAGED" color="#ff6b9d" /> : null}
+            {r.married ? <Chip label="MARRIED" color={colors.love} /> : r.engaged ? <Chip label="ENGAGED" color={colors.love} /> : null}
           </View>
           <View style={styles.metaRow}>
             <Chip label={meta.label.toUpperCase()} color={meta.color} />

@@ -802,6 +802,33 @@ Lesson: on web, an absolutely-positioned gradient paints over un-positioned
 screen and a real click-through (14 Age Up taps, popups, tab switching,
 expanding a person).
 
+**Feel pass (done, v1.7.0)** — user feedback after testing v1.6.0: not
+every year should throw a popup (it was repeating and not varying), the
+color scheme could be better or come in several themes, and the game needed
+animations, transitions, smoothness and reactions. **Quiet years**: about
+1 year in 5 now passes with no decision popup (a quiet year right after a
+quiet year is much rarer), with per-life-stage flavor lines so it reads as
+a real year; measured 83% popup years over 347 simulated years. **No
+repeats**: `Character.recentEvents` puts every event on an 8-year cooldown
+(falling back to repeats only if the pool would be empty), so the same few
+events stop looping. **Themes**: `theme.ts` now holds five hand-tuned
+palettes — Midnight (the refreshed default), Ocean, Sunset, Forest and a
+light Daylight — chosen from a picker (palette button in the header and on
+the Start screen) that previews each one; all hardcoded colors were moved
+onto tokens (new gradient/love/teal/shade/overlay tokens). Styles are built
+once at startup, so picking a theme saves it and reloads — progress is saved
+every action so nothing is lost; web only for now (native would need an
+async read before first render). **Motion** (`src/motion.tsx`): staggered
+FadeInUp entrances on the Life feed, People/Career/Crime lists and popup
+choices; the Life hero replays every Age Up; tab content slides in; tab
+icons bounce; money counts up with a floating +/- delta; stat numbers pop
+and float their changes; the avatar pops each birthday and its face now
+reacts to happiness (smile/neutral/frown, eyebrows tilt when sad); milestone
+birthdays (1, 5, 10, 13, 16, 18, 21, 25, 30, ...) get confetti and a banner.
+Bugs the tests caught: an SVG `origin` prop that isn't valid on web, and a
+milestone banner that stranded itself on screen when aging again cancelled
+its timer.
+
 **Still open for later in this update**: a mute/volume toggle (there's no
 settings surface at all yet to put one on), a custom app icon/splash
 screen (still Expo's generic defaults), and a deeper visual pass beyond

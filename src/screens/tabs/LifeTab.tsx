@@ -5,6 +5,7 @@ import { useGameStore } from "../../state/gameStore";
 import GradientBg from "../../components/GradientBg";
 import Card from "../../components/Card";
 import Chip from "../../components/Chip";
+import { FadeInUp } from "../../motion";
 import { getRegion } from "../../data/regions";
 import { getLifeStage } from "../../engine/lifeEngine";
 import { Character, YearRecord } from "../../types";
@@ -18,7 +19,7 @@ const KINDS: { test: RegExp; kind: LineKind }[] = [
   { test: /\b(arrest\w*|police|jail\w*|prison|court|crime|sentence\w*|monitor|convicted|lawyer|trial)\b/i, kind: { icon: "shield", color: colors.danger } },
   { test: /\$|\b(paid|pay|salary|tax|taxes|loan|bought|sold|rent|stock\w*|money|credit|debt|cash|bill|wallet|lottery|invest\w*)\b/i, kind: { icon: "cash", color: colors.primary } },
   { test: /\b(hired|job|interview|promotion|promoted|boss|career|coworker\w*|quit|fired|office|shift|raise)\b/i, kind: { icon: "briefcase", color: colors.smarts } },
-  { test: /\b(love|partner|date|dating|wedding|married|marry|kiss\w*|romantic|crush|engaged|anniversary|matched|spark|proposal)\b/i, kind: { icon: "heart", color: "#ff6b9d" } },
+  { test: /\b(love|partner|date|dating|wedding|married|marry|kiss\w*|romantic|crush|engaged|anniversary|matched|spark|proposal)\b/i, kind: { icon: "heart", color: colors.love } },
   { test: /\b(baby|child|kid|kids|born|mother|father|sibling|family|parent\w*|grand\w*|passed away)\b/i, kind: { icon: "people", color: colors.looks } },
   { test: /\b(school|class|classes|teacher|grade|college|homework|exam|degree|graduat\w*|gpa|professor|study|studied)\b/i, kind: { icon: "school", color: colors.smarts } },
   { test: /\b(sick|cold|doctor|hospital|injur\w*|ill|illness|health|surgery|flu|virus|fever|checkup|medical)\b/i, kind: { icon: "medkit", color: colors.health } },
@@ -59,7 +60,8 @@ export default function LifeTab() {
 
   return (
     <ScrollView contentContainerStyle={styles.scroll}>
-      <GradientBg id="lifeHero" from="#1d2b4a" to="#171726" radius={radii.lg} style={styles.hero}>
+      <FadeInUp key={`hero-${character.age}`} distance={20} duration={420}>
+      <GradientBg id="lifeHero" from={colors.gradLife} to={colors.surface} radius={radii.lg} style={styles.hero}>
         <View style={styles.heroTop}>
           <View>
             <Text style={styles.heroAge}>{character.age}</Text>
@@ -78,9 +80,12 @@ export default function LifeTab() {
 
         <Text style={styles.heroHeading}>This year</Text>
         {character.yearLog.map((line, i) => (
-          <FeedLine key={i} text={line} big />
+          <FadeInUp key={`${character.age}-${i}`} delay={220 + i * 130}>
+            <FeedLine text={line} big />
+          </FadeInUp>
         ))}
       </GradientBg>
+      </FadeInUp>
 
       {cond || news.length > 0 ? (
         <View style={[styles.news, cond && styles.newsAlert]}>
@@ -107,7 +112,7 @@ export default function LifeTab() {
             <Text style={styles.timelineTitle}>Your story so far</Text>
           </View>
           {past.slice(0, shown).map((y, idx) => (
-            <View key={`${y.age}-${idx}`} style={styles.yearRow}>
+            <FadeInUp key={`${y.age}-${idx}`} delay={Math.min(idx, 7) * 55 + 250} style={styles.yearRow}>
               <View style={styles.rail}>
                 <View style={styles.ageDot}>
                   <Text style={styles.ageDotText}>{y.age}</Text>
@@ -119,7 +124,7 @@ export default function LifeTab() {
                   <FeedLine key={i} text={line} />
                 ))}
               </Card>
-            </View>
+            </FadeInUp>
           ))}
           {shown < past.length && (
             <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.more} onPress={() => setShown((s) => s + PAGE)}>

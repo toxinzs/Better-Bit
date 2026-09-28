@@ -184,6 +184,8 @@ export type Character = {
   relationships: Relationship[];
   yearLog: string[];
   lifeLog?: YearRecord[];
+  recentEvents?: { id: string; age: number }[];
+  quietLastYear?: boolean;
   fullLog: LogEntry[];
   triggeredEvents: string[];
 };

@@ -6,9 +6,11 @@ import EventModal from "../components/EventModal";
 import TextThreadModal from "../components/TextThreadModal";
 import ActionResultModal from "../components/ActionResultModal";
 import NameBabyModal from "../components/NameBabyModal";
-import Avatar from "../components/Avatar";
+import Avatar, { moodFor } from "../components/Avatar";
+import { Confetti, CountUp, FadeInUp, FloatingDelta, Pop } from "../motion";
 import GradientBg from "../components/GradientBg";
 import StatStrip from "../components/StatStrip";
+import ThemePicker from "../components/ThemePicker";
 import LifeTab from "./tabs/LifeTab";
 import PeopleTab from "./tabs/PeopleTab";
 import AssetsTab from "./tabs/AssetsTab";
@@ -17,6 +19,26 @@ import DoTab from "./tabs/DoTab";
 import { getRegion } from "../data/regions";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
 import { playSound } from "../sound";
+
+const MILESTONES: Record<number, string> = {
+  1: "Happy 1st birthday!",
+  5: "Off to school!",
+  10: "Double digits!",
+  13: "You're a teenager!",
+  16: "Sweet sixteen!",
+  18: "You're an adult now!",
+  21: "Twenty-one!",
+  25: "A quarter century!",
+  30: "Thirty!",
+  40: "Forty!",
+  50: "Fifty and fabulous!",
+  60: "Sixty!",
+  65: "Retirement age!",
+  70: "Seventy years!",
+  80: "Eighty!",
+  90: "Ninety!",
+  100: "A whole century!",
+};
 
 type Tab = "life" | "do" | "people" | "work" | "money";
 
@@ -43,12 +65,20 @@ export default function HomeScreen() {
   const sendGift = useGameStore((s) => s.sendGift);
   const [tab, setTab] = useState<Tab>("life");
   const [viewingThreadId, setViewingThreadId] = useState<string | null>(null);
+  const [showThemes, setShowThemes] = useState(false);
+  const [confetti, setConfetti] = useState(0);
+  const [milestone, setMilestone] = useState<string | null>(null);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     fadeAnim.setValue(0);
-    Animated.timing(fadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
-  }, [tab, fadeAnim]);
+    slideAnim.setValue(0);
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 260, useNativeDriver: true }),
+      Animated.spring(slideAnim, { toValue: 1, friction: 9, tension: 70, useNativeDriver: true }),
+    ]).start();
+  }, [tab, fadeAnim, slideAnim]);
 
   const ageScale = useRef(new Animated.Value(1)).current;
   const prevAge = useRef(character?.age);
@@ -57,8 +87,23 @@ export default function HomeScreen() {
       ageScale.setValue(1.4);
       Animated.spring(ageScale, { toValue: 1, friction: 4, useNativeDriver: true }).start();
       prevAge.current = character.age;
+      const label = MILESTONES[character.age];
+      if (label && character.alive) {
+        setMilestone(label);
+        setConfetti((n) => n + 1);
+      } else {
+        setMilestone(null);
+      }
     }
   }, [character?.age, ageScale]);
+
+  // dismiss the banner on its own timer, independent of the age effect, so
+  // aging again can't strand it on screen
+  useEffect(() => {
+    if (!milestone) return;
+    const t = setTimeout(() => setMilestone(null), 2600);
+    return () => clearTimeout(t);
+  }, [milestone]);
 
   const ageBtnScale = useRef(new Animated.Value(1)).current;
   const ageBtnPressIn = () => Animated.spring(ageBtnScale, { toValue: 0.96, friction: 5, useNativeDriver: true }).start();
@@ -83,10 +128,12 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <GradientBg id="homeHeader" from="#1f2140" to={colors.surface} radius={0} vertical style={styles.header}>
+      <GradientBg id="homeHeader" from={colors.gradHeader} to={colors.surface} radius={0} vertical style={styles.header}>
         <View style={styles.identityRow}>
           <View style={styles.avatarRing}>
-            <Avatar character={character} size={50} />
+            <Pop trigger={character.age} strength={1.18}>
+              <Avatar character={character} size={50} mood={moodFor(character.stats.happiness)} />
+            </Pop>
           </View>
           <View style={styles.identityText}>
             <Text style={styles.name} numberOfLines={1}>
@@ -106,13 +153,26 @@ export default function HomeScreen() {
           </View>
           <View style={styles.moneyPill}>
             <Ionicons name="cash" size={14} color={colors.primary} />
-            <Text style={styles.moneyText}>${character.money.toLocaleString()}</Text>
+            <CountUp value={character.money} style={styles.moneyText} />
+            <FloatingDelta
+              value={character.money}
+              format={(d) => `${d > 0 ? "+" : "-"}$${Math.abs(d).toLocaleString()}`}
+              style={styles.moneyDelta}
+            />
           </View>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Change theme" activeOpacity={0.7} style={styles.themeBtn} onPress={() => setShowThemes(true)}>
+            <Ionicons name="color-palette" size={17} color={colors.textSecondary} />
+          </TouchableOpacity>
         </View>
       </GradientBg>
       <StatStrip stats={character.stats} />
 
-      <Animated.View style={[styles.tabContent, { opacity: fadeAnim }]}>
+      <Animated.View
+        style={[
+          styles.tabContent,
+          { opacity: fadeAnim, transform: [{ translateY: slideAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }] },
+        ]}
+      >
         {tab === "life" && <LifeTab />}
         {tab === "do" && <DoTab />}
         {tab === "people" && <PeopleTab onOpenThread={setViewingThreadId} />}
@@ -123,11 +183,13 @@ export default function HomeScreen() {
       <View style={styles.bottomArea}>
         <Pressable accessibilityRole="button" onPress={handleAgeUp} onPressIn={ageBtnPressIn} onPressOut={ageBtnPressOut}>
           <Animated.View style={{ transform: [{ scale: ageBtnScale }] }}>
-            <GradientBg id="ageBtn" from="#35d67d" to="#1fa85a" radius={radii.lg} style={styles.ageBtn}>
+            <GradientBg id="ageBtn" from={colors.primary} to={colors.primaryDeep} radius={radii.lg} style={styles.ageBtn}>
               <View style={styles.ageBtnInner}>
                 <Text style={styles.ageBtnText}>Age Up</Text>
                 <View style={styles.ageBtnPill}>
-                  <Text style={styles.ageBtnPillText}>{character.age + 1}</Text>
+                  <Pop trigger={character.age}>
+                    <Text style={styles.ageBtnPillText}>{character.age + 1}</Text>
+                  </Pop>
                   <Ionicons name="arrow-forward" size={14} color={colors.primaryText} />
                 </View>
               </View>
@@ -135,25 +197,21 @@ export default function HomeScreen() {
           </Animated.View>
         </Pressable>
         <View style={styles.tabBar}>
-          {TABS.map((t) => {
-            const active = tab === t.key;
-            return (
-              <TouchableOpacity
-                key={t.key}
-                accessibilityRole="button"
-                activeOpacity={0.7}
-                style={styles.tabBtn}
-                onPress={() => setTab(t.key)}
-              >
-                <View style={[styles.tabIcon, active && { backgroundColor: t.color + "26" }]}>
-                  <Ionicons name={t.icon} size={22} color={active ? t.color : colors.textMuted} />
-                </View>
-                <Text style={[styles.tabLabel, active && { color: activeTab.color }]}>{t.label}</Text>
-              </TouchableOpacity>
-            );
-          })}
+          {TABS.map((t) => (
+            <TabButton key={t.key} tab={t} active={tab === t.key} activeColor={activeTab.color} onPress={() => setTab(t.key)} />
+          ))}
         </View>
       </View>
+
+      {confetti > 0 && <Confetti key={confetti} />}
+      {milestone && (
+        <FadeInUp key={milestone} distance={-18} style={styles.milestone}>
+          <Ionicons name="gift" size={16} color={colors.gold} />
+          <Text style={styles.milestoneText}>{milestone}</Text>
+        </FadeInUp>
+      )}
+
+      {showThemes && <ThemePicker onClose={() => setShowThemes(false)} />}
 
       {character.pendingBabyId ? (
         <NameBabyModal onSubmit={nameBaby} />
@@ -178,7 +236,59 @@ export default function HomeScreen() {
   );
 }
 
+function TabButton({
+  tab,
+  active,
+  activeColor,
+  onPress,
+}: {
+  tab: (typeof TABS)[number];
+  active: boolean;
+  activeColor: string;
+  onPress: () => void;
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    if (active) {
+      scale.setValue(0.78);
+      Animated.spring(scale, { toValue: 1, friction: 3.5, tension: 160, useNativeDriver: true }).start();
+    }
+  }, [active, scale]);
+  return (
+    <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.tabBtn} onPress={onPress}>
+      <Animated.View style={[styles.tabIcon, active && { backgroundColor: tab.color + "26" }, { transform: [{ scale }] }]}>
+        <Ionicons name={tab.icon} size={22} color={active ? tab.color : colors.textMuted} />
+      </Animated.View>
+      <Text style={[styles.tabLabel, active && { color: activeColor }]}>{tab.label}</Text>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
+  moneyDelta: {
+    right: 6,
+    top: -14,
+  },
+  milestone: {
+    position: "absolute",
+    top: 92,
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: colors.surfaceRaised,
+    borderWidth: 1,
+    borderColor: colors.gold + "88",
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm + 2,
+    zIndex: 60,
+  },
+  milestoneText: {
+    color: colors.textPrimary,
+    fontFamily: fonts.extraBold,
+    fontSize: fontSize.base,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -254,6 +364,16 @@ const styles = StyleSheet.create({
     fontFamily: fonts.extraBold,
     fontSize: fontSize.base,
   },
+  themeBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.surfaceRaised,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   tabContent: {
     flex: 1,
   },
@@ -284,7 +404,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "rgba(6,23,14,0.18)",
+    backgroundColor: colors.shade,
     borderRadius: radii.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: 5,

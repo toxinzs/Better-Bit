@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "1.6.0";
+export const APP_VERSION = "1.7.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,17 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "1.7.0",
+    title: "Alive",
+    highlights: [
+      "Some years now just pass quietly - popups are still the norm, but not every single year",
+      "Events no longer repeat over and over - each one takes a break for years after it shows up",
+      "Five themes to pick from: Midnight, Ocean, Sunset, Forest and Daylight (tap the palette button)",
+      "Smoother, livelier motion - cards slide in, money counts up, stat changes float up, tabs bounce",
+      "Your character's face reacts to how you're doing, and milestone birthdays get confetti",
+    ],
+  },
   {
     version: "1.6.0",
     title: "A Real Look",

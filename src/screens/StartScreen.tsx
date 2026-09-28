@@ -11,6 +11,7 @@ import { APP_VERSION } from "../version";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
 import Avatar from "../components/Avatar";
 import GradientBg from "../components/GradientBg";
+import ThemePicker from "../components/ThemePicker";
 
 const GENDER_OPTIONS: { key: Gender; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { key: "female", label: "Female", icon: "female" },
@@ -28,6 +29,7 @@ export default function StartScreen() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [showWhatsNew, setShowWhatsNew] = useState(false);
+  const [showThemes, setShowThemes] = useState(false);
   // real avatarSeed doesn't exist until createCharacter() runs - this is
   // just a temporary preview seed, re-rolled whenever gender/region/name
   // change so the picker visibly reacts to your choices.
@@ -47,8 +49,11 @@ export default function StartScreen() {
 
   return (
     <SafeAreaView style={styles.root}>
-      <GradientBg id="startBg" from="#1a1c3d" to={colors.background} radius={0} vertical style={StyleSheet.absoluteFill} />
+      <GradientBg id="startBg" from={colors.gradStart} to={colors.background} radius={0} vertical style={StyleSheet.absoluteFill} />
       <View style={styles.container}>
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Change theme" activeOpacity={0.7} style={styles.themeBtn} onPress={() => setShowThemes(true)}>
+        <Ionicons name="color-palette" size={20} color={colors.textSecondary} />
+      </TouchableOpacity>
       <View style={styles.logoWrap}>
         <View style={styles.logoBadge}>
           <Ionicons name="infinite" size={30} color={colors.primaryText} />
@@ -119,12 +124,27 @@ export default function StartScreen() {
       </TouchableOpacity>
 
       {showWhatsNew && <WhatsNewModal onClose={() => setShowWhatsNew(false)} />}
+      {showThemes && <ThemePicker onClose={() => setShowThemes(false)} />}
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  themeBtn: {
+    position: "absolute",
+    top: spacing.lg,
+    right: spacing.lg,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surfaceRaised,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 5,
+  },
   root: {
     flex: 1,
     backgroundColor: colors.background,

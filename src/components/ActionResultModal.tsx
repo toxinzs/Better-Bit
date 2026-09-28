@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
 import ModalBase from "./ModalBase";
+import { FadeInUp } from "../motion";
 
 // The generic "here's what happened" popup - shown after any action that
 // pushed new lines to the year's log, instead of the player having to go
@@ -11,9 +12,9 @@ export default function ActionResultModal({ lines, onClose }: { lines: string[];
   return (
     <ModalBase icon="checkmark-circle" iconColor={colors.primary}>
       {lines.map((line, i) => (
-        <Text key={i} style={styles.text}>
-          {line}
-        </Text>
+        <FadeInUp key={i} delay={180 + i * 120} distance={8}>
+          <Text style={styles.text}>{line}</Text>
+        </FadeInUp>
       ))}
       <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.closeBtn} onPress={onClose}>
         <Text style={styles.closeText}>Got it</Text>

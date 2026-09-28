@@ -80,7 +80,7 @@ export default function ActivitiesTab() {
 
   return (
     <ScrollView contentContainerStyle={tabStyles.scroll}>
-      <Section title="Venues" icon="location" color="#f5c542" defaultOpen={true}>
+      <Section title="Venues" icon="location" color={colors.happiness} defaultOpen={true}>
         <View style={styles.grid}>
           {venues.map((v) => (
             <TouchableOpacity
@@ -100,7 +100,7 @@ export default function ActivitiesTab() {
         <Button label="See a Doctor ($150)" icon="medkit" variant="secondary" onPress={visitDoctor} style={styles.inlineBtn} />
       </Section>
 
-      <Section title="Lessons" icon="ribbon" color="#4d9fef" summary={lessonSummary} defaultOpen={false}>
+      <Section title="Lessons" icon="ribbon" color={colors.smarts} summary={lessonSummary} defaultOpen={false}>
         {hasSkills && (
           <View style={styles.skillsWrap}>
             {(Object.keys(skills) as LessonDef["key"][]).map((key) => (
@@ -125,7 +125,7 @@ export default function ActivitiesTab() {
         </View>
       </Section>
 
-      <Section title="Dating" icon="heart" color="#ff6b9d" summary={datingSummary} defaultOpen={false}>
+      <Section title="Dating" icon="heart" color={colors.love} summary={datingSummary} defaultOpen={false}>
 
         {!canDate ? (
           <Text style={tabStyles.logLine}>Too young to date yet.</Text>
@@ -178,7 +178,7 @@ export default function ActivitiesTab() {
         )}
       </Section>
 
-      <Section title="Fertility" icon="medkit" color="#ef5b5b" defaultOpen={false}>
+      <Section title="Fertility" icon="medkit" color={colors.health} defaultOpen={false}>
 
         {!canDate ? (
           <Text style={tabStyles.logLine}>Not applicable yet.</Text>
@@ -226,7 +226,7 @@ export default function ActivitiesTab() {
         )}
       </Section>
 
-      <Section title="Vacations" icon="airplane" color="#3fb8af" defaultOpen={false}>
+      <Section title="Vacations" icon="airplane" color={colors.teal} defaultOpen={false}>
         {VACATIONS.map((v) => (
           <TouchableOpacity
             key={v.key}
@@ -244,7 +244,7 @@ export default function ActivitiesTab() {
         ))}
       </Section>
 
-      <Section title="End of the Road" icon="alert-circle" color="#f87171" defaultOpen={false}>
+      <Section title="End of the Road" icon="alert-circle" color={colors.danger} defaultOpen={false}>
         <Text style={tabStyles.logLine}>If it's become too much, you can choose to end things here.</Text>
         <Button label="Surrender" icon="flag" variant="danger" onPress={surrender} style={styles.surrenderBtn} />
       </Section>

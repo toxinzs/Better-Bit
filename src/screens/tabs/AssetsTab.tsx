@@ -63,7 +63,7 @@ export default function AssetsTab() {
 
   return (
     <ScrollView contentContainerStyle={tabStyles.scroll}>
-      <GradientBg id="moneyHero" from="#124a2e" to="#171726" radius={radii.lg} style={styles.hero}>
+      <GradientBg id="moneyHero" from={colors.gradMoney} to={colors.surface} radius={radii.lg} style={styles.hero}>
         <Text style={styles.netWorthLabel}>NET WORTH</Text>
         <Text style={styles.netWorthValue}>${netWorth.toLocaleString()}</Text>
         <View style={styles.heroTiles}>
@@ -84,7 +84,7 @@ export default function AssetsTab() {
         </View>
       </GradientBg>
 
-      <Section title="Car" icon="car-sport" color="#4d9fef" summary={carSummary} defaultOpen={false}>
+      <Section title="Car" icon="car-sport" color={colors.smarts} summary={carSummary} defaultOpen={false}>
         {character.car ? (
           <View>
             <View style={styles.ownedRow}>
@@ -111,7 +111,7 @@ export default function AssetsTab() {
         )}
       </Section>
 
-      <Section title="Home" icon="home" color="#f5b942" summary={homeSummary} defaultOpen={false}>
+      <Section title="Home" icon="home" color={colors.gold} summary={homeSummary} defaultOpen={false}>
         {character.home ? (
           <View>
             <View style={styles.ownedRow}>
@@ -151,7 +151,7 @@ export default function AssetsTab() {
         )}
       </Section>
 
-      <Section title="Credit & Loans" icon="card" color="#f87171" summary={debtSummary} defaultOpen={false}>
+      <Section title="Credit & Loans" icon="card" color={colors.danger} summary={debtSummary} defaultOpen={false}>
 
         <View style={styles.creditScoreRow}>
           <Text style={styles.creditScoreLabel}>Credit Score</Text>
@@ -246,7 +246,7 @@ export default function AssetsTab() {
         )}
       </Section>
 
-      <Section title="Investments" icon="trending-up" color="#2ecc71" summary={investSummary} defaultOpen={false}>
+      <Section title="Investments" icon="trending-up" color={colors.primary} summary={investSummary} defaultOpen={false}>
 
         {character.age < 18 ? (
           <Text style={tabStyles.logLine}>Too young to open a brokerage account yet.</Text>
@@ -326,7 +326,7 @@ export default function AssetsTab() {
         )}
       </Section>
 
-      <Section title="Retirement" icon="umbrella" color="#b370e0" summary={retireSummary} defaultOpen={false}>
+      <Section title="Retirement" icon="umbrella" color={colors.looks} summary={retireSummary} defaultOpen={false}>
 
         <View style={styles.creditScoreRow}>
           <Text style={styles.creditScoreLabel}>Balance</Text>
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
   },
   heroTile: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.25)",
+    backgroundColor: colors.shade,
     borderRadius: radii.md,
     padding: spacing.md,
     alignItems: "center",

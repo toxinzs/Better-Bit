@@ -37,7 +37,7 @@ export default function App() {
     return (
       <View style={styles.loading}>
         <ActivityIndicator color={colors.primary} size="large" />
-        <StatusBar style="light" />
+        <StatusBar style={colors.mode === "light" ? "dark" : "light"} />
       </View>
     );
   }
@@ -47,7 +47,7 @@ export default function App() {
       {screen === "start" && <StartScreen />}
       {screen === "home" && <HomeScreen />}
       {screen === "gameover" && <GameOverScreen />}
-      <StatusBar style="light" />
+      <StatusBar style={colors.mode === "light" ? "dark" : "light"} />
     </View>
   );
 }

@@ -3,7 +3,7 @@ import { clamp, randomInt, pickWeighted } from "./util";
 import { EVENTS } from "../data/events";
 import { randomFirstName, randomLastName } from "../data/names";
 import { getRegion } from "../data/regions";
-import { MIN_AGE_CONVERSATION } from "./lifeStage";
+import { MIN_AGE_CONVERSATION, getLifeStage } from "./lifeStage";
 import { tickWorldState, hasActiveCondition, effectiveSalary } from "./worldState";
 import { ambientMessageTick } from "./relationships";
 import { tickAssets, netWorth } from "./assets";
@@ -147,13 +147,60 @@ function deathChance(age: number, health: number): number {
   return Math.min(base, 0.95);
 }
 
+// How many years before a non-`once` event is allowed to come up again -
+// stops the same handful of events from looping year after year.
+const REPEAT_COOLDOWN_YEARS = 8;
+// Roughly one year in five just passes without a decision popup; a run of
+// two quiet years in a row is much rarer than that.
+const QUIET_YEAR_CHANCE = 0.18;
+const QUIET_AFTER_QUIET_CHANCE = 0.04;
+
+const QUIET_LINES: Record<string, string[]> = {
+  baby: [
+    "A gentle year of naps, snacks and stumbling around.",
+    "You mostly played, giggled and got carried places.",
+    "Not much happened - you just grew a little.",
+  ],
+  child: [
+    "A regular year - school, friends and a lot of playing outside.",
+    "Nothing dramatic. Just recess, cartoons and growing taller.",
+    "A quiet stretch of ordinary childhood days.",
+  ],
+  teen: [
+    "No big drama this year - homework, group chats and figuring yourself out.",
+    "A calm year. You kept your head down and got through it.",
+    "Nothing major happened. Just the slow work of becoming you.",
+  ],
+  adult: [
+    "A steady year. No big drama - just work, bills and small wins.",
+    "Nothing dramatic happened. Life just kept moving.",
+    "A quiet year. You settled into your routine.",
+  ],
+  senior: [
+    "A calm, comfortable year. You savored the little things.",
+    "Nothing much happened, and that was just fine.",
+    "A slow, peaceful year at your own pace.",
+  ],
+};
+
+function rememberEvent(c: Character, id: string): void {
+  const recent = (c.recentEvents ??= []);
+  recent.push({ id, age: c.age });
+  // keep the list short - only the cooldown window matters
+  c.recentEvents = recent.filter((r) => c.age - r.age < REPEAT_COOLDOWN_YEARS);
+}
+
 function eligibleEvents(c: Character, world: WorldState): LifeEvent[] {
-  return EVENTS.filter((e) => {
+  const base = EVENTS.filter((e) => {
     if (c.age < e.minAge || c.age > e.maxAge) return false;
     if (e.once && c.triggeredEvents.includes(e.id)) return false;
     if (e.condition && !e.condition(c, world)) return false;
     return true;
   });
+  const recent = c.recentEvents ?? [];
+  const fresh = base.filter((e) => !recent.some((r) => r.id === e.id && c.age - r.age < REPEAT_COOLDOWN_YEARS));
+  // if the cooldown would empty the pool entirely, allow repeats rather than nothing
+  return fresh.length > 0 ? fresh : base;
 }
 
 export type AgeUpResult = {
@@ -285,12 +332,20 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
       usedIds.add(chosen.id);
       if (chosen.once) c.triggeredEvents.push(chosen.id);
       chosen.autoEffect?.(c, world);
+      rememberEvent(c, chosen.id);
       const text = chosen.text(c, world);
       c.yearLog.push(text);
       c.fullLog.push({ age: c.age, text });
     }
 
-    pendingEvent = pickWeighted(choicePool);
+    const quiet = Math.random() < (c.quietLastYear ? QUIET_AFTER_QUIET_CHANCE : QUIET_YEAR_CHANCE);
+    c.quietLastYear = quiet;
+    if (quiet) {
+      const lines = QUIET_LINES[getLifeStage(c.age)] ?? QUIET_LINES.adult;
+      c.yearLog.push(lines[randomInt(0, lines.length - 1)]);
+    } else {
+      pendingEvent = pickWeighted(choicePool);
+    }
   }
 
   if (c.yearLog.length === 0) {
@@ -309,6 +364,7 @@ export function resolveEvent(c: Character, world: WorldState, event: LifeEvent, 
   const choice = event.choices?.[choiceIndex];
   if (!choice) return undefined;
   if (event.once) c.triggeredEvents.push(event.id);
+  rememberEvent(c, event.id);
   const next = choice.effect(c, world);
   const baseText = event.text(c, world);
   const resultText = choice.resultText?.(c, world);

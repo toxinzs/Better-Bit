@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-nati
 import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../../state/gameStore";
 import Card from "../../components/Card";
+import { FadeInUp } from "../../motion";
 import { availableCrimes, CrimeDef } from "../../data/crimes";
 import {
   successChance,
@@ -101,12 +102,13 @@ export default function CrimeTab() {
         </Card>
       )}
 
-      {crimes.map((crime) => {
+      {crimes.map((crime, idx) => {
         const tier = TIER_META[crime.tier];
         const chance = Math.round(successChance(crime, character.stats.smarts, worldState) * 100);
         const oddsColor = chance >= 65 ? colors.primary : chance >= 45 ? colors.gold : colors.danger;
         return (
-          <Card key={crime.id} style={{ ...styles.crimeCard, borderLeftColor: tier.color }}>
+          <FadeInUp key={crime.id} delay={Math.min(idx, 8) * 50}>
+          <Card style={{ ...styles.crimeCard, borderLeftColor: tier.color }}>
             <View style={styles.headerRow}>
               <Text style={styles.crimeLabel}>{crime.label}</Text>
               <View style={[styles.tierBadge, { borderColor: tier.color }]}>
@@ -142,6 +144,7 @@ export default function CrimeTab() {
               <Text style={styles.commitBtnText}>Do it</Text>
             </TouchableOpacity>
           </Card>
+          </FadeInUp>
         );
       })}
     </ScrollView>
