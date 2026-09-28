@@ -4,9 +4,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../../state/gameStore";
 import Card from "../../components/Card";
 import Button from "../../components/Button";
+import Chip from "../../components/Chip";
+import GradientBg from "../../components/GradientBg";
 import { availableJobs } from "../../data/jobs";
 import { effectiveSalary, takeHomePay } from "../../engine/lifeEngine";
-import { colors, fonts, fontSize, spacing } from "../../theme";
+import { colors, fonts, fontSize, radii, spacing } from "../../theme";
 import { tabStyles } from "./sharedStyles";
 
 export default function CareerTab() {
@@ -17,99 +19,226 @@ export default function CareerTab() {
 
   if (!character) return null;
 
+  const region = character.originRegion;
   const jobs = availableJobs(character.age, character.stats.smarts, character.hasCollegeDegree, character.criminalRecord ?? false);
+  const gross = character.job ? effectiveSalary(character.job, worldState, region) : 0;
+  const net = character.job ? takeHomePay(gross, region) : 0;
 
   return (
     <ScrollView contentContainerStyle={tabStyles.scroll}>
-      <Card>
-        <View style={styles.currentRow}>
-          <Ionicons name="briefcase" size={18} color={colors.smarts} />
-          <Text style={tabStyles.sectionTitle}>
-            {character.inJail ? "Incarcerated" : character.job ? character.job.title : "Unemployed"}
-          </Text>
-        </View>
-        {character.job && (
-          <>
-            <Text style={styles.takeHomeLine}>
-              ${effectiveSalary(character.job, worldState, character.originRegion).toLocaleString()}/yr gross · $
-              {takeHomePay(effectiveSalary(character.job, worldState, character.originRegion), character.originRegion).toLocaleString()}/yr take-home
+      <GradientBg id="careerHero" from="#173a63" to="#171726" radius={radii.lg} style={styles.hero}>
+        <View style={styles.heroTop}>
+          <View style={styles.heroIcon}>
+            <Ionicons name={character.inJail ? "lock-closed" : "briefcase"} size={22} color={colors.smarts} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.heroLabel}>{character.inJail ? "STATUS" : "CURRENT JOB"}</Text>
+            <Text style={styles.heroTitle}>
+              {character.inJail ? "Incarcerated" : character.job ? character.job.title : "Unemployed"}
             </Text>
+          </View>
+        </View>
+        {character.job ? (
+          <>
+            <View style={styles.tiles}>
+              <View style={styles.tile}>
+                <Text style={styles.tileLabel}>Gross</Text>
+                <Text style={styles.tileValue}>${gross.toLocaleString()}</Text>
+                <Text style={styles.tileSub}>per year</Text>
+              </View>
+              <View style={styles.tile}>
+                <Text style={styles.tileLabel}>Take-home</Text>
+                <Text style={[styles.tileValue, { color: colors.primary }]}>${net.toLocaleString()}</Text>
+                <Text style={styles.tileSub}>after tax</Text>
+              </View>
+            </View>
             <Button label="Quit current job" icon="exit" variant="danger" onPress={quitJob} />
           </>
-        )}
+        ) : !character.inJail ? (
+          <Text style={styles.heroHint}>Pick a position below. Higher pay needs more smarts or a degree.</Text>
+        ) : null}
         {character.criminalRecord && (
-          <Text style={styles.recordLine}>
-            You have a criminal record — some jobs won't consider you.
-          </Text>
+          <View style={styles.record}>
+            <Ionicons name="warning" size={14} color={colors.danger} />
+            <Text style={styles.recordText}>Criminal record — some jobs won't consider you.</Text>
+          </View>
         )}
-      </Card>
+      </GradientBg>
 
+      <Text style={styles.listTitle}>Open positions</Text>
       {character.inJail ? (
         <Card>
-          <Text style={tabStyles.sectionTitle}>Open positions</Text>
           <Text style={tabStyles.logLine}>You can't work from behind bars.</Text>
         </Card>
-      ) : (
+      ) : jobs.length === 0 ? (
         <Card>
-          <Text style={tabStyles.sectionTitle}>Open positions</Text>
-          {jobs.length === 0 && <Text style={tabStyles.logLine}>No jobs available yet.</Text>}
-          {jobs.map((job) => {
-            const gross = effectiveSalary(job, worldState, character.originRegion);
-            return (
-              <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} key={job.title} style={styles.jobRow} onPress={() => applyForJob(job)}>
-                <View>
-                  <Text style={styles.jobTitle}>{job.title}</Text>
-                  <Text style={styles.jobSub}>${takeHomePay(gross, character.originRegion).toLocaleString()}/yr take-home</Text>
-                </View>
-                <Text style={styles.jobSalary}>${gross.toLocaleString()}/yr</Text>
-              </TouchableOpacity>
-            );
-          })}
+          <Text style={tabStyles.logLine}>No jobs available yet.</Text>
         </Card>
+      ) : (
+        jobs.map((job) => {
+          const g = effectiveSalary(job, worldState, region);
+          const current = character.job?.title === job.title;
+          return (
+            <TouchableOpacity
+              accessibilityRole="button"
+              activeOpacity={0.75}
+              key={job.title}
+              style={[styles.jobCard, current && styles.jobCardCurrent]}
+              onPress={() => applyForJob(job)}
+            >
+              <View style={styles.jobIcon}>
+                <Ionicons name="briefcase-outline" size={18} color={colors.smarts} />
+              </View>
+              <View style={{ flex: 1, gap: 4 }}>
+                <Text style={styles.jobTitle}>{job.title}</Text>
+                <View style={styles.chips}>
+                  {job.requiresCollege ? <Chip label="DEGREE" color={colors.smarts} /> : null}
+                  {job.minSmarts ? <Chip label={`SMARTS ${job.minSmarts}+`} color={colors.looks} /> : null}
+                  <Text style={styles.jobSub}>${takeHomePay(g, region).toLocaleString()} take-home</Text>
+                </View>
+              </View>
+              <View style={{ alignItems: "flex-end" }}>
+                <Text style={styles.jobSalary}>${g.toLocaleString()}</Text>
+                <Text style={styles.jobPer}>/yr</Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })
       )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  currentRow: {
+  hero: {
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: spacing.lg,
+  },
+  heroTop: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
+    gap: spacing.md,
+    marginBottom: spacing.md,
   },
-  takeHomeLine: {
+  heroIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    backgroundColor: colors.smarts + "22",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  heroLabel: {
+    color: colors.textSecondary,
+    fontFamily: fonts.bold,
+    fontSize: fontSize.xs,
+    letterSpacing: 1,
+  },
+  heroTitle: {
+    color: colors.textPrimary,
+    fontFamily: fonts.extraBold,
+    fontSize: fontSize.xxl - 4,
+  },
+  heroHint: {
+    color: colors.textSecondary,
+    fontFamily: fonts.regular,
+    fontSize: fontSize.md,
+    lineHeight: 19,
+  },
+  tiles: {
+    flexDirection: "row",
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  tile: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.22)",
+    borderRadius: radii.md,
+    padding: spacing.md,
+  },
+  tileLabel: {
+    color: colors.textSecondary,
+    fontFamily: fonts.semiBold,
+    fontSize: fontSize.sm,
+  },
+  tileValue: {
+    color: colors.textPrimary,
+    fontFamily: fonts.extraBold,
+    fontSize: fontSize.xl,
+    marginTop: 2,
+  },
+  tileSub: {
     color: colors.textMuted,
     fontFamily: fonts.regular,
+    fontSize: fontSize.xs,
+  },
+  record: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: spacing.md,
+  },
+  recordText: {
+    color: colors.danger,
+    fontFamily: fonts.semiBold,
     fontSize: fontSize.sm,
+    flex: 1,
+  },
+  listTitle: {
+    color: colors.textPrimary,
+    fontFamily: fonts.extraBold,
+    fontSize: fontSize.base,
+    letterSpacing: 0.5,
     marginBottom: spacing.sm,
   },
-  recordLine: {
-    color: colors.danger,
-    fontFamily: fonts.regular,
-    fontSize: fontSize.sm,
-    marginTop: spacing.sm,
+  jobCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md + 2,
+    marginBottom: spacing.sm,
+  },
+  jobCardCurrent: {
+    borderColor: colors.smarts,
+  },
+  jobIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: colors.smarts + "1f",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  jobTitle: {
+    color: colors.textPrimary,
+    fontFamily: fonts.bold,
+    fontSize: fontSize.base + 1,
+  },
+  chips: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 6,
   },
   jobSub: {
     color: colors.textMuted,
     fontFamily: fonts.regular,
     fontSize: fontSize.sm,
   },
-  jobRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: spacing.sm + 2,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  jobTitle: {
-    color: colors.textPrimary,
-    fontFamily: fonts.regular,
-    fontSize: fontSize.base,
-  },
   jobSalary: {
     color: colors.primary,
-    fontSize: fontSize.base,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.extraBold,
+    fontSize: fontSize.lg,
+  },
+  jobPer: {
+    color: colors.textMuted,
+    fontFamily: fonts.regular,
+    fontSize: fontSize.xs,
   },
 });

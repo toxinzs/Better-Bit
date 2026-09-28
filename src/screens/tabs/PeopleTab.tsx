@@ -3,20 +3,35 @@ import { Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "
 import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../../state/gameStore";
 import Card from "../../components/Card";
-import { Relationship } from "../../types";
+import Chip from "../../components/Chip";
+import { PersonAvatar } from "../../components/Avatar";
+import { Relationship, RelationType, RegionKey } from "../../types";
 import { MIN_AGE_CONVERSATION } from "../../engine/lifeStage";
 import { colors, fonts, fontSize, radii, spacing } from "../../theme";
 import { tabStyles } from "./sharedStyles";
 
-const RELATION_META: Record<string, { label: string; icon: keyof typeof Ionicons.glyphMap }> = {
-  mother: { label: "Mother", icon: "woman" },
-  father: { label: "Father", icon: "man" },
-  sibling: { label: "Sibling", icon: "people" },
-  friend: { label: "Friend", icon: "happy" },
-  partner: { label: "Partner", icon: "heart" },
-  child: { label: "Child", icon: "body" },
-  ex: { label: "Ex", icon: "flame" },
+const RELATION_META: Record<string, { label: string; color: string }> = {
+  mother: { label: "Mother", color: colors.looks },
+  father: { label: "Father", color: colors.looks },
+  sibling: { label: "Sibling", color: colors.looks },
+  friend: { label: "Friend", color: colors.happiness },
+  partner: { label: "Partner", color: "#ff6b9d" },
+  child: { label: "Child", color: colors.smarts },
+  ex: { label: "Ex", color: colors.danger },
 };
+
+const GROUPS: { title: string; icon: keyof typeof Ionicons.glyphMap; color: string; types: RelationType[] }[] = [
+  { title: "Partner", icon: "heart", color: "#ff6b9d", types: ["partner"] },
+  { title: "Family", icon: "home", color: colors.looks, types: ["mother", "father", "sibling", "child"] },
+  { title: "Friends", icon: "happy", color: colors.happiness, types: ["friend"] },
+  { title: "Exes", icon: "flame", color: colors.danger, types: ["ex"] },
+];
+
+function levelColor(level: number): string {
+  if (level < 35) return colors.danger;
+  if (level < 65) return colors.happiness;
+  return colors.primary;
+}
 
 export default function PeopleTab({ onOpenThread }: { onOpenThread: (relationshipId: string) => void }) {
   const character = useGameStore((s) => s.character);
@@ -43,31 +58,45 @@ export default function PeopleTab({ onOpenThread }: { onOpenThread: (relationshi
 
   return (
     <ScrollView contentContainerStyle={tabStyles.scroll}>
-      <Card>
-        <View style={styles.headerRow}>
-          <Ionicons name="people" size={18} color={colors.looks} />
-          <Text style={tabStyles.sectionTitle}>Relationships</Text>
-        </View>
-        {relationships.length === 0 && <Text style={tabStyles.logLine}>No one in your life yet.</Text>}
-        {relationships.map((r) => (
-          <RelationshipRow
-            key={r.id}
-            r={r}
-            expanded={expandedIds.has(r.id)}
-            onToggle={() => toggle(r.id)}
-            canTalk={character.age >= MIN_AGE_CONVERSATION}
-            onSpendTime={() => spendTimeWith(r.id)}
-            onTalk={() => haveConversation(r.id)}
-            onOpenThread={() => onOpenThread(r.id)}
-          />
-        ))}
-      </Card>
+      {relationships.length === 0 && (
+        <Card style={styles.empty}>
+          <Ionicons name="people" size={24} color={colors.looks} />
+          <Text style={styles.emptyTitle}>No one in your life yet</Text>
+        </Card>
+      )}
+      {GROUPS.map((g) => {
+        const members = relationships.filter((r) => g.types.includes(r.type)).sort((a, b) => b.level - a.level);
+        if (members.length === 0) return null;
+        return (
+          <View key={g.title} style={styles.group}>
+            <View style={styles.groupHeader}>
+              <Ionicons name={g.icon} size={15} color={g.color} />
+              <Text style={styles.groupTitle}>{g.title}</Text>
+              <Text style={styles.groupCount}>{members.length}</Text>
+            </View>
+            {members.map((r) => (
+              <PersonCard
+                key={r.id}
+                r={r}
+                region={character.originRegion}
+                expanded={expandedIds.has(r.id)}
+                onToggle={() => toggle(r.id)}
+                canTalk={character.age >= MIN_AGE_CONVERSATION}
+                onSpendTime={() => spendTimeWith(r.id)}
+                onTalk={() => haveConversation(r.id)}
+                onOpenThread={() => onOpenThread(r.id)}
+              />
+            ))}
+          </View>
+        );
+      })}
     </ScrollView>
   );
 }
 
-function RelationshipRow({
+function PersonCard({
   r,
+  region,
   expanded,
   onToggle,
   canTalk,
@@ -76,6 +105,7 @@ function RelationshipRow({
   onOpenThread,
 }: {
   r: Relationship;
+  region?: RegionKey;
   expanded: boolean;
   onToggle: () => void;
   canTalk: boolean;
@@ -83,7 +113,7 @@ function RelationshipRow({
   onTalk: () => void;
   onOpenThread: () => void;
 }) {
-  const meta = RELATION_META[r.type] ?? { label: r.type, icon: "person" as const };
+  const meta = RELATION_META[r.type] ?? { label: r.type, color: colors.textSecondary };
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const chevronAnim = useRef(new Animated.Value(0)).current;
 
@@ -96,122 +126,179 @@ function RelationshipRow({
     }
   };
 
+  const lc = levelColor(r.level);
+
   return (
-    <View style={styles.relBlock}>
-      <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.relRow} onPress={handleToggle}>
-        <View style={styles.relNameWrap}>
-          <Ionicons name={meta.icon} size={14} color={colors.textSecondary} />
-          <Text style={styles.relName}>
-            {r.name} <Text style={styles.relType}>({meta.label})</Text>
-          </Text>
+    <Card style={styles.person}>
+      <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.personRow} onPress={handleToggle}>
+        <View style={[styles.avatarWrap, { borderColor: meta.color + "88" }]}>
+          <PersonAvatar name={r.name} type={r.type} region={region} size={46} />
         </View>
-        <View style={styles.relRight}>
-          <Text style={styles.relLevel}>{Math.round(r.level)}</Text>
-          <Animated.View
-            style={{ transform: [{ rotate: chevronAnim.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "180deg"] }) }] }}
-          >
-            <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
-          </Animated.View>
+        <View style={styles.personBody}>
+          <View style={styles.nameRow}>
+            <Text style={styles.personName} numberOfLines={1}>
+              {r.name}
+            </Text>
+            {r.married ? <Chip label="MARRIED" color="#ff6b9d" /> : r.engaged ? <Chip label="ENGAGED" color="#ff6b9d" /> : null}
+          </View>
+          <View style={styles.metaRow}>
+            <Chip label={meta.label.toUpperCase()} color={meta.color} />
+            <Text style={[styles.levelText, { color: lc }]}>{Math.round(r.level)}</Text>
+          </View>
+          <View style={styles.track}>
+            <View style={[styles.fill, { width: `${Math.max(3, Math.min(100, r.level))}%`, backgroundColor: lc }]} />
+          </View>
         </View>
+        <Animated.View
+          style={{ transform: [{ rotate: chevronAnim.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "180deg"] }) }] }}
+        >
+          <Ionicons name="chevron-down" size={18} color={colors.textMuted} />
+        </Animated.View>
       </TouchableOpacity>
 
       {expanded && (
-        <Animated.View style={[styles.relActions, { opacity: fadeAnim }]}>
+        <Animated.View style={[styles.actions, { opacity: fadeAnim }]}>
           {r.type === "ex" ? (
-            <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.relActionBtn} onPress={onOpenThread}>
-              <Ionicons name="chatbubble-ellipses" size={14} color={colors.textPrimary} />
-              <Text style={styles.relActionText}>Messages</Text>
+            <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.actionBtn} onPress={onOpenThread}>
+              <Ionicons name="chatbubble-ellipses" size={15} color={colors.textPrimary} />
+              <Text style={styles.actionText}>Messages</Text>
             </TouchableOpacity>
           ) : (
             <>
-              <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.relActionBtn} onPress={onSpendTime}>
-                <Ionicons name="time" size={14} color={colors.textPrimary} />
-                <Text style={styles.relActionText}>Spend Time</Text>
+              <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.actionBtn} onPress={onSpendTime}>
+                <Ionicons name="time" size={15} color={colors.textPrimary} />
+                <Text style={styles.actionText}>Spend Time</Text>
               </TouchableOpacity>
               {canTalk && (
-                <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.relActionBtn} onPress={onTalk}>
-                  <Ionicons name="chatbox" size={14} color={colors.textPrimary} />
-                  <Text style={styles.relActionText}>Talk</Text>
+                <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.actionBtn} onPress={onTalk}>
+                  <Ionicons name="chatbox" size={15} color={colors.textPrimary} />
+                  <Text style={styles.actionText}>Talk</Text>
                 </TouchableOpacity>
               )}
-              <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.relIconBtn} onPress={onOpenThread}>
-                <Ionicons name="chatbubble-ellipses" size={16} color={colors.textPrimary} />
+              <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.iconBtn} onPress={onOpenThread}>
+                <Ionicons name="chatbubble-ellipses" size={17} color={colors.textPrimary} />
               </TouchableOpacity>
             </>
           )}
         </Animated.View>
       )}
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  headerRow: {
-    flexDirection: "row",
+  empty: {
     alignItems: "center",
     gap: 8,
-    marginBottom: 8,
+    paddingVertical: spacing.xl,
   },
-  relBlock: {
-    paddingVertical: spacing.xs + 2,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+  emptyTitle: {
+    color: colors.textSecondary,
+    fontFamily: fonts.semiBold,
+    fontSize: fontSize.base,
   },
-  relRow: {
+  group: {
+    marginBottom: spacing.sm,
+  },
+  groupHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: spacing.xs + 2,
+    gap: 6,
+    marginBottom: spacing.sm,
+    marginTop: spacing.xs,
   },
-  relNameWrap: {
+  groupTitle: {
+    color: colors.textPrimary,
+    fontFamily: fonts.extraBold,
+    fontSize: fontSize.base,
+    letterSpacing: 0.5,
+  },
+  groupCount: {
+    color: colors.textMuted,
+    fontFamily: fonts.bold,
+    fontSize: fontSize.sm,
+  },
+  person: {
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  personRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  avatarWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    borderWidth: 2,
+    backgroundColor: colors.surfaceRaised,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  personBody: {
+    flex: 1,
+    gap: 5,
+  },
+  nameRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
   },
-  relRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  relName: {
+  personName: {
+    flexShrink: 1,
     color: colors.textPrimary,
-    fontFamily: fonts.semiBold,
-    fontSize: fontSize.base,
-  },
-  relType: {
-    color: colors.textMuted,
-    fontFamily: fonts.regular,
-  },
-  relLevel: {
-    color: colors.primary,
-    fontSize: fontSize.base,
     fontFamily: fonts.bold,
+    fontSize: fontSize.base + 1,
   },
-  relActions: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-    paddingBottom: spacing.sm,
-    paddingTop: 2,
-  },
-  relActionBtn: {
+  metaRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    backgroundColor: colors.surfaceRaised,
-    paddingVertical: 7,
-    paddingHorizontal: spacing.sm + 2,
-    borderRadius: radii.sm,
+    justifyContent: "space-between",
   },
-  relIconBtn: {
-    backgroundColor: colors.surfaceRaised,
-    paddingVertical: 7,
-    paddingHorizontal: spacing.sm + 2,
-    borderRadius: radii.sm,
+  levelText: {
+    fontFamily: fonts.extraBold,
+    fontSize: fontSize.md,
   },
-  relActionText: {
+  track: {
+    height: 6,
+    borderRadius: radii.pill,
+    backgroundColor: colors.surfaceRaised,
+    overflow: "hidden",
+  },
+  fill: {
+    height: "100%",
+    borderRadius: radii.pill,
+  },
+  actions: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  actionBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: colors.surfaceRaised,
+    borderRadius: radii.md,
+    paddingVertical: spacing.sm + 2,
+  },
+  actionText: {
     color: colors.textPrimary,
-    fontSize: fontSize.sm,
-    fontFamily: fonts.semiBold,
+    fontFamily: fonts.bold,
+    fontSize: fontSize.md,
+  },
+  iconBtn: {
+    width: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surfaceRaised,
+    borderRadius: radii.md,
   },
 });

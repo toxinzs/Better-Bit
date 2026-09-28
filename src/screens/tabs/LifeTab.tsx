@@ -21,7 +21,7 @@ const KINDS: { test: RegExp; kind: LineKind }[] = [
   { test: /\b(love|partner|date|dating|wedding|married|marry|kiss\w*|romantic|crush|engaged|anniversary|matched|spark|proposal)\b/i, kind: { icon: "heart", color: "#ff6b9d" } },
   { test: /\b(baby|child|kid|kids|born|mother|father|sibling|family|parent\w*|grand\w*|passed away)\b/i, kind: { icon: "people", color: colors.looks } },
   { test: /\b(school|class|classes|teacher|grade|college|homework|exam|degree|graduat\w*|gpa|professor|study|studied)\b/i, kind: { icon: "school", color: colors.smarts } },
-  { test: /\b(sick|doctor|hospital|injur\w*|ill|illness|health|surgery|flu|virus|fever|checkup|medical)\b/i, kind: { icon: "medkit", color: colors.health } },
+  { test: /\b(sick|cold|doctor|hospital|injur\w*|ill|illness|health|surgery|flu|virus|fever|checkup|medical)\b/i, kind: { icon: "medkit", color: colors.health } },
   { test: /\b(friend|friends|party|fun|laugh\w*|trip|vacation|concert|beach|hung out|motivated|dream|dance\w*)\b/i, kind: { icon: "happy", color: colors.happiness } },
 ];
 const DEFAULT_KIND: LineKind = { icon: "chatbubble-ellipses", color: colors.textSecondary };

@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-nati
 import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../../state/gameStore";
 import { generateDatingCandidates, DatingCandidate } from "../../engine/lifeEngine";
-import Card from "../../components/Card";
+import Section from "../../components/Section";
 import Button from "../../components/Button";
 import StatBar from "../../components/StatBar";
 import { availableVenues, availableLessons, VACATIONS, CONCEPTION_METHODS, STERILIZATION_COST } from "../../data/activities";
@@ -75,13 +75,12 @@ export default function ActivitiesTab() {
   const hasPartner = character.relationships.some((r) => r.type === "partner" && r.alive);
   const canDate = character.age >= 18;
 
+  const lessonSummary = hasSkills ? `${Object.keys(skills).length} skill${Object.keys(skills).length === 1 ? "" : "s"}` : undefined;
+  const datingSummary = hasPartner ? "In a relationship" : canDate ? "Single" : undefined;
+
   return (
     <ScrollView contentContainerStyle={tabStyles.scroll}>
-      <Card>
-        <View style={styles.headerRow}>
-          <Ionicons name="location" size={18} color={colors.happiness} />
-          <Text style={tabStyles.sectionTitle}>Venues</Text>
-        </View>
+      <Section title="Venues" icon="location" color="#f5c542" defaultOpen={true}>
         <View style={styles.grid}>
           {venues.map((v) => (
             <TouchableOpacity
@@ -99,13 +98,9 @@ export default function ActivitiesTab() {
         </View>
 
         <Button label="See a Doctor ($150)" icon="medkit" variant="secondary" onPress={visitDoctor} style={styles.inlineBtn} />
-      </Card>
+      </Section>
 
-      <Card>
-        <View style={styles.headerRow}>
-          <Ionicons name="ribbon" size={18} color={colors.smarts} />
-          <Text style={tabStyles.sectionTitle}>Lessons</Text>
-        </View>
+      <Section title="Lessons" icon="ribbon" color="#4d9fef" summary={lessonSummary} defaultOpen={false}>
         {hasSkills && (
           <View style={styles.skillsWrap}>
             {(Object.keys(skills) as LessonDef["key"][]).map((key) => (
@@ -128,13 +123,9 @@ export default function ActivitiesTab() {
             </TouchableOpacity>
           ))}
         </View>
-      </Card>
+      </Section>
 
-      <Card>
-        <View style={styles.headerRow}>
-          <Ionicons name="heart" size={18} color={colors.happiness} />
-          <Text style={tabStyles.sectionTitle}>Dating</Text>
-        </View>
+      <Section title="Dating" icon="heart" color="#ff6b9d" summary={datingSummary} defaultOpen={false}>
 
         {!canDate ? (
           <Text style={tabStyles.logLine}>Too young to date yet.</Text>
@@ -185,13 +176,9 @@ export default function ActivitiesTab() {
         {canDate && (
           <Button label="Hookup" icon="flame" variant="danger" onPress={hookup} style={styles.inlineBtn} />
         )}
-      </Card>
+      </Section>
 
-      <Card>
-        <View style={styles.headerRow}>
-          <Ionicons name="medkit" size={18} color={colors.health} />
-          <Text style={tabStyles.sectionTitle}>Fertility</Text>
-        </View>
+      <Section title="Fertility" icon="medkit" color="#ef5b5b" defaultOpen={false}>
 
         {!canDate ? (
           <Text style={tabStyles.logLine}>Not applicable yet.</Text>
@@ -237,13 +224,9 @@ export default function ActivitiesTab() {
             )}
           </>
         )}
-      </Card>
+      </Section>
 
-      <Card>
-        <View style={styles.headerRow}>
-          <Ionicons name="airplane" size={18} color={colors.primary} />
-          <Text style={tabStyles.sectionTitle}>Vacations</Text>
-        </View>
+      <Section title="Vacations" icon="airplane" color="#3fb8af" defaultOpen={false}>
         {VACATIONS.map((v) => (
           <TouchableOpacity
             key={v.key}
@@ -259,16 +242,12 @@ export default function ActivitiesTab() {
             <Text style={styles.listingPrice}>${v.cost.toLocaleString()}</Text>
           </TouchableOpacity>
         ))}
-      </Card>
+      </Section>
 
-      <Card>
-        <View style={styles.headerRow}>
-          <Ionicons name="alert-circle" size={18} color={colors.danger} />
-          <Text style={tabStyles.sectionTitle}>End of the Road</Text>
-        </View>
+      <Section title="End of the Road" icon="alert-circle" color="#f87171" defaultOpen={false}>
         <Text style={tabStyles.logLine}>If it's become too much, you can choose to end things here.</Text>
         <Button label="Surrender" icon="flag" variant="danger" onPress={surrender} style={styles.surrenderBtn} />
-      </Card>
+      </Section>
     </ScrollView>
   );
 }

@@ -772,6 +772,36 @@ shape with a real per-tab accent color pulled from the stat-color palette
 (health/happiness/smarts/looks) instead of defaulting to primary green
 everywhere.
 
+**Refinement pass (done, v1.6.0)** — direction from the user: before adding
+anything new, the game had to stop feeling empty, boring and cluttered and
+reach a BitLife-or-better level of polish. An audit of a 32-year-old
+character's screens found: the Life tab showed 3 lines while 92 events sat
+unseen, the four stat bars filled a whole card on one tab, seven cramped
+bottom tabs plus a full-width button, flat undifferentiated lists on every
+other tab, and romance events naming partners literally "Your partner".
+Fixed: **Life is now a by-age story feed** (hero card for the current year
+with keyword-tagged icons, a world-news banner only when there's news, and a
+paged "Your story so far" timeline; a new `Character.lifeLog` archives each
+year on `ageUp()` so actions/income survive, old saves fall back to
+`fullLog`). **Stats are a compact always-visible strip** under a gradient
+header (avatar ring, occupation, region, money pill). **Seven tabs became
+five** — Life, Activities (Fun + Crime via a segmented control), People,
+Work (Career + School), Money. **Age Up is a gradient pill** showing the age
+you're about to become. **People** is grouped (Partner/Family/Friends/Exes)
+with a face for everyone (`PersonAvatar`, derived from name so no extra
+saved data), relationship-strength bars, and MARRIED/ENGAGED chips.
+**Career** has a job hero with gross/take-home tiles and requirement chips;
+**Money** has a net-worth hero (cash/invested/debt) over five collapsible
+sections with live summaries; **Crime** shows odds bars, reward/sentence
+facts and tier-coloured cards; the **Start** screen got a gradient backdrop,
+region flags and a bigger live avatar. New reusable kit: `GradientBg`
+(react-native-svg), `Section`, `SegmentedControl`, `Chip`, `StatStrip`.
+Lesson: on web, an absolutely-positioned gradient paints over un-positioned
+`<input>` elements regardless of DOM order — content needs its own
+`zIndex` layer above it. Verified with before/after screenshots of every
+screen and a real click-through (14 Age Up taps, popups, tab switching,
+expanding a person).
+
 **Still open for later in this update**: a mute/volume toggle (there's no
 settings surface at all yet to put one on), a custom app icon/splash
 screen (still Expo's generic defaults), and a deeper visual pass beyond

@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "1.5.1";
+export const APP_VERSION = "1.6.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,18 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "1.6.0",
+    title: "A Real Look",
+    highlights: [
+      "Your Life tab is now your full story - every year written down, with icons, instead of three lines and empty space",
+      "Health, happiness, smarts and looks are always visible under your name",
+      "Five tabs instead of seven: Life, Activities, People, Work, Money - with Crime and School folded into the right places",
+      "People now have faces, grouped into Partner, Family, Friends and Exes, with relationship bars",
+      "Redesigned Career, Money, Crime and Start screens, plus a bigger Age Up button that shows your next age",
+      "Fixed partners being named \"Your partner\"",
+    ],
+  },
   {
     version: "1.5.1",
     title: "A Real Name Bank",

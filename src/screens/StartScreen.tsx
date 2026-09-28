@@ -10,6 +10,7 @@ import { REGIONS } from "../data/regions";
 import { APP_VERSION } from "../version";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
 import Avatar from "../components/Avatar";
+import GradientBg from "../components/GradientBg";
 
 const GENDER_OPTIONS: { key: Gender; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { key: "female", label: "Female", icon: "female" },
@@ -18,6 +19,7 @@ const GENDER_OPTIONS: { key: Gender; label: string; icon: keyof typeof Ionicons.
 ];
 
 const REGION_OPTIONS = Object.values(REGIONS);
+const FLAGS: Record<RegionKey, string> = { us: "🇺🇸", uk: "🇬🇧", nigeria: "🇳🇬", japan: "🇯🇵", brazil: "🇧🇷" };
 
 export default function StartScreen() {
   const startNewLife = useGameStore((s) => s.startNewLife);
@@ -44,7 +46,9 @@ export default function StartScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.root}>
+      <GradientBg id="startBg" from="#1a1c3d" to={colors.background} radius={0} vertical style={StyleSheet.absoluteFill} />
+      <View style={styles.container}>
       <View style={styles.logoWrap}>
         <View style={styles.logoBadge}>
           <Ionicons name="infinite" size={30} color={colors.primaryText} />
@@ -54,7 +58,7 @@ export default function StartScreen() {
       </View>
 
       <View style={styles.previewWrap}>
-        <Avatar character={{ gender, originRegion: region, avatarSeed: previewSeed }} size={72} />
+        <Avatar character={{ gender, originRegion: region, avatarSeed: previewSeed }} size={92} />
       </View>
 
       <View style={styles.genderRow}>
@@ -87,7 +91,7 @@ export default function StartScreen() {
               setPreviewSeed(Date.now());
             }}
           >
-            <Text style={[styles.regionText, region === r.key && styles.regionTextActive]}>{r.label}</Text>
+            <Text style={[styles.regionText, region === r.key && styles.regionTextActive]}>{FLAGS[r.key]} {r.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -115,14 +119,19 @@ export default function StartScreen() {
       </TouchableOpacity>
 
       {showWhatsNew && <WhatsNewModal onClose={() => setShowWhatsNew(false)} />}
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  container: {
+    zIndex: 1,
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
     padding: spacing.xl,
@@ -132,12 +141,13 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xxl,
   },
   previewWrap: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
+    width: 108,
+    height: 108,
+    borderRadius: 54,
+    backgroundColor: colors.surfaceRaised,
+    borderWidth: 2,
+    borderColor: colors.primary + "88",
+    overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: spacing.lg,

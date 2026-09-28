@@ -4,10 +4,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../../state/gameStore";
 import Card from "../../components/Card";
 import Button from "../../components/Button";
+import Section from "../../components/Section";
+import GradientBg from "../../components/GradientBg";
 import { availableCars, availableHomes } from "../../data/assets";
 import { availablePersonalLoans, availableCreditCards } from "../../data/loans";
 import { STOCK_DEFS } from "../../data/stocks";
-import { totalNetWorth, creditScoreLabel } from "../../engine/lifeEngine";
+import { totalNetWorth, creditScoreLabel, portfolioValue } from "../../engine/lifeEngine";
 import { colors, fonts, fontSize, radii, spacing } from "../../theme";
 import { tabStyles } from "./sharedStyles";
 
@@ -50,18 +52,39 @@ export default function AssetsTab() {
   const stocks = worldState.stocks ?? [];
   const portfolio = character.portfolio ?? [];
 
+  const debtTotal = loans.reduce((sum, l) => sum + l.balance, 0) + (character.home?.mortgageBalance ?? 0);
+  const investTotal = portfolioValue(character, worldState);
+  const netWorth = totalNetWorth(character, worldState);
+  const carSummary = character.car ? `$${character.car.value.toLocaleString()}` : "None";
+  const homeSummary = character.home ? `$${character.home.value.toLocaleString()}` : "None";
+  const debtSummary = debtTotal > 0 ? `-$${debtTotal.toLocaleString()}` : `Score ${creditScore}`;
+  const investSummary = investTotal > 0 ? `$${investTotal.toLocaleString()}` : "None";
+  const retireSummary = `$${retirement.balance.toLocaleString()}`;
+
   return (
     <ScrollView contentContainerStyle={tabStyles.scroll}>
-      <Card style={styles.netWorthCard}>
-        <Text style={styles.netWorthLabel}>Net Worth</Text>
-        <Text style={styles.netWorthValue}>${totalNetWorth(character, worldState).toLocaleString()}</Text>
-      </Card>
-
-      <Card>
-        <View style={styles.headerRow}>
-          <Ionicons name="car-sport" size={18} color={colors.primary} />
-          <Text style={tabStyles.sectionTitle}>Car</Text>
+      <GradientBg id="moneyHero" from="#124a2e" to="#171726" radius={radii.lg} style={styles.hero}>
+        <Text style={styles.netWorthLabel}>NET WORTH</Text>
+        <Text style={styles.netWorthValue}>${netWorth.toLocaleString()}</Text>
+        <View style={styles.heroTiles}>
+          <View style={styles.heroTile}>
+            <Text style={styles.heroTileLabel}>Cash</Text>
+            <Text style={styles.heroTileValue}>${character.money.toLocaleString()}</Text>
+          </View>
+          <View style={styles.heroTile}>
+            <Text style={styles.heroTileLabel}>Invested</Text>
+            <Text style={styles.heroTileValue}>${(investTotal + retirement.balance).toLocaleString()}</Text>
+          </View>
+          <View style={styles.heroTile}>
+            <Text style={styles.heroTileLabel}>Debt</Text>
+            <Text style={[styles.heroTileValue, debtTotal > 0 && { color: colors.danger }]}>
+              {debtTotal > 0 ? `-$${debtTotal.toLocaleString()}` : "$0"}
+            </Text>
+          </View>
         </View>
+      </GradientBg>
+
+      <Section title="Car" icon="car-sport" color="#4d9fef" summary={carSummary} defaultOpen={false}>
         {character.car ? (
           <View>
             <View style={styles.ownedRow}>
@@ -86,13 +109,9 @@ export default function AssetsTab() {
             </TouchableOpacity>
           ))
         )}
-      </Card>
+      </Section>
 
-      <Card>
-        <View style={styles.headerRow}>
-          <Ionicons name="home" size={18} color={colors.primary} />
-          <Text style={tabStyles.sectionTitle}>Home</Text>
-        </View>
+      <Section title="Home" icon="home" color="#f5b942" summary={homeSummary} defaultOpen={false}>
         {character.home ? (
           <View>
             <View style={styles.ownedRow}>
@@ -130,13 +149,9 @@ export default function AssetsTab() {
             );
           })
         )}
-      </Card>
+      </Section>
 
-      <Card>
-        <View style={styles.headerRow}>
-          <Ionicons name="card" size={18} color={colors.primary} />
-          <Text style={tabStyles.sectionTitle}>Credit & Loans</Text>
-        </View>
+      <Section title="Credit & Loans" icon="card" color="#f87171" summary={debtSummary} defaultOpen={false}>
 
         <View style={styles.creditScoreRow}>
           <Text style={styles.creditScoreLabel}>Credit Score</Text>
@@ -229,13 +244,9 @@ export default function AssetsTab() {
             ))}
           </View>
         )}
-      </Card>
+      </Section>
 
-      <Card>
-        <View style={styles.headerRow}>
-          <Ionicons name="trending-up" size={18} color={colors.primary} />
-          <Text style={tabStyles.sectionTitle}>Investments</Text>
-        </View>
+      <Section title="Investments" icon="trending-up" color="#2ecc71" summary={investSummary} defaultOpen={false}>
 
         {character.age < 18 ? (
           <Text style={tabStyles.logLine}>Too young to open a brokerage account yet.</Text>
@@ -313,13 +324,9 @@ export default function AssetsTab() {
             })}
           </>
         )}
-      </Card>
+      </Section>
 
-      <Card>
-        <View style={styles.headerRow}>
-          <Ionicons name="umbrella" size={18} color={colors.primary} />
-          <Text style={tabStyles.sectionTitle}>Retirement</Text>
-        </View>
+      <Section title="Retirement" icon="umbrella" color="#b370e0" summary={retireSummary} defaultOpen={false}>
 
         <View style={styles.creditScoreRow}>
           <Text style={styles.creditScoreLabel}>Balance</Text>
@@ -366,7 +373,7 @@ export default function AssetsTab() {
         {character.age < 60 && (
           <Text style={styles.subheading}>10% early-withdrawal penalty before age 60</Text>
         )}
-      </Card>
+      </Section>
     </ScrollView>
   );
 }
@@ -375,10 +382,42 @@ const styles = StyleSheet.create({
   netWorthCard: {
     alignItems: "center",
   },
-  netWorthLabel: {
+  hero: {
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: spacing.md,
+    alignItems: "center",
+  },
+  heroTiles: {
+    alignSelf: "stretch",
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginTop: spacing.lg,
+  },
+  heroTile: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.25)",
+    borderRadius: radii.md,
+    padding: spacing.md,
+    alignItems: "center",
+  },
+  heroTileLabel: {
     color: colors.textSecondary,
     fontFamily: fonts.semiBold,
-    fontSize: fontSize.md,
+    fontSize: fontSize.xs,
+  },
+  heroTileValue: {
+    color: colors.textPrimary,
+    fontFamily: fonts.extraBold,
+    fontSize: fontSize.base,
+    marginTop: 2,
+  },
+  netWorthLabel: {
+    color: colors.textSecondary,
+    fontFamily: fonts.bold,
+    fontSize: fontSize.xs,
+    letterSpacing: 1.5,
     marginBottom: 4,
   },
   netWorthValue: {
