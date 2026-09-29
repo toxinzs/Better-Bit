@@ -97,6 +97,10 @@ export const SKILL_TALENT: Record<string, TalentKey> = {
   art: "artistic",
   martialArts: "athletic",
   acting: "verbal",
+  athletics: "athletic",
+  debate: "verbal",
+  coding: "technical",
+  leadership: "social",
 };
 
 export type TraitWord = { label: string; tone: "good" | "bad" | "neutral" };
@@ -144,7 +148,7 @@ export function tickCharacter(c: Character): void {
 
   // conscientiousness + academic talent: the students who put the work in
   if (inSchool) {
-    const effort = 0.12 + traitMod(c, "c") * 0.28 + ((c.talents?.academic ?? 50) - 50) / 250;
+    const effort = (0.12 + traitMod(c, "c") * 0.28 + ((c.talents?.academic ?? 50) - 50) / 250) * (1 - Math.max(0, c.stats.smarts - 60) / 70);
     if (Math.random() < effort) c.stats.smarts = clamp(c.stats.smarts + 1);
     else if (effort < -0.05 && Math.random() < -effort) c.stats.smarts = clamp(c.stats.smarts - 1);
   }

@@ -9,7 +9,7 @@ import { create } from "zustand";
 export type MenuId =
   | "venues" | "lessons" | "health" | "dating" | "fertility" | "vacations" | "endroad" | "crime"
   | "car" | "home" | "loans" | "invest" | "retire"
-  | "occupation" | "findwork" | "school"
+  | "occupation" | "findwork" | "school" | "reportcard" | "study" | "myschool" | "schoolsocial" | "clubs" | "teachers" | "college"
   | "peopleGroup"
   | "profile" | "statDetail";
 

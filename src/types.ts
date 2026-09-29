@@ -184,7 +184,7 @@ export type Retirement = {
   contributionRate: number; // 0-0.5, fraction of gross salary
 };
 
-export type SkillKey = "music" | "singing" | "art" | "martialArts" | "acting";
+export type SkillKey = "music" | "singing" | "art" | "martialArts" | "acting" | "athletics" | "debate" | "coding" | "leadership";
 export type Skills = Partial<Record<SkillKey, number>>;
 
 export type Degree = {
@@ -272,6 +272,35 @@ export type Appearance = {
   balding: number;
 };
 
+// ---- school (v2.2) ----
+export type SchoolKind = "public" | "private" | "magnet" | "boarding" | "alternative";
+
+export type School = {
+  name: string;
+  kind: SchoolKind;
+  quality: number; // 0-100: teaching, facilities, peers - feeds every grade
+  tuition: number; // per year (US-baseline dollars); public schools are free
+  stage: EducationStage;
+};
+
+export type StudyMode = "slack" | "normal" | "hard";
+
+export type ReportCard = {
+  age: number;
+  stage: EducationStage;
+  school?: string;
+  grades: Record<string, number>; // subject -> 0-100
+  gpa: number; // this year's, 0-4
+  rank: number;
+  classSize: number;
+  honor?: boolean;
+  note: string; // the teacher's comment
+};
+
+export type Bullying = { role: "victim" | "bully"; years: number };
+
+export type Diploma = "diploma" | "ged" | "none";
+
 // An illness or long-term condition the player has. `key` matches
 // engine/health.ts's PLAYER_CONDITIONS (which extends mortality.ts CONDITIONS).
 export type PlayerCondition = { key: string; since: number; treated?: boolean };
@@ -342,6 +371,20 @@ export type Character = {
   avatarSeed?: number;
   // ---- character depth (v2.0c); all optional, backfilled by engine/character.ts ensureCharacter ----
   personality?: Personality;
+  // ---- school (v2.2) ----
+  school?: School | null; // where you go now (K-12)
+  studyMode?: StudyMode;
+  reportCards?: ReportCard[];
+  popularity?: number; // 0-100
+  bullying?: Bullying | null;
+  conduct?: number; // 0-100: how well behaved you've been; falls with trouble
+  suspensions?: number;
+  track?: "college" | "trade" | "work" | "arts"; // set by the guidance counsellor
+  diploma?: Diploma;
+  failedYears?: number;
+  activityYears?: Record<string, number>; // years spent in each club/team
+  upbringing?: string; // how you were raised: strict, nurturing, permissive, neglectful
+  helpBonus?: number; // extra help from a teacher or tutor this year
   // ---- work (v2.1a) ----
   partTime?: Job | null; // a second, part-time job alongside school or a career
   workYears?: number; // years spent in any job - experience for interviews

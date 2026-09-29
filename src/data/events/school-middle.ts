@@ -207,6 +207,7 @@ export const SCHOOL_MIDDLE_EVENTS: LifeEvent[] = [
         label: "Take it",
         effect: (c) => {
           c.stats.happiness = clamp(c.stats.happiness - 4);
+          c.conduct = clamp((c.conduct ?? 80) - 4);
         },
       },
       {
@@ -275,16 +276,5 @@ export const SCHOOL_MIDDLE_EVENTS: LifeEvent[] = [
         effect: () => {},
       },
     ],
-  },
-  {
-    id: "middle-school-report-card",
-    minAge: 11,
-    maxAge: 13,
-    weight: 3,
-    text: () => "Report cards came out today.",
-    autoEffect: (c) => {
-      const smartsEffect = (c.stats.smarts - 50) / 100;
-      bumpGpa(c, smartsEffect * 0.5 + (Math.random() - 0.5) * 0.4);
-    },
   },
 ];

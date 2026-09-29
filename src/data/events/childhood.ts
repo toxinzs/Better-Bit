@@ -105,21 +105,34 @@ export const CHILDHOOD_EVENTS: LifeEvent[] = [
     id: "report-card",
     minAge: 6,
     maxAge: 17,
-    weight: 2,
-    text: (c) => `Report card day. Your grades reflect ${c.stats.smarts} smarts.`,
+    weight: 3,
+    condition: (c) => (c.reportCards?.length ?? 0) > 0,
+    text: (c) => {
+      const card = c.reportCards![c.reportCards!.length - 1];
+      const tail = card.honor ? "Honour roll." : card.gpa < 1.5 ? "Not a good year." : "";
+      return `Report card day. A ${card.gpa.toFixed(1)} GPA, ${card.rank}${card.rank === 1 ? "st" : card.rank === 2 ? "nd" : card.rank === 3 ? "rd" : "th"} in a class of ${card.classSize}. "${card.note}" ${tail}`.trim();
+    },
     choices: [
       {
-        label: "Study harder next term",
+        label: "Study harder next year",
         effect: (c) => {
-          c.stats.smarts = clamp(c.stats.smarts + 4);
-          c.stats.happiness = clamp(c.stats.happiness - 1);
+          c.studyMode = "hard";
+        },
+        resultText: () => "You're going to hit the books harder. It'll cost you some free time.",
+      },
+      {
+        label: "It's fine as it is",
+        effect: (c) => {
+          c.studyMode = "normal";
+          c.stats.happiness = clamp(c.stats.happiness + 1);
         },
       },
       {
-        label: "Whatever, it's fine",
+        label: "Ease off - you need a break",
         effect: (c) => {
-          c.stats.happiness = clamp(c.stats.happiness + 1);
+          c.studyMode = "slack";
         },
+        resultText: () => "You decide to take it easy. Your grades may feel it.",
       },
     ],
   },

@@ -13,6 +13,7 @@ import {
   availableVenues, availableLessons, VACATIONS, CONCEPTION_METHODS, STERILIZATION_COST, VenueKey, LessonDef,
 } from "../../data/activities";
 import { getRegion } from "../../data/regions";
+import { SKILL_LABELS } from "../../data/skills";
 import { coverageLine, fitnessWord, insurancePremium, medicalBill, playerConditionDef, stressWord, treatmentCost } from "../../engine/health";
 import { colors, spacing } from "../../theme";
 import { tabStyles } from "../tabs/sharedStyles";
@@ -22,10 +23,10 @@ const VENUE_ICONS: Record<VenueKey, keyof typeof Ionicons.glyphMap> = {
   park: "leaf", beach: "sunny", worship: "moon", library: "book", museum: "color-palette", gym: "barbell",
   movies: "film", mall: "cart", concert: "musical-notes", spa: "water", bar: "beer", club: "disc", casino: "game-controller",
 };
-const LESSON_ICONS: Record<LessonDef["key"], keyof typeof Ionicons.glyphMap> = {
+const LESSON_ICONS: Partial<Record<LessonDef["key"], keyof typeof Ionicons.glyphMap>> = {
   music: "musical-notes", singing: "mic", art: "brush", martialArts: "fitness", acting: "film",
 };
-const LESSON_LABELS: Record<LessonDef["key"], string> = {
+const LESSON_LABELS: Partial<Record<LessonDef["key"], string>> = {
   music: "Music", singing: "Singing", art: "Art", martialArts: "Martial Arts", acting: "Acting",
 };
 const VACATION_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
@@ -183,7 +184,7 @@ export function LessonsMenu() {
           <Text style={tabStyles.sectionTitle}>Your skills</Text>
           <View style={ms.skillsWrap}>
             {(Object.keys(skills) as LessonDef["key"][]).map((key) => (
-              <StatBar key={key} label={LESSON_LABELS[key]} value={skills[key] ?? 0} />
+              <StatBar key={key} label={SKILL_LABELS[key]} value={skills[key] ?? 0} />
             ))}
           </View>
         </Card>

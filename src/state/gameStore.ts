@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Character, Gender, JobKind, LifeEvent, RegionKey, SkillKey, WorldState } from "../types";
+import { Character, Gender, JobKind, LifeEvent, SchoolKind, StudyMode, RegionKey, SkillKey, WorldState } from "../types";
 import type { CreationOptions } from "../engine/lifeEngine";
 import { CarListing, HomeListing } from "../data/assets";
 import { LoanListing, CreditCardListing } from "../data/loans";
@@ -56,6 +56,19 @@ import {
 } from "../engine/lifeEngine";
 
 import { ensurePeople } from "../engine/people";
+import {
+  askTeacherForHelp as engineAskTeacherForHelp,
+  changeSchool as engineChangeSchool,
+  dropOutOfSchool as engineDropOutOfSchool,
+  quitClub as engineQuitClub,
+  respondToBullying as engineRespondToBullying,
+  seeCounsellor as engineSeeCounsellor,
+  setStudyMode as engineSetStudyMode,
+  switchClique as engineSwitchClique,
+  takeGED as engineTakeGED,
+  ensureSchool,
+} from "../engine/education";
+import type { BullyAction } from "../engine/education";
 import { doGig as engineDoGig, quitWork as engineQuitWork, startApplication as engineStartApplication } from "../engine/jobs";
 import type { Listing } from "../engine/jobs";
 import { buyInsurance as engineBuyInsurance, treatCondition as engineTreatCondition } from "../engine/health";
@@ -129,6 +142,15 @@ type GameState = {
   attack: (relationshipId: string) => void;
   surrender: () => void;
   seeTherapist: () => void;
+  setStudyMode: (mode: StudyMode) => void;
+  askTeacherForHelp: (relationshipId: string) => void;
+  seeCounsellor: () => void;
+  changeSchool: (kind: SchoolKind) => void;
+  respondToBullying: (action: BullyAction) => void;
+  dropOutOfSchool: () => void;
+  takeGED: () => void;
+  quitClub: (label: string) => void;
+  switchClique: (clique: string) => void;
   treatCondition: (key: string) => void;
   buyInsurance: () => void;
   personAction: (relationshipId: string, key: ActionKey, amount?: number) => void;
@@ -216,6 +238,7 @@ export const useGameStore = create<GameState>((set, get) => {
             // backfilled deterministically; a decision the player still owed
             // an answer to when they closed the app comes back too
             ensurePeople(parsed.character);
+            ensureSchool(parsed.character);
             const pendingEvent = parsed.screen === "home" ? nextDecisionEvent(parsed.character, worldState) : null;
             set({ character: parsed.character, screen: parsed.screen, worldState, pendingEvent, hydrated: true });
             return;
@@ -326,6 +349,15 @@ export const useGameStore = create<GameState>((set, get) => {
     doVenue: (venue) => applyToCharacter((c) => engineApplyVenue(c, venue)),
     visitDoctor: () => applyToCharacter((c) => engineVisitDoctor(c)),
     seeTherapist: () => applyToCharacter((c) => engineSeeTherapist(c)),
+    setStudyMode: (mode) => applyToCharacter((c) => engineSetStudyMode(c, mode)),
+    askTeacherForHelp: (id) => applyToCharacter((c) => engineAskTeacherForHelp(c, id)),
+    seeCounsellor: () => applyChained((c) => engineSeeCounsellor(c)),
+    changeSchool: (kind) => applyToCharacter((c) => engineChangeSchool(c, kind)),
+    respondToBullying: (action) => applyToCharacter((c) => engineRespondToBullying(c, action)),
+    dropOutOfSchool: () => applyToCharacter((c) => engineDropOutOfSchool(c)),
+    takeGED: () => applyToCharacter((c) => engineTakeGED(c)),
+    quitClub: (label) => applyToCharacter((c) => engineQuitClub(c, label)),
+    switchClique: (clique) => applyToCharacter((c) => engineSwitchClique(c, clique)),
     treatCondition: (key) => applyToCharacter((c) => engineTreatCondition(c, key)),
     buyInsurance: () => applyToCharacter((c) => engineBuyInsurance(c)),
     takeLesson: (skill) => applyToCharacter((c) => engineTakeLesson(c, skill)),

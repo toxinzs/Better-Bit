@@ -86,15 +86,31 @@ the planning notes; each release below is shippable on its own.
   next year, rejection feedback and a per-employer cooldown; 11 gigs with a
   reputation and a yearly cap (`data/gigs.ts`); part-time pay, school/work trade-off
   and work history. Engine: `engine/jobs.ts`.
-- **v2.2 "Growing Up" (next):** childhood 0-12, school as a real system (subjects,
-  exams, bullying, extracurriculars, region education systems, admissions, aid,
-  student loans, ~30 colleges/majors), and happiness/stress pressure for kids and teens
-  (they still sit near 100 - the balance pass so far only covers adult life).
-- **v2.3 "The World":** 12 regions / ~50 cities, renting/owning/moving, cost of living.
-- **v2.4 "Across Borders":** emigration, immigration, citizenship, visas, travel.
-- **v2.5 "Working Life & Money":** career ladders, performance, promotions, firing,
+- **v2.2 "Growing Up" (done).** K-12 as a system (`engine/education.ts`,
+  `data/education.ts`): a school entity per stage (public / private / magnet /
+  boarding / alternative, with a quality score), per-subject grades from smarts,
+  talent, effort, school quality, teacher rapport, stress and bullying, a yearly
+  report card with GPA, class rank, honour roll and a teacher's note (labels per
+  region: letters / GCSE 9-1 / WAEC / 5-point / out of ten), study modes, teacher
+  help, a guidance counsellor that sets a track, conduct (detention -> suspension ->
+  expulsion to an alternative school), failing a year -> summer school decision,
+  diploma / GED / dropout with a regional leaving age (full-time jobs now require a
+  diploma), popularity and cliques with yearly effects, bullying both ways (victim
+  and bully, with response choices), 17 clubs and teams with tryouts, captains and
+  injuries, and how you were raised (strict / nurturing / permissive / neglectful).
+  Childhood 0-12: ~32 new events (milestones at 0-4, birthdays, camps, screen time,
+  lemonade stand, road trips, presents, sibling forts...) plus chores as a gig from 6.
+  Balance pass: childhood happiness and smarts no longer sit near their maximum.
+- **v2.3 "Beyond High School" (next):** admissions (SAT/ACT, GCSE/A-level + UCAS, WAEC/
+  JAMB, entrance exams, ENEM), applications with recommendation letters, scholarships
+  and aid, student loans, 30+ colleges and ~30 majors with real effects, trade school
+  and apprenticeships, grad/professional school, and the education-to-career link. The
+  college screen is still the pre-2.0 one (wrapped as "College & beyond").
+- **v2.4 "The World":** 12 regions / ~50 cities, renting/owning/moving, cost of living.
+- **v2.5 "Across Borders":** emigration, immigration, citizenship, visas, travel.
+- **v2.6 "Working Life & Money":** career ladders, performance, promotions, firing,
   business, taxes per country, field-specific interview questions.
-- **v2.6 "Body, Mind & Things To Do":** fitness/diet, addiction, hobbies, interactions pass, 450+ events.
+- **v2.7 "Body, Mind & Things To Do":** fitness/diet, addiction, hobbies, interactions pass, 450+ events.
 
 Still owed from 2.0: talents `technical`/`verbal`/`social`/`artistic` are only read
 by lessons so far (school subjects and interviews read them in 2.1); hidden

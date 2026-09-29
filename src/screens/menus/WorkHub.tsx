@@ -2,20 +2,11 @@ import React from "react";
 import { ScrollView } from "react-native";
 import { useGameStore } from "../../state/gameStore";
 import { useNav } from "../../nav/navStore";
-import MenuScreen, { MenuRow } from "../../nav/MenuScreen";
-import SchoolTab from "../tabs/SchoolTab";
+import { MenuRow } from "../../nav/MenuScreen";
 import { getRegion } from "../../data/regions";
+import { stageLabel } from "../../data/education";
 import { colors } from "../../theme";
 import { tabStyles } from "../tabs/sharedStyles";
-
-const STAGE: Record<string, string> = {
-  none: "Not in school yet",
-  elementary: "Elementary school",
-  middle: "Middle school",
-  high: "High school",
-  college: "College",
-  graduated: "Not enrolled",
-};
 
 export function WorkHub() {
   const character = useGameStore((s) => s.character);
@@ -24,7 +15,7 @@ export function WorkHub() {
   const job = character.inJail
     ? "Incarcerated"
     : [character.job?.title, character.partTime ? `${character.partTime.title} (part-time)` : undefined].filter(Boolean).join(" + ") || "Unemployed";
-  const school = STAGE[character.educationStage] ?? character.educationStage;
+  const school = stageLabel(character.originRegion, character.educationStage);
   return (
     <ScrollView contentContainerStyle={tabStyles.scroll} showsVerticalScrollIndicator={false}>
       <MenuRow icon="briefcase" color={colors.smarts} title="Occupation" summary={job} delay={0} onPress={() => push("occupation")} />
@@ -39,14 +30,5 @@ export function WorkHub() {
         delay={40} onPress={() => push("school")}
       />
     </ScrollView>
-  );
-}
-
-// School is still the older screen, wrapped as a menu (rebuilt in v2.1b).
-export function SchoolMenu() {
-  return (
-    <MenuScreen title="School & Education" icon="school" color={colors.looks} scroll={false}>
-      <SchoolTab />
-    </MenuScreen>
   );
 }

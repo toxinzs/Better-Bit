@@ -11,6 +11,7 @@ import {
   onEnterSchoolStage,
 } from "../../engine/school";
 import { partner, hasPartner } from "./helpers";
+import { awardDiploma, misbehave } from "../../engine/education";
 
 export const SCHOOL_HIGH_EVENTS: LifeEvent[] = [
   {
@@ -227,8 +228,10 @@ export const SCHOOL_HIGH_EVENTS: LifeEvent[] = [
             const t = randomTeacher(c);
             if (t) t.level = clamp(t.level - 15);
             c.stats.happiness = clamp(c.stats.happiness - 8);
+            misbehave(c, 2, "cheating");
           } else {
             bumpGpa(c, 0.1);
+            c.conduct = clamp((c.conduct ?? 80) - 3);
           }
         },
       },
@@ -300,12 +303,26 @@ export const SCHOOL_HIGH_EVENTS: LifeEvent[] = [
         label: "Talk about college",
         effect: (c) => {
           setFlag(c, "leaning-college");
+          c.track = "college";
+        },
+      },
+      {
+        label: "Talk about a trade or apprenticeship",
+        effect: (c) => {
+          c.track = "trade";
+        },
+      },
+      {
+        label: "Talk about the arts",
+        effect: (c) => {
+          c.track = "arts";
         },
       },
       {
         label: "Talk about working right away",
         effect: (c) => {
           setFlag(c, "leaning-work");
+          c.track = "work";
         },
       },
     ],
@@ -391,11 +408,12 @@ export const SCHOOL_HIGH_EVENTS: LifeEvent[] = [
     text: () => "Graduation day.",
     autoEffect: (c) => {
       const gpa = c.gpa ?? 3.0;
-      c.stats.happiness = clamp(c.stats.happiness + (gpa >= 3.5 ? 25 : 15));
       if (!c.inCollege) {
         c.educationStage = "graduated";
         onEnterSchoolStage(c, "graduated");
       }
+      if (c.diploma === undefined) awardDiploma(c);
+      if (c.diploma !== "none") c.stats.happiness = clamp(c.stats.happiness + (gpa >= 3.5 ? 25 : 15));
     },
   },
 ];

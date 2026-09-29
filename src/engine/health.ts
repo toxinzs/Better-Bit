@@ -274,6 +274,10 @@ export function tickWellbeing(c: Character, world: WorldState): void {
   // a job is pressure, and a high-paying one more so
   if (c.job) t += 26 + Math.min(10, c.job.salary / 15000);
   if (c.partTime) t += (c.partTime.hours ?? 12) / 3; // hours add up
+  if (inSchool && c.studyMode === "hard") t += 8;
+  if (inSchool && c.studyMode === "slack") t -= 5;
+  if (c.bullying?.role === "victim") t += 12;
+  if (c.age >= 8 && c.age <= 17 && (c.popularity ?? 50) < 25) t += 4;
   if (c.age >= 18) {
     const debt = debtOf(c);
     if (debt > 0) t += Math.min(22, debt / 2500);
@@ -324,7 +328,9 @@ export function tickWellbeing(c: Character, world: WorldState): void {
   if (c.age >= 14 && socialCount === 0) changeStat(c, "happiness", -2, "Loneliness");
   if (c.stats.health < 35) changeStat(c, "happiness", -3, "Poor health");
   // the glow of a great year fades - very high happiness slides back toward a normal high
-  if (c.stats.happiness > 80) changeStat(c, "happiness", -randomInt(2, 5), "Things settle down");
+  // a good year fades: happiness drifts back toward where people usually sit at your age
+  const mood = c.age < 13 ? 84 : c.age < 20 ? 72 : 70;
+  if (c.stats.happiness > mood) changeStat(c, "happiness", -Math.round((c.stats.happiness - mood) * 0.5) - randomInt(0, 2), "Things settle down");
   // years show
   if (c.age > 40 && Math.random() < 0.6) changeStat(c, "looks", -1, "Getting older");
   if (c.age > 60 && Math.random() < 0.5) changeStat(c, "looks", -1, "Getting older");

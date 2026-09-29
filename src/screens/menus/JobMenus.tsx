@@ -38,7 +38,7 @@ export function FindWorkMenu() {
   if (!character) return null;
   const wa = getRegion(character.originRegion).workAge;
   const list = tab === "parttime" ? parttime : fulltime;
-  const tooYoung = tab === "parttime" ? age < wa.parttime : tab === "fulltime" ? age < wa.fulltime : age < wa.light;
+  const tooYoung = tab === "parttime" ? age < wa.parttime : tab === "fulltime" ? age < wa.fulltime : age < 6;
 
   const region = character.originRegion;
   return (
@@ -66,7 +66,7 @@ export function FindWorkMenu() {
         {tooYoung ? (
           <Card>
             <Text style={ms.note}>
-              You're too young for {tab === "gigs" ? "odd jobs" : tab === "parttime" ? "a part-time job" : "a full-time career"} where you live. It opens at {tab === "gigs" ? wa.light : tab === "parttime" ? wa.parttime : wa.fulltime}.
+              You're too young for {tab === "gigs" ? "odd jobs" : tab === "parttime" ? "a part-time job" : "a full-time career"} where you live. It opens at {tab === "gigs" ? 6 : tab === "parttime" ? wa.parttime : wa.fulltime}.
             </Text>
           </Card>
         ) : tab === "gigs" ? (

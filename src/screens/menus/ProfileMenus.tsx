@@ -11,6 +11,8 @@ import { totalNetWorth } from "../../engine/lifeEngine";
 import { talentsKnown, traitWords } from "../../engine/character";
 import { CLASSES, TALENTS, quirkDef, talentWord } from "../../data/traits";
 import { EYE_COLORS, HAIR_COLOR_NAMES } from "../../data/appearance";
+import { SKILL_LABELS } from "../../data/skills";
+import { UPBRINGING_BLURB } from "../../engine/education";
 import { colors, fonts, fontSize, spacing } from "../../theme";
 import { StatKey } from "../../types";
 
@@ -23,13 +25,7 @@ const STAGE: Record<string, string> = {
   graduated: "Finished school",
 };
 
-const SKILL_NAMES: Record<string, string> = {
-  music: "Music",
-  singing: "Singing",
-  art: "Art",
-  martialArts: "Martial arts",
-  acting: "Acting",
-};
+const SKILL_NAMES: Record<string, string> = SKILL_LABELS;
 
 const money = (n: number) => `${n < 0 ? "-" : ""}$${Math.abs(Math.round(n)).toLocaleString()}`;
 
@@ -70,7 +66,7 @@ export function ProfileMenu() {
         {traitWords(character).length > 0 ? (
           <View style={styles.chips}>
             {traitWords(character).map((t) => (
-              <Chip key={t.label} label={t.label} color={t.tone === "good" ? colors.health : t.tone === "bad" ? colors.danger : colors.textSecondary} />
+              <Chip key={t.label} label={t.label} color={t.tone === "good" ? colors.primary : t.tone === "bad" ? colors.danger : colors.textSecondary} />
             ))}
           </View>
         ) : (
@@ -93,10 +89,10 @@ export function ProfileMenu() {
               <View key={t.key} style={styles.talent}>
                 <View style={styles.talentHead}>
                   <Text style={styles.rowLabel}>{t.label}</Text>
-                  <Text style={[styles.rowValue, { color: v >= 62 ? colors.health : v < 40 ? colors.textMuted : colors.textPrimary }]}>{talentWord(v)}</Text>
+                  <Text style={[styles.rowValue, { color: v >= 62 ? colors.primary : v < 40 ? colors.textMuted : colors.textPrimary }]}>{talentWord(v)}</Text>
                 </View>
                 <View style={styles.track}>
-                  <View style={[styles.fill, { width: `${v}%`, backgroundColor: v >= 62 ? colors.health : colors.smarts }]} />
+                  <View style={[styles.fill, { width: `${v}%`, backgroundColor: v >= 62 ? colors.primary : colors.smarts }]} />
                 </View>
               </View>
             );
@@ -112,6 +108,7 @@ export function ProfileMenu() {
           <Row label="Family" value={CLASSES[character.background.wealthClass].label} />
           <Text style={styles.quirkBlurb}>{CLASSES[character.background.wealthClass].blurb}</Text>
           <Text style={[styles.quirkBlurb, { marginTop: spacing.sm, fontFamily: fonts.semiBold }]}>"{character.background.parentValues}"</Text>
+          {character.upbringing ? <Text style={[styles.quirkBlurb, { marginTop: spacing.sm }]}>{UPBRINGING_BLURB[character.upbringing]}</Text> : null}
         </Card>
       )}
 

@@ -3,6 +3,7 @@ import { appearanceFromSeed } from "../data/appearance";
 import { CLASSES } from "../data/traits";
 import { resetStatNotes } from "./stats";
 import { tickWork } from "./jobs";
+import { ensureSchool, tickSchool } from "./education";
 import { attendanceFactor, causeFromConditions, conditionMortality, tickHealth, tickWellbeing } from "./health";
 import { classFamilyBlurb, familyAllowance, rollClass, rollPersonality, rollQuirks, rollTalents, tickCharacter } from "./character";
 import { clamp, randomInt, pickWeighted } from "./util";
@@ -241,6 +242,7 @@ export type AgeUpResult = {
 
 export function ageUp(c: Character, world: WorldState): AgeUpResult {
   ensurePeople(c);
+  ensureSchool(c);
   tickWorldState(world);
   tickMarket(world);
   tickRetirementGrowth(c, world);
@@ -271,7 +273,8 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
   c.stats.happiness = clamp(c.stats.happiness + randomInt(-2, 2));
   c.stats.looks = clamp(c.stats.looks + randomInt(-1, 1));
   if (c.age >= 6 && c.age <= 22) {
-    c.stats.smarts = clamp(c.stats.smarts + randomInt(0, 2));
+    // learning slows as you get good at it
+    c.stats.smarts = clamp(c.stats.smarts + (c.stats.smarts > 72 ? randomInt(0, 1) * (Math.random() < 0.5 ? 1 : 0) : randomInt(0, 1)));
   }
   if (c.age >= 55) {
     // ageing itself is gentle until the seventies; illnesses (engine/health.ts) do the real damage
@@ -316,6 +319,9 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
     c.stats.happiness = clamp(c.stats.happiness - 4);
     c.yearLog.push("Grief still weighs on you this year.");
   }
+
+  // the school year that just ended: grades, report card, behaviour, bullying, teams
+  tickSchool(c);
 
   // education auto-progression (doesn't override college/graduated)
   if (!c.inCollege && c.educationStage !== "graduated") {

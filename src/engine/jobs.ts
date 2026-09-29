@@ -4,6 +4,7 @@ import { ALL_JOBS, FULLTIME_JOBS, PARTTIME_JOBS } from "../data/jobs";
 import { Humour, Interviewer, companyFor, hashKey, interviewerFor, rngFrom } from "../data/companies";
 import { Ans, Cat, QUESTIONS, Question } from "../data/interviews";
 import { GIGS, GigDef, gigDef } from "../data/gigs";
+import { SKILL_LABELS } from "../data/skills";
 import { changeStat } from "./stats";
 import { finishDecision, queueDecision, registerDecision } from "./decisionQueue";
 import { effectiveSalary, hasActiveCondition, regionJobMultiplier } from "./worldState";
@@ -11,6 +12,7 @@ import { incomeTax } from "./taxes";
 import { refreshCoworkers } from "./people";
 import { traitMod } from "./character";
 import { attendanceFactor, gainFitness } from "./health";
+import { hasDiploma } from "./education";
 import { clamp, randomInt } from "./util";
 
 // Finding, applying for and doing work: three separate kinds (part-time,
@@ -80,6 +82,7 @@ export function requirements(c: Character, job: Job): Requirement[] {
   const reqs: Requirement[] = [];
   reqs.push({ label: `Age ${minAge}+`, met: c.age >= minAge, note: job.kind === "fulltime" ? `Full-time work starts at ${wa.fulltime} here` : `Part-time work starts at ${wa.parttime} here` });
   if (job.minSmarts) reqs.push({ label: `Smarts ${job.minSmarts}+`, met: c.stats.smarts >= job.minSmarts, note: `Yours: ${Math.round(c.stats.smarts)}` });
+  if (job.kind === "fulltime" && ((job.minSmarts ?? 0) >= 45 || job.requiresCollege)) reqs.push({ label: "High school diploma or equivalent", met: hasDiploma(c), note: "Finish school or pass the GED" });
   if (job.requiresCollege) reqs.push({ label: "College degree", met: c.hasCollegeDegree });
   if (job.requiresCleanRecord) reqs.push({ label: "Clean criminal record", met: !c.criminalRecord });
   if (job.minSkill) {
@@ -95,7 +98,7 @@ export function requirements(c: Character, job: Job): Requirement[] {
   return reqs;
 }
 
-const SKILL_LABEL: Record<string, string> = { music: "Music", singing: "Singing", art: "Art", martialArts: "Martial arts", acting: "Acting" };
+const SKILL_LABEL = SKILL_LABELS;
 
 export function canApply(c: Character, listing: Listing): { ok: boolean; reason?: string } {
   if (c.inJail) return { ok: false, reason: "You can't apply from behind bars." };
@@ -420,6 +423,7 @@ export function quitWork(c: Character, kind: JobKind): void {
 export const gigCap = (c: Character) => 3 + Math.floor((c.gigRep ?? 0) / 25);
 
 export function gigGateAge(c: Character, gig: GigDef): number {
+  if (gig.minAge !== undefined) return gig.minAge;
   const wa = workAgesFor(c);
   return gig.gate === "light" ? wa.light : gig.gate === "parttime" ? wa.parttime : wa.fulltime;
 }
@@ -467,6 +471,7 @@ export function doGig(c: Character, key: string): void {
   c.money = Math.max(0, c.money + pay);
   c.gigRep = clamp(rep + randomInt(2, 5));
   if (["dogwalk", "carwash", "lawn", "delivery"].includes(gig.key)) gainFitness(c, 3);
+  if (gig.key === "chores") for (const r of c.relationships) if (r.alive && (r.type === "mother" || r.type === "father")) r.level = clamp(r.level + 2);
   changeStat(c, "happiness", 1, "Earning your own money");
   c.yearLog.push(pay >= 0 ? `You did some ${label} and made ${money(pay)}.` : `You tried ${label} but lost ${money(-pay)}.`);
   if (gig.risk && Math.random() < gig.risk.chance) {

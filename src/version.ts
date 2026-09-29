@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "2.1.0";
+export const APP_VERSION = "2.2.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,20 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "2.2.0",
+    title: "Growing Up",
+    highlights: [
+      "School is a real system now: you go to an actual school (public, private, magnet or boarding), and its quality helps decide your grades",
+      "Every year ends with a report card - subject grades, GPA, your class rank, the honour roll and a teacher's comment - shown in your country's style (letters, GCSE grades, WAEC, 5-point, out of 10)",
+      "Choose how hard you work (study hard, steady, or take it easy), stay after class for a teacher's help, and see the guidance counsellor to set a plan",
+      "Behaviour matters: detention, suspensions and expulsion (to an alternative school). Fail a year and you're offered summer school. Drop out - only once you're old enough where you live - and take the GED later",
+      "Popularity and cliques (Jocks, Nerds, Artsy, Popular, Loners) with real effects, and bullying from both sides: get bullied and choose how to respond, or decide what kind of person you'll be when the crowd starts laughing",
+      "17 clubs and teams with tryouts, skills that grow, captains and injuries - up to three at a time",
+      "Childhood finally has a childhood: 30+ new events from teething and first words to birthday parties, summer camps, screen-time fights, lemonade stands, road trips and the winter present you ask for - and how your parents raised you nudges your personality",
+      "Kids can do chores for pocket money from 6, and stress, happiness and smarts no longer sit near their maximum through childhood",
+    ],
+  },
   {
     version: "2.1.0",
     title: "Getting Hired",

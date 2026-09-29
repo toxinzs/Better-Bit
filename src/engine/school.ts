@@ -3,7 +3,9 @@ import { clamp, randomInt } from "./util";
 import { SKILL_TALENT, talentMult } from "./character";
 import { randomLastName } from "../data/names";
 import { addPerson, randomGender, uid } from "./people";
-import { CLUBS, ClubKey, COLLEGES, COLLEGE_HOUSING, HousingListing } from "../data/school";
+import { COLLEGES, COLLEGE_HOUSING, HousingListing } from "../data/school";
+import { awardDiploma, enterSchool, misbehave, registerRosterReset } from "./education";
+export { joinClub } from "./education";
 
 // ---------- generic "remember what happened" flags ----------
 // Any event in any life stage can set/check one of these - what makes a
@@ -41,6 +43,8 @@ const COLLEGE_TITLES = ["Dr.", "Professor"];
 // every year, only ever acts once per actual stage change.
 export function onEnterSchoolStage(c: Character, stage: EducationStage): void {
   const prefix = STAGE_PREFIX[stage];
+  enterSchool(c, stage);
+  if (stage === "graduated" && c.diploma === undefined && c.age >= 17) awardDiploma(c);
 
   // people who fade off the roster are removed outright - `alive: false` now
   // means "actually died" (memorial list, funerals), never "moved on"
@@ -118,29 +122,6 @@ export function bumpGpa(c: Character, delta: number): void {
 
 // ---------- clubs ----------
 
-export function joinClub(c: Character, clubKey: ClubKey): void {
-  const def = CLUBS.find((cl) => cl.key === clubKey);
-  if (!def) return;
-  if (c.age < def.minAge) {
-    c.yearLog.push("You're too young for that club yet.");
-    return;
-  }
-  const activities = c.schoolActivities ?? [];
-  if (activities.includes(def.label)) {
-    c.yearLog.push(`You're already in ${def.label}.`);
-    return;
-  }
-  activities.push(def.label);
-  c.schoolActivities = activities;
-  if (def.skill) {
-    const skills = c.skills ?? {};
-    skills[def.skill] = clamp((skills[def.skill] ?? 0) + Math.round(randomInt(5, 10) * talentMult(c, SKILL_TALENT[def.skill] ?? "academic")));
-    c.skills = skills;
-  }
-  c.stats.happiness = clamp(c.stats.happiness + 4);
-  c.yearLog.push(`You joined ${def.label}.`);
-}
-
 // ---------- faculty actions ----------
 
 export function facultyAction(c: Character, relationshipId: string, kind: "suckup" | "insult" | "report"): void {
@@ -165,6 +146,7 @@ export function facultyAction(c: Character, relationshipId: string, kind: "sucku
     if (consequence) {
       c.stats.happiness = clamp(c.stats.happiness - 5);
       c.yearLog.push(`You told off ${teacher.name}. You got sent to the office for it.`);
+      misbehave(c, 2, "being rude to a teacher");
     } else {
       c.yearLog.push(`You told off ${teacher.name}. Worth it.`);
     }
@@ -284,6 +266,7 @@ export function throwParty(c: Character): void {
     const parent = c.relationships.find((r) => (r.type === "mother" || r.type === "father") && r.alive);
     if (parent) parent.level = clamp(parent.level - 20);
     c.yearLog.push("You threw a party and got busted. Not worth it.");
+    misbehave(c, 2, "throwing a party");
   } else {
     c.stats.happiness = clamp(c.stats.happiness + 10);
     c.relationships.forEach((r) => {
@@ -302,6 +285,7 @@ export function skipClass(c: Character): void {
     const t = randomTeacher(c);
     if (t) t.level = clamp(t.level - 10);
     c.yearLog.push("You skipped class and got caught.");
+    misbehave(c, 1, "skipping class");
   } else {
     c.stats.happiness = clamp(c.stats.happiness + 5);
     c.yearLog.push("You skipped class. No one noticed.");
@@ -332,3 +316,6 @@ export function seduceFaculty(c: Character, relationshipId: string): void {
     c.yearLog.push(`Word got out about you and ${faculty.name}. It's a real mess on campus now.`);
   }
 }
+
+// changing schools rebuilds the classmate/teacher roster for the current stage
+registerRosterReset((c) => onEnterSchoolStage(c, c.educationStage));

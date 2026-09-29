@@ -15,11 +15,14 @@ export type GigDef = {
   skill?: { key: SkillKey; level: number }; // a skill you need to have
   minSmarts?: number;
   needsCar?: boolean;
+  minAge?: number; // overrides the regional working-age gate (chores are not employment)
   blurb: string;
   risk?: { chance: number; text: string; cost: [number, number] }; // it can go wrong
 };
 
 export const GIGS: GigDef[] = [
+  { key: "chores", label: "Chores for pocket money", icon: "home", gate: "light", minAge: 6, pay: [4, 30], talent: "athletic",
+    blurb: "Wash up, rake leaves, tidy your room without being asked. Your parents notice." },
   { key: "babysit", label: "Babysitting", icon: "happy", gate: "light", pay: [40, 160], talent: "social",
     blurb: "Watch someone else's kids for an evening. Bedtime is the hard part." },
   { key: "dogwalk", label: "Dog walking & pet sitting", icon: "paw", gate: "light", pay: [30, 120], talent: "athletic",
