@@ -1,6 +1,11 @@
 import { RegionKey } from "../types";
 
 export type CostOfLivingTier = "low" | "mid" | "high";
+// the youngest you may legally do each kind of work: light = odd jobs and light
+// work (babysitting, chores for pay), parttime = a regular part-time job (with
+// a work permit under 16 in most places), fulltime = a full-time career
+export type WorkAges = { light: number; parttime: number; fulltime: number };
+
 export type HealthcareModel = "public" | "mixed" | "private";
 
 export type LegalAges = {
@@ -25,6 +30,7 @@ export type RegionDef = {
   // who pays for care: "public" = the state (small copays), "mixed" = state plus a share you
   // pay, "private" = you or your insurance/employer
   healthcare: HealthcareModel;
+  workAge: WorkAges;
   startingWealthRange: [number, number];
   legalAges: LegalAges;
   drugsIllegal: boolean;
@@ -46,6 +52,7 @@ export const REGIONS: Record<RegionKey, RegionDef> = {
   us: {
     key: "us",
     healthcare: "private",
+    workAge: { light: 12, parttime: 15, fulltime: 18 },
     label: "United States",
     costOfLivingTier: "mid",
     startingWealthRange: [0, 400],
@@ -66,6 +73,7 @@ export const REGIONS: Record<RegionKey, RegionDef> = {
   uk: {
     key: "uk",
     healthcare: "public",
+    workAge: { light: 13, parttime: 16, fulltime: 18 },
     label: "United Kingdom",
     costOfLivingTier: "mid",
     startingWealthRange: [0, 350],
@@ -86,6 +94,7 @@ export const REGIONS: Record<RegionKey, RegionDef> = {
   nigeria: {
     key: "nigeria",
     healthcare: "private",
+    workAge: { light: 12, parttime: 15, fulltime: 18 },
     label: "Nigeria",
     costOfLivingTier: "low",
     startingWealthRange: [0, 120],
@@ -109,6 +118,7 @@ export const REGIONS: Record<RegionKey, RegionDef> = {
   japan: {
     key: "japan",
     healthcare: "mixed",
+    workAge: { light: 13, parttime: 15, fulltime: 18 },
     label: "Japan",
     costOfLivingTier: "high",
     startingWealthRange: [0, 600],
@@ -133,6 +143,7 @@ export const REGIONS: Record<RegionKey, RegionDef> = {
   brazil: {
     key: "brazil",
     healthcare: "mixed",
+    workAge: { light: 14, parttime: 16, fulltime: 18 },
     label: "Brazil",
     costOfLivingTier: "low",
     startingWealthRange: [0, 150],

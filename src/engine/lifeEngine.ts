@@ -2,6 +2,7 @@ import { Appearance, Character, Gender, Job, LifeEvent, Personality, RegionKey, 
 import { appearanceFromSeed } from "../data/appearance";
 import { CLASSES } from "../data/traits";
 import { resetStatNotes } from "./stats";
+import { tickWork } from "./jobs";
 import { attendanceFactor, causeFromConditions, conditionMortality, tickHealth, tickWellbeing } from "./health";
 import { classFamilyBlurb, familyAllowance, rollClass, rollPersonality, rollQuirks, rollTalents, tickCharacter } from "./character";
 import { clamp, randomInt, pickWeighted } from "./util";
@@ -345,6 +346,7 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
     );
   }
 
+  tickWork(c, world);
   tickAssets(c);
   tickDebt(c);
 
@@ -451,20 +453,4 @@ export function haveConversation(c: Character, relationshipId: string) {
   r.level = clamp(r.level + 8);
   c.stats.happiness = clamp(c.stats.happiness + 3);
   c.yearLog.push(`You had a good conversation with ${r.name}.`);
-}
-
-export function applyForJob(c: Character, job: Job) {
-  if (c.inJail) {
-    c.yearLog.push("You can't get a job from behind bars.");
-    return;
-  }
-  c.job = job;
-  refreshCoworkers(c);
-  c.yearLog.push(`You got a job as a ${job.title}!`);
-}
-
-export function quitJob(c: Character) {
-  c.job = null;
-  refreshCoworkers(c);
-  c.yearLog.push("You quit your job.");
 }

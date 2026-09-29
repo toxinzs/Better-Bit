@@ -32,7 +32,29 @@ export default function EventModal({
   const who = whoId ? character.relationships.find((r) => r.id === whoId) : undefined;
 
   return (
-    <ModalBase icon={who ? undefined : "sparkles"}>
+    <ModalBase icon={who || event.banner ? undefined : "sparkles"}>
+      {event.banner && (
+        <View style={styles.banner}>
+          <View style={styles.bannerIcon}>
+            <Ionicons name={(event.banner.icon as keyof typeof Ionicons.glyphMap) ?? "briefcase"} size={20} color={colors.smarts} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.bannerTitle} numberOfLines={1}>
+              {event.banner.title}
+            </Text>
+            {event.banner.subtitle ? (
+              <Text style={styles.whoSub} numberOfLines={1}>
+                {event.banner.subtitle}
+              </Text>
+            ) : null}
+          </View>
+          {event.banner.step ? (
+            <View style={styles.stepChip}>
+              <Text style={styles.stepText}>{event.banner.step}</Text>
+            </View>
+          ) : null}
+        </View>
+      )}
       {who && (
         <View style={styles.whoRow}>
           <View style={styles.whoAvatar}>
@@ -86,6 +108,39 @@ export default function EventModal({
 }
 
 const styles = StyleSheet.create({
+  banner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    marginBottom: spacing.md,
+    paddingBottom: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  bannerIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: colors.smarts + "22",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  bannerTitle: {
+    color: colors.textPrimary,
+    fontFamily: fonts.extraBold,
+    fontSize: fontSize.lg,
+  },
+  stepChip: {
+    backgroundColor: colors.smarts + "22",
+    borderRadius: radii.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  stepText: {
+    color: colors.smarts,
+    fontFamily: fonts.bold,
+    fontSize: fontSize.xs,
+  },
   whoRow: {
     flexDirection: "row",
     alignItems: "center",

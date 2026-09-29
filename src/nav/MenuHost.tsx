@@ -2,7 +2,8 @@ import React from "react";
 import { Route } from "./navStore";
 import { CrimeMenu, DatingMenu, EndRoadMenu, FertilityMenu, HealthMenu, LessonsMenu, VacationsMenu, VenuesMenu } from "../screens/menus/ActivityMenus";
 import { CarMenu, HomeMenu, InvestMenu, LoansMenu, RetireMenu } from "../screens/menus/AssetMenus";
-import { OccupationMenu, SchoolMenu } from "../screens/menus/WorkHub";
+import { SchoolMenu } from "../screens/menus/WorkHub";
+import { FindWorkMenu, OccupationMenu } from "../screens/menus/JobMenus";
 import { ProfileMenu, StatDetailMenu } from "../screens/menus/ProfileMenus";
 import PeopleTab from "../screens/tabs/PeopleTab";
 import { StatKey } from "../types";
@@ -24,6 +25,7 @@ export default function MenuHost({ route }: { route: Route }) {
     case "invest": return <InvestMenu />;
     case "retire": return <RetireMenu />;
     case "occupation": return <OccupationMenu />;
+    case "findwork": return <FindWorkMenu />;
     case "school": return <SchoolMenu />;
     case "peopleGroup": return <PeopleTab group={String(route.params?.group ?? "family")} />;
     case "profile": return <ProfileMenu />;

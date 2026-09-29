@@ -70,6 +70,19 @@ after income and before the death roll, in the same relative position
 as `tickAssets`/`tickDebt` (spend/earn first, so the effect has real
 money to work with).
 
+**2.x additions to that order** (all in `ageUp()`): `resetStatNotes` (start of
+the year, so `changeStat` reasons only ever describe the current year) →
+`c.age += 1` → pregnancy → natural stat drift → `tickCharacter`
+(personality/quirks/talents, `engine/character.ts`) → `tickWellbeing`
+(hidden stress + fitness and what they do) → `tickHealth` (conditions
+start/clear, premiums; `engine/health.ts`) → family pocket money → relatives/
+kids/exes → education → income (pay is scaled by `attendanceFactor`, so
+poor health costs money) → `tickWork` (part-time pay, experience, resets the
+yearly application/gig counters; `engine/jobs.ts`) → `tickAssets`/`tickDebt`
+→ death roll (death odds are multiplied by `conditionMortality`). New
+stat movement should go through `changeStat(c, key, delta, reason)`
+(`engine/stats.ts`) so the stat screens can show what moved it.
+
 **Pre-tax vs post-tax ordering, concretely**: `retirement.ts`'s
 `applyContribution(c, grossIncome)` returns `taxableIncome` (gross minus
 the contribution) — `incomeTax()` must run on *that*, not on

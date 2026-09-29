@@ -116,13 +116,37 @@ export type Relationship = {
   kissed?: boolean; // teen dating: first kiss happened
 };
 
+export type JobKind = "parttime" | "fulltime";
+
+export type CompanySize = "Small business" | "Mid-size" | "Large company" | "Corporation";
+
+// A generated employer: every listing gets one (data/companies.ts).
+export type Company = {
+  name: string;
+  industry: string;
+  size: CompanySize;
+  blurb: string;
+  culture: string;
+  benefits: string[];
+  commute: string;
+  stars: number; // 1-5 employee rating
+};
+
 export type Job = {
   title: string;
-  salary: number;
+  salary: number; // per year (part-time: what the hours add up to)
   minAge: number;
   minSmarts?: number;
   requiresCollege?: boolean;
   requiresCleanRecord?: boolean;
+  // ---- v2.1a: real listings ----
+  kind?: JobKind;
+  field?: string; // "Retail & Service", "Healthcare"...
+  hours?: number; // per week
+  minSkill?: { skill: SkillKey; level: number };
+  day?: string; // "a typical day"
+  growth?: string; // where it leads
+  company?: Company; // set once you actually work somewhere
 };
 
 export type OwnedCar = {
@@ -318,6 +342,14 @@ export type Character = {
   avatarSeed?: number;
   // ---- character depth (v2.0c); all optional, backfilled by engine/character.ts ensureCharacter ----
   personality?: Personality;
+  // ---- work (v2.1a) ----
+  partTime?: Job | null; // a second, part-time job alongside school or a career
+  workYears?: number; // years spent in any job - experience for interviews
+  gigRep?: number; // 0-100, how well known you are for odd jobs
+  gigsThisYear?: number;
+  appsThisYear?: number; // job applications made this year (capped)
+  rejections?: { company: string; age: number }[]; // employers that turned you down (cooldown)
+  jobHistory?: { title: string; company?: string; from: number; to: number }[];
   // ---- stat consequences + health (v2.0d) ----
   stress?: number; // 0-100 hidden; drags happiness/health when high
   fitness?: number; // 0-100 hidden; feeds health and looks
@@ -355,6 +387,8 @@ export type EventChoice = {
 
 export type LifeEvent = {
   id: string;
+  // a small header shown above the text (an interview at a company, a court date...)
+  banner?: { title: string; subtitle?: string; step?: string; icon?: string };
   minAge: number;
   maxAge: number;
   weight?: number;

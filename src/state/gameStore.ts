@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Character, Gender, Job, LifeEvent, RegionKey, SkillKey, WorldState } from "../types";
+import { Character, Gender, JobKind, LifeEvent, RegionKey, SkillKey, WorldState } from "../types";
 import type { CreationOptions } from "../engine/lifeEngine";
 import { CarListing, HomeListing } from "../data/assets";
 import { LoanListing, CreditCardListing } from "../data/loans";
@@ -11,8 +11,6 @@ import {
   createInitialWorldState,
   ageUp as engineAgeUp,
   resolveEvent as engineResolveEvent,
-  applyForJob as engineApplyForJob,
-  quitJob as engineQuitJob,
   spendTimeWith as engineSpendTimeWith,
   haveConversation as engineHaveConversation,
   textRelationship as engineTextRelationship,
@@ -58,6 +56,8 @@ import {
 } from "../engine/lifeEngine";
 
 import { ensurePeople } from "../engine/people";
+import { doGig as engineDoGig, quitWork as engineQuitWork, startApplication as engineStartApplication } from "../engine/jobs";
+import type { Listing } from "../engine/jobs";
 import { buyInsurance as engineBuyInsurance, treatCondition as engineTreatCondition } from "../engine/health";
 import { nextDecisionEvent } from "../engine/decisionQueue";
 
@@ -87,8 +87,9 @@ type GameState = {
   chooseEventOption: (choiceIndex: number) => void;
   clearActionResult: () => void;
   nameBaby: (name: string) => void;
-  applyForJob: (job: Job) => void;
-  quitJob: () => void;
+  startApplication: (listing: Listing) => void;
+  quitWork: (kind: JobKind) => void;
+  doGig: (key: string) => void;
   spendTimeWith: (relationshipId: string) => void;
   haveConversation: (relationshipId: string) => void;
   textRelationship: (relationshipId: string) => void;
@@ -296,8 +297,13 @@ export const useGameStore = create<GameState>((set, get) => {
       persist(character, get().screen, get().worldState);
     },
 
-    applyForJob: (job) => applyToCharacter((c) => engineApplyForJob(c, job)),
-    quitJob: () => applyToCharacter((c) => engineQuitJob(c)),
+    // an application becomes a chained interview popup (see engine/jobs.ts)
+    startApplication: (listing) => {
+      if (get().pendingEvent || get().character?.pendingBabyId) return;
+      applyChained((c, world) => engineStartApplication(c, world, listing));
+    },
+    quitWork: (kind) => applyToCharacter((c) => engineQuitWork(c, kind)),
+    doGig: (key) => applyToCharacter((c) => engineDoGig(c, key)),
     spendTimeWith: (relationshipId) => applyToCharacter((c) => engineSpendTimeWith(c, relationshipId)),
     haveConversation: (relationshipId) => applyToCharacter((c) => engineHaveConversation(c, relationshipId)),
     textRelationship: (relationshipId) => applyToCharacter((c) => engineTextRelationship(c, relationshipId)),

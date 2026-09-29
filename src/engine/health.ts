@@ -273,6 +273,7 @@ export function tickWellbeing(c: Character, world: WorldState): void {
   if (inSchool) t += 14 + (c.quirks?.includes("perfectionist") ? 8 : 0) + (c.age >= 15 ? 8 : 0);
   // a job is pressure, and a high-paying one more so
   if (c.job) t += 26 + Math.min(10, c.job.salary / 15000);
+  if (c.partTime) t += (c.partTime.hours ?? 12) / 3; // hours add up
   if (c.age >= 18) {
     const debt = debtOf(c);
     if (debt > 0) t += Math.min(22, debt / 2500);

@@ -74,16 +74,27 @@ the planning notes; each release below is shippable on its own.
     death.
   - Bug sweep: baby gender reveal + name suggestions, GPA initialised, legacy
     college events folded into the school system, duplicate events removed.
-- **v2.1 "Growing Up" (next):** childhood 0-12, school as a real system (subjects,
+- **v2.1 "Getting Hired" (done).** The Jobs revamp: separate part-time, full-time
+  and gig work; legal working ages by region (`RegionDef.workAge`); 16 part-time and
+  35 full-time job templates in 11 fields (`data/jobs.ts`); a generated employer for
+  every listing (`data/companies.ts` - name, size, culture, benefits, commute,
+  rating); a job detail popup with live requirement checks; Apply -> a chained
+  interview popup drawn from a 110+ question bank (`data/interviews.ts`: genuine,
+  situational, curveball, nonsense and first-job questions) scored by personality,
+  smarts, looks, experience, skills and the interviewer's sense of humour (jokes can
+  flop, lies can be caught); offers with negotiation, "we'll be in touch" answered
+  next year, rejection feedback and a per-employer cooldown; 11 gigs with a
+  reputation and a yearly cap (`data/gigs.ts`); part-time pay, school/work trade-off
+  and work history. Engine: `engine/jobs.ts`.
+- **v2.2 "Growing Up" (next):** childhood 0-12, school as a real system (subjects,
   exams, bullying, extracurriculars, region education systems, admissions, aid,
-  student loans, ~30 colleges/majors), and the **Jobs revamp** - separate
-  part-time, full-time and gig work with legal working ages by region, a job
-  detail popup (company + info) and an Apply -> interview popup with genuine,
-  situational, curveball and nonsense questions.
-- **v2.2 "The World":** 12 regions / ~50 cities, renting/owning/moving, cost of living.
-- **v2.3 "Across Borders":** emigration, immigration, citizenship, visas, travel.
-- **v2.4 "Working Life & Money":** career ladders, performance, business, taxes per country.
-- **v2.5 "Body, Mind & Things To Do":** fitness/diet, addiction, hobbies, interactions pass, 450+ events.
+  student loans, ~30 colleges/majors), and happiness/stress pressure for kids and teens
+  (they still sit near 100 - the balance pass so far only covers adult life).
+- **v2.3 "The World":** 12 regions / ~50 cities, renting/owning/moving, cost of living.
+- **v2.4 "Across Borders":** emigration, immigration, citizenship, visas, travel.
+- **v2.5 "Working Life & Money":** career ladders, performance, promotions, firing,
+  business, taxes per country, field-specific interview questions.
+- **v2.6 "Body, Mind & Things To Do":** fitness/diet, addiction, hobbies, interactions pass, 450+ events.
 
 Still owed from 2.0: talents `technical`/`verbal`/`social`/`artistic` are only read
 by lessons so far (school subjects and interviews read them in 2.1); hidden

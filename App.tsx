@@ -17,10 +17,12 @@ import { actionsFor, romanceCandidates, runPersonAction } from "./src/engine/lif
 import { killRelative } from "./src/engine/relatives";
 import { nextDecisionEvent } from "./src/engine/decisionQueue";
 import { tickExes, craziness } from "./src/engine/exes";
+import { listingsFor, requirements, preparedness } from "./src/engine/jobs";
+import { QUESTIONS } from "./src/data/interviews";
 
 if (typeof window !== "undefined") {
   (window as any).__store = useGameStore;
-  (window as any).__engine = { actionsFor, romanceCandidates, runPersonAction, killRelative, nextDecisionEvent, tickExes, craziness };
+  (window as any).__engine = { actionsFor, romanceCandidates, runPersonAction, killRelative, nextDecisionEvent, tickExes, craziness, listingsFor, requirements, preparedness, QUESTIONS };
 }
 
 export default function App() {

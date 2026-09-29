@@ -289,8 +289,14 @@ export function refreshCoworkers(c: Character): void {
     }
     return !r.alive; // keep memorials
   });
-  if (!c.job || c.age < 18) return;
+  if (!c.job && !c.partTime) return;
+  // a teen's part-time job puts them among other young staff; an adult's among grown-ups
+  const young = !c.job && c.age < 18;
   for (let i = 0; i < 3; i++) {
-    addPerson(c, { type: "coworker", age: clamp(c.age + randomInt(-8, 10), 18, 66), level: randomInt(35, 60) });
+    addPerson(c, {
+      type: "coworker",
+      age: young ? clamp(c.age + randomInt(-2, 5), 15, 30) : clamp(c.age + randomInt(-8, 10), 18, 66),
+      level: randomInt(35, 60),
+    });
   }
 }

@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "2.0.0";
+export const APP_VERSION = "2.1.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,20 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "2.1.0",
+    title: "Getting Hired",
+    highlights: [
+      "Work is now three separate things: part-time jobs, full-time careers, and gigs (babysitting, tutoring, lawn mowing and handyman jobs, dog walking, busking, freelancing, delivery, rideshare and more)",
+      "Legal working ages depend on where you were born - odd jobs from 12-14, part-time from 15-16, full-time from 18. Under 16 you need a parent's permission",
+      "Tap any job to open a real listing: the company (generated for every opening) with its size, culture, perks, commute and employee rating, the pay, the hours, a typical day, where it leads - and every requirement checked live",
+      "Press Apply and you sit an actual interview: 3-5 questions from a bank of 100+, some genuine, some situational, some curveballs (how many golf balls fit in a school bus?) and some pure nonsense (what's your spirit sandwich?)",
+      "How you answer matters - your personality, smarts, looks, experience and skills shape the result, jokes only land if the interviewer has a sense of humour, and lying can get you caught",
+      "Offers you can accept, negotiate or turn down; a \"we'll be in touch\" that gets answered next year; and rejections with feedback (and a cooldown before you can apply to the same place again)",
+      "Gigs build a reputation, pay more the better you are, and are capped each year. Part-time jobs cut into school time and add stress",
+      "The Occupation screen shows your full-time job, part-time job, odd-job reputation and work history",
+    ],
+  },
   {
     version: "2.0.0",
     title: "New Look, New Character",
