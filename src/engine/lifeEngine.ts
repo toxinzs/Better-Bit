@@ -93,6 +93,7 @@ export function createCharacter(
   lastName: string,
   gender: Gender,
   region: RegionKey,
+  avatarSeed?: number,
 ): Character {
   const motherName = `${randomFirstName("female", region)} ${lastName}`;
   const fatherName = `${randomFirstName("male", region)} ${lastName}`;
@@ -121,7 +122,7 @@ export function createCharacter(
     flags: [],
     originRegion: region,
     appearanceFlavor: regionDef.appearanceFlavor[randomInt(0, regionDef.appearanceFlavor.length - 1)],
-    avatarSeed: randomInt(0, 999999),
+    avatarSeed: avatarSeed ?? randomInt(0, 999999),
     relationships: [],
     yearLog: [`You were born! ${motherName} and ${fatherName} welcomed you into the world.`],
     fullLog: [{ age: 0, text: "You were born." }],
@@ -138,6 +139,10 @@ export function createCharacter(
 }
 
 function educationForAge(age: number): Character["educationStage"] | null {
+  // school ends by 19: anyone who never got a graduation moment (or dropped
+  // out and never re-enrolled) is simply "graduated" rather than stuck in high
+  // school for life
+  if (age >= 19) return "graduated";
   if (age >= 14) return "high";
   if (age >= 11) return "middle";
   if (age >= 5) return "elementary";

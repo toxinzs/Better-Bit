@@ -1,7 +1,14 @@
-import { LifeEvent } from "../../types";
+import { Character, LifeEvent } from "../../types";
 import { clamp, randomInt } from "../../engine/util";
 import { randomClassmate, randomTeacher, bumpGpa, setFlag, joinClub } from "../../engine/school";
 import { CLIQUES, CLUBS } from "../../data/school";
+
+// deterministic for a given character and year, and skips clubs already joined
+function offeredClub(c: Character) {
+  const open = CLUBS.filter((cl) => !(c.schoolActivities ?? []).includes(cl.label));
+  const pool = open.length > 0 ? open : CLUBS;
+  return pool[((c.avatarSeed ?? 0) + c.age) % pool.length];
+}
 
 export const SCHOOL_MIDDLE_EVENTS: LifeEvent[] = [
   {
@@ -130,16 +137,13 @@ export const SCHOOL_MIDDLE_EVENTS: LifeEvent[] = [
     minAge: 11,
     maxAge: 13,
     weight: 1,
-    text: () => {
-      const club = CLUBS[randomInt(0, CLUBS.length - 1)];
-      return `${club.label} is looking for new members.`;
-    },
+    // one club is offered, the same one in the prompt and when you say yes
+    text: (c) => `${offeredClub(c).label} is looking for new members.`,
     choices: [
       {
         label: "Join",
         effect: (c) => {
-          const club = CLUBS[randomInt(0, CLUBS.length - 1)];
-          joinClub(c, club.key);
+          joinClub(c, offeredClub(c).key);
         },
       },
       {

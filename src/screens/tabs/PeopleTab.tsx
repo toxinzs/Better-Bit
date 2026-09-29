@@ -227,6 +227,9 @@ function PersonCard({ c, r, region, onOpen }: { c: Character; r: Relationship; r
               {r.name}
             </Text>
             {r.married ? <Chip label="MARRIED" color={colors.love} /> : r.engaged ? <Chip label="ENGAGED" color={colors.love} /> : null}
+            {r.type === "child" || r.type === "grandchild" ? (
+              <Chip label={r.gender === "male" ? "BOY" : r.gender === "female" ? "GIRL" : "NB"} color={colors.looks} />
+            ) : null}
             {r.status === "placed" ? <Chip label="ADOPTED OUT" color={colors.textSecondary} /> : null}
             {ledger !== 0 ? <Chip label={ledger < 0 ? "YOU OWE" : "OWES YOU"} color={ledger < 0 ? colors.danger : colors.primary} /> : null}
           </View>

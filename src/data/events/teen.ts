@@ -52,28 +52,6 @@ export const TEEN_EVENTS: LifeEvent[] = [
     ],
   },
   {
-    id: "prom",
-    minAge: 17,
-    maxAge: 18,
-    once: true,
-    text: () => "It's prom season.",
-    choices: [
-      {
-        label: "Go all out",
-        effect: (c) => {
-          c.money = Math.max(0, c.money - 400);
-          c.stats.happiness = clamp(c.stats.happiness + 15);
-        },
-      },
-      {
-        label: "Skip it",
-        effect: (c) => {
-          c.stats.happiness = clamp(c.stats.happiness - 4);
-        },
-      },
-    ],
-  },
-  {
     id: "drivers-test",
     minAge: 16,
     maxAge: 17,
@@ -185,30 +163,5 @@ export const TEEN_EVENTS: LifeEvent[] = [
       },
     ],
   },
-  {
-    id: "sneaking-out",
-    minAge: 14,
-    maxAge: 17,
-    weight: 0.8,
-    text: () => "Your friends are sneaking out tonight to hang by the river. You could climb out the window.",
-    choices: [
-      {
-        label: "Sneak out",
-        effect: (c) => {
-          const caught = Math.random() < 0.35;
-          c.stats.happiness = clamp(c.stats.happiness + 10);
-          if (caught) {
-            const m = mother(c);
-            if (m) m.level = clamp(m.level - 15);
-            c.stats.happiness = clamp(c.stats.happiness - 5);
-          }
-        },
-        resultText: (c) => (c.stats.happiness > 50 ? "Got away with it." : "Got caught coming back in. Grounded."),
-      },
-      {
-        label: "Stay in",
-        effect: () => {},
-      },
-    ],
-  },
+
 ];

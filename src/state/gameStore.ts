@@ -77,7 +77,7 @@ type GameState = {
   actionResultLines: string[] | null;
   hydrated: boolean;
   hydrate: () => Promise<void>;
-  startNewLife: (firstName: string, lastName: string, gender: Gender, region: RegionKey) => void;
+  startNewLife: (firstName: string, lastName: string, gender: Gender, region: RegionKey, avatarSeed?: number) => void;
   ageUp: () => void;
   chooseEventOption: (choiceIndex: number) => void;
   clearActionResult: () => void;
@@ -221,8 +221,8 @@ export const useGameStore = create<GameState>((set, get) => {
       set({ hydrated: true });
     },
 
-    startNewLife: (firstName, lastName, gender, region) => {
-      const character = createCharacter(firstName, lastName, gender, region);
+    startNewLife: (firstName, lastName, gender, region, avatarSeed) => {
+      const character = createCharacter(firstName, lastName, gender, region, avatarSeed);
       set({ character, screen: "home", pendingEvent: null, actionResultLines: null });
       persist(character, "home", get().worldState);
     },
@@ -277,7 +277,8 @@ export const useGameStore = create<GameState>((set, get) => {
       if (!character || !character.pendingBabyId) return;
       const baby = character.relationships.find((r) => r.id === character.pendingBabyId);
       const trimmed = name.trim();
-      if (baby && trimmed) baby.name = trimmed;
+      // a first name alone gets the family name, like the suggestions do
+      if (baby && trimmed) baby.name = trimmed.includes(" ") ? trimmed : `${trimmed} ${character.lastName}`;
       character.pendingBabyId = undefined;
       set({ character: { ...character } });
       persist(character, get().screen, get().worldState);

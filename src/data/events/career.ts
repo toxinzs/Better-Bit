@@ -1,75 +1,59 @@
 import { LifeEvent } from "../../types";
 import { clamp } from "../../engine/util";
 import { hasActiveCondition } from "../../engine/worldState";
+import { randomInt } from "../../engine/util";
+import { availableColleges, MAJORS } from "../school";
+import { enrollInCollege } from "../../engine/school";
+
+let collegeResult = ""; // read back by resultText after effect() runs
 
 export const CAREER_EVENTS: LifeEvent[] = [
+  // What comes after high school. Enrollment itself is the real thing in
+  // engine/school.ts (a school, a major, housing); this event just makes the
+  // decision happen instead of waiting for the player to find the School menu.
   {
-    id: "college-decision",
+    id: "after-graduation",
     minAge: 18,
     maxAge: 20,
     weight: 30,
     once: true,
-    condition: (c) => c.educationStage === "graduated" || c.educationStage === "high",
-    text: (c) => `You graduated high school with ${c.stats.smarts} smarts. What now?`,
+    condition: (c) => !c.inCollege && !c.hasCollegeDegree && (c.educationStage === "graduated" || c.educationStage === "high"),
+    text: (c) => `You finished school with a ${(c.gpa ?? 3).toFixed(2)} GPA. What now?`,
     choices: [
       {
-        label: "Apply to college",
+        label: "Go to college",
+        sublabel: "The best school your grades allow",
         effect: (c) => {
-          if (c.stats.smarts >= 55) {
-            c.inCollege = true;
-            c.educationStage = "college";
-          } else {
+          const options = availableColleges(c.gpa ?? 0);
+          const affordable = options.filter((o) => o.tier !== "ivy" || c.stats.smarts >= 70);
+          const pick = affordable[affordable.length - 1] ?? options[options.length - 1];
+          if (!pick) {
             c.stats.happiness = clamp(c.stats.happiness - 10);
+            collegeResult = "Your grades weren't enough for any school that would take you. It stings.";
+            return;
           }
+          enrollInCollege(c, pick.name, MAJORS[randomInt(0, MAJORS.length - 1)], false, pick.tier === "community" ? "commute" : "dorm");
+          collegeResult = `You got in to ${pick.name}. You can change your major any time from the School menu.`;
         },
-        resultText: (c) => (c.inCollege ? "You got in! College starts this year." : "Your grades weren't enough. Rejected."),
+        resultText: () => collegeResult,
       },
       {
         label: "Go straight to work",
         effect: (c) => {
           c.educationStage = "graduated";
         },
-      },
-    ],
-  },
-  {
-    id: "college-life",
-    minAge: 19,
-    maxAge: 22,
-    weight: 1.5,
-    condition: (c) => c.inCollege,
-    text: () => "Midterms are piling up and so is the temptation to just skip them.",
-    choices: [
-      {
-        label: "Grind it out",
-        effect: (c) => {
-          c.stats.smarts = clamp(c.stats.smarts + 6);
-          c.stats.happiness = clamp(c.stats.happiness - 4);
-        },
+        resultText: () => "You're joining the workforce. Check the Career menu for openings.",
       },
       {
-        label: "Live a little",
+        label: "Take a gap year",
         effect: (c) => {
+          c.educationStage = "graduated";
           c.stats.happiness = clamp(c.stats.happiness + 6);
-          c.stats.smarts = clamp(c.stats.smarts - 3);
+          c.stats.smarts = clamp(c.stats.smarts + 1);
         },
+        resultText: () => "You spent the year figuring things out. The plan can wait.",
       },
     ],
-  },
-  {
-    id: "college-graduation",
-    minAge: 21,
-    maxAge: 23,
-    once: true,
-    condition: (c) => c.inCollege,
-    text: () => "You walked at graduation. Cap, gown, the whole thing.",
-    autoEffect: (c) => {
-      c.inCollege = false;
-      c.educationStage = "graduated";
-      c.hasCollegeDegree = true;
-      c.stats.happiness = clamp(c.stats.happiness + 10);
-      c.stats.smarts = clamp(c.stats.smarts + 5);
-    },
   },
   {
     id: "promotion-chance",

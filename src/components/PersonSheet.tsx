@@ -85,6 +85,9 @@ export default function PersonSheet({
             {!rel.alive ? <Chip label="IN MEMORY" color={colors.textSecondary} /> : null}
             {rel.alive ? <Chip label={healthWord(rel.health).toUpperCase()} color={(rel.health ?? 80) >= 50 ? colors.health : colors.danger} /> : null}
             {rel.alive && rel.order && rel.order.untilAge > character.age ? <Chip label="ORDER IN EFFECT" color={colors.danger} /> : null}
+            {rel.alive && (rel.type === "child" || rel.type === "grandchild") ? (
+              <Chip label={rel.gender === "male" ? "BOY" : rel.gender === "female" ? "GIRL" : "NONBINARY"} color={colors.looks} />
+            ) : null}
             {rel.alive && rel.type === "child" && rel.status !== "placed" && ageOf(character, rel) < 18 ? (
               <Chip label={bracketOf(ageOf(character, rel)).toUpperCase()} color={colors.smarts} />
             ) : null}

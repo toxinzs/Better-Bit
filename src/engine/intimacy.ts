@@ -346,12 +346,13 @@ export function tickPregnancy(c: Character): void {
   if (p.plan === "keep") {
     c.pendingBabyId = baby.id;
     c.stats.happiness = clamp(c.stats.happiness + 15);
+    const word = gender === "male" ? "boy" : "girl";
     c.yearLog.push(
       p.carrier === "player"
-        ? "Your baby was born!"
+        ? `It's a ${word}! Your baby was born.`
         : p.carrier === "surrogate"
-          ? "Your baby was born through your surrogate, healthy and loud!"
-          : `${carrierRel ? first(carrierRel) : "Your partner"} gave birth to your baby!`,
+          ? `It's a ${word}! Your baby was born through your surrogate, healthy and loud.`
+          : `It's a ${word}! ${carrierRel ? first(carrierRel) : "Your partner"} gave birth to your baby.`,
     );
     return;
   }
@@ -360,7 +361,7 @@ export function tickPregnancy(c: Character): void {
   const name = `${randomFirstName(gender, c.originRegion)} ${c.lastName}`;
   baby.name = name;
   baby.status = "placed";
-  c.yearLog.push("Your baby was born. You've chosen adoption, and now comes the hardest part.");
+  c.yearLog.push(`It's a ${gender === "male" ? "boy" : "girl"}. You've chosen adoption, and now comes the hardest part.`);
   queueDecision(c, { kind: "adoption", relId: baby.id });
 }
 

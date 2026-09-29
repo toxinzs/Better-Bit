@@ -245,6 +245,9 @@ export function ensurePeople(c: Character): void {
   }
   c.pregnant = false;
   c.decisions ??= [];
+  // school has always tracked a GPA from the first day; older saves that never
+  // had one get the neutral default
+  if (c.age >= 5 && c.gpa === undefined) c.gpa = 3;
 }
 
 // ---------- death (single entry point; funerals build on this later) ----------

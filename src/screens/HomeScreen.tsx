@@ -210,7 +210,7 @@ export default function HomeScreen() {
       {showThemes && <ThemePicker onClose={() => setShowThemes(false)} />}
 
       {character.pendingBabyId ? (
-        <NameBabyModal onSubmit={nameBaby} />
+        <NameBabyModal baby={character.relationships.find((r) => r.id === character.pendingBabyId)} character={character} onSubmit={nameBaby} />
       ) : pendingEvent ? (
         <EventModal key={pendingEvent.id} event={pendingEvent} character={character} world={worldState} onChoose={handleChoose} />
       ) : actionResultLines ? (

@@ -33,18 +33,18 @@ export default function StartScreen() {
   // real avatarSeed doesn't exist until createCharacter() runs - this is
   // just a temporary preview seed, re-rolled whenever gender/region/name
   // change so the picker visibly reacts to your choices.
-  const [previewSeed, setPreviewSeed] = useState(() => Date.now());
+  const [previewSeed, setPreviewSeed] = useState(() => Date.now() % 999983);
 
   const reroll = () => {
     setFirstName(randomFirstName(gender, region));
     setLastName(randomLastName(region));
-    setPreviewSeed(Date.now());
+    setPreviewSeed(Date.now() % 999983);
   };
 
   const begin = () => {
     const fn = firstName.trim() || randomFirstName(gender, region);
     const ln = lastName.trim() || randomLastName(region);
-    startNewLife(fn, ln, gender, region);
+    startNewLife(fn, ln, gender, region, previewSeed);
   };
 
   return (
