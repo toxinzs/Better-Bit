@@ -18,6 +18,7 @@ import { coverageLine, fitnessWord, insurancePremium, medicalBill, playerConditi
 import { colors, spacing } from "../../theme";
 import { tabStyles } from "../tabs/sharedStyles";
 import { ms } from "./menuStyles";
+import { cityOf } from "../../engine/where";
 
 const VENUE_ICONS: Record<VenueKey, keyof typeof Ionicons.glyphMap> = {
   park: "leaf", beach: "sunny", worship: "moon", library: "book", museum: "color-palette", gym: "barbell",
@@ -46,6 +47,7 @@ export function ActivitiesHub() {
 
   return (
     <ScrollView contentContainerStyle={tabStyles.scroll} showsVerticalScrollIndicator={false}>
+      <MenuRow icon="home" color={colors.gold} title="Home & Moving" summary={`${cityOf(character).name}, ${getRegion(character.originRegion).label}`} delay={0} onPress={() => push("place")} />
       <MenuRow icon="location" color={colors.happiness} title="Outings & Venues" summary={`${venues} places to go`} delay={0} onPress={() => push("venues")} />
       <MenuRow icon="medkit" color={colors.health} title="Health & Wellbeing" summary="Doctor, therapy" delay={40} onPress={() => push("health")} />
       <MenuRow icon="ribbon" color={colors.smarts} title="Lessons & Skills" summary={skills > 0 ? `${skills} skill${skills === 1 ? "" : "s"}` : "Learn something new"} delay={80} onPress={() => push("lessons")} />

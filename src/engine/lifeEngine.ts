@@ -24,6 +24,8 @@ import { tickKids } from "./kids";
 import "./decisions"; // registers the funeral/crisis/request decision builders
 import { nextDecisionEvent } from "./decisionQueue";
 import { tickAssets, netWorth } from "./assets";
+import { ensureLocation, tickLocation } from "./location";
+import { cityWage, noteIncome } from "./where";
 import { tickDebt } from "./debt";
 import { tickMarket, portfolioValue } from "./stocks";
 import { incomeTax } from "./taxes";
@@ -100,6 +102,7 @@ export type CreationOptions = {
   talents?: Talents;
   quirks?: string[];
   wealthClass?: WealthClass;
+  birthCity?: string;
 };
 
 export function createCharacter(
@@ -162,6 +165,8 @@ export function createCharacter(
     newPerson(character, { id: "father", type: "father", name: fatherName, gender: "male", age: randomInt(22, 40), level: randomInt(55, 90), fields: parentFields() }),
   );
   ensurePeople(character);
+  if (options.birthCity) character.birthCity = options.birthCity;
+  ensureLocation(character);
 
   return character;
 }
@@ -336,11 +341,12 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
   // income
   if (c.job) {
     // a head for business shows up in the pay packet
-    const gross = Math.round(effectiveSalary(c.job, world, c.originRegion) * (1 + ((c.talents?.business ?? 50) - 50) / 1000) * attendanceFactor(c));
+    const gross = Math.round(effectiveSalary(c.job, world, c.originRegion, cityWage(c)) * (1 + ((c.talents?.business ?? 50) - 50) / 1000) * attendanceFactor(c));
     const { contribution, employerMatch, taxableIncome } = applyContribution(c, gross);
     const tax = incomeTax(taxableIncome, c.originRegion);
     const net = taxableIncome - tax;
     c.money += net;
+    noteIncome(c, net, tax);
     const contribText =
       contribution > 0
         ? ` $${contribution.toLocaleString()} to retirement${
@@ -354,6 +360,7 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
 
   tickWork(c, world);
   tickAssets(c);
+  tickLocation(c);
   tickDebt(c);
 
   // death roll: very low health raises the odds sharply but never guarantees death on its own

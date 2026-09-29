@@ -84,7 +84,10 @@ export const CLASSES: Record<WealthClass, { label: string; blurb: string; moneyF
 };
 
 // Odds of being born into each class, by region: [struggling, working, middle, comfortable, wealthy]
+import { MORE_CLASS_WEIGHTS } from "./moreRegions";
+
 export const CLASS_WEIGHTS: Record<string, number[]> = {
+  ...MORE_CLASS_WEIGHTS,
   us: [12, 28, 35, 18, 7],
   uk: [10, 28, 38, 18, 6],
   nigeria: [38, 32, 18, 9, 3],

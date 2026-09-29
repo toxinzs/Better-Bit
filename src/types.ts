@@ -1,6 +1,6 @@
 export type Gender = "male" | "female" | "nonbinary";
 
-export type RegionKey = "us" | "uk" | "nigeria" | "japan" | "brazil";
+export type RegionKey = "us" | "uk" | "nigeria" | "japan" | "brazil" | "canada" | "australia" | "germany" | "france" | "india" | "mexico" | "southkorea";
 
 export type Stats = {
   health: number;
@@ -338,6 +338,21 @@ export type PlayerCondition = { key: string; since: number; treated?: boolean };
 
 export type StatNote = { reason: string; delta: number };
 
+// ---- where you live (v2.4) ----
+export type HousingKind = "family" | "rent" | "own" | "homeless";
+export type RentKey = "share" | "studio" | "onebed" | "twobed" | "house";
+export type Lifestyle = "frugal" | "normal" | "comfortable";
+export type Residence = {
+  city: string; // key into data/cities.ts
+  housing: HousingKind;
+  rentKey?: RentKey;
+  rent?: number; // yearly rent as it stands now (rises over time)
+  since: number; // age you moved in
+  arrears?: number; // consecutive years you could not cover the bills
+};
+// what last year's money did, for the Budget screen
+export type Budget = { age: number; income: number; tax: number; rent: number; living: number; upkeep: number; other?: number };
+
 export type Background = {
   wealthClass: WealthClass;
   parentValues: string; // one line of flavour about how the family sees the world
@@ -404,7 +419,13 @@ export type Character = {
   // drives the sparkline on the stat detail screens
   statHistory?: { age: number; health: number; happiness: number; smarts: number; looks: number }[];
   griefYears?: number; // years of lingering sadness after losing someone close
-  originRegion?: RegionKey;
+  originRegion?: RegionKey; // the country you live in now (the name is historic)
+  birthRegion?: RegionKey;
+  birthCity?: string;
+  residence?: Residence;
+  lifestyle?: Lifestyle;
+  moves?: number;
+  budget?: Budget;
   appearanceFlavor?: string;
   avatarSeed?: number;
   // ---- character depth (v2.0c); all optional, backfilled by engine/character.ts ensureCharacter ----

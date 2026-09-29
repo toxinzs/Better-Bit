@@ -1,6 +1,7 @@
 import { EducationStage, RegionKey, SchoolKind, TalentKey } from "../types";
 import { NAME_POOLS } from "./names";
 import { hashKey, rngFrom } from "./companies";
+import { MORE_EDU } from "./moreRegions";
 
 // How schooling looks in each country: what the stages are called, how grades
 // are shown, and (for the admissions release) which exams they sit. The engine
@@ -15,7 +16,7 @@ export type EduSystem = {
   blurb: string;
 };
 
-export const EDU_SYSTEMS: Record<RegionKey, EduSystem> = {
+const CORE_EDU = {
   us: {
     stageNames: { elementary: "Elementary School", middle: "Middle School", high: "High School" },
     gradeStyle: "letter", gradeWord: "GPA", leavingAge: 16, exams: ["SAT", "ACT", "AP exams"],
@@ -42,6 +43,8 @@ export const EDU_SYSTEMS: Record<RegionKey, EduSystem> = {
     blurb: "Grades out of ten, and the ENEM decides where you go next.",
   },
 };
+
+export const EDU_SYSTEMS: Record<RegionKey, EduSystem> = { ...(CORE_EDU as unknown as Record<"us" | "uk" | "nigeria" | "japan" | "brazil", EduSystem>), ...MORE_EDU };
 
 export const eduSystem = (region?: RegionKey) => EDU_SYSTEMS[region ?? "us"];
 

@@ -1,4 +1,5 @@
 import { DegreeLevel, RegionKey } from "../types";
+import { MORE_INSTITUTIONS } from "./moreInstitutions";
 
 // Where you can study. Costs are yearly tuition in game dollars for that
 // country. `bar` is how strong an application must be (0-100): open-access
@@ -26,7 +27,7 @@ export type Institution = {
 
 const I = (i: Institution) => i;
 
-export const INSTITUTIONS: Institution[] = [
+const CORE_INSTITUTIONS: Institution[] = [
   // ------------------------------------------------------------ United States
   I({ id: "us-riverside", name: "Riverside Community College", region: "us", tier: "community", cost: 3500, years: 2, bar: 12, prestige: 22, blurb: "Open doors, low fees, and a well-trodden path to transfer.", housing: false, probationGpa: 1.2 }),
   I({ id: "us-state", name: "State University", region: "us", tier: "state", cost: 12000, years: 4, bar: 42, prestige: 52, blurb: "Big lecture halls, a big football team and something for everyone.", housing: true, needsExam: true, probationGpa: 1.8 }),
@@ -71,6 +72,8 @@ export const INSTITUTIONS: Institution[] = [
   I({ id: "br-aberta", name: "Universidade Aberta", region: "brazil", tier: "online", cost: 1800, years: 4, bar: 8, prestige: 24, blurb: "Distance learning with weekend meetups.", housing: false, online: true, probationGpa: 1.5 }),
   I({ id: "br-tecnico", name: "Instituto Técnico Federal", region: "brazil", tier: "trade", cost: 0, years: 2, bar: 20, prestige: 34, blurb: "Free technical training in trades and technology.", housing: false, trade: true, probationGpa: 1.2 }),
 ];
+
+export const INSTITUTIONS: Institution[] = [...CORE_INSTITUTIONS, ...MORE_INSTITUTIONS];
 
 export const institutionsFor = (region: RegionKey | undefined) => INSTITUTIONS.filter((i) => i.region === (region ?? "us"));
 export const institutionById = (id: string) => INSTITUTIONS.find((i) => i.id === id);

@@ -9,6 +9,7 @@ import ModalBase from "./ModalBase";
 import Button from "./Button";
 import Chip from "./Chip";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
+import { cityWage } from "../engine/where";
 
 const noFocusRing = { outlineStyle: "none", outlineWidth: 0 } as object;
 const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
@@ -58,7 +59,7 @@ export function JobDetailModal({
   const job = listing.job;
   const co = job.company!;
   const region = character.originRegion;
-  const gross = effectiveSalary(job, world, region);
+  const gross = effectiveSalary(job, world, region, cityWage(character));
   const net = takeHomePay(gross, region);
   const can = canApply(character, listing);
   const reqs = requirements(character, job);

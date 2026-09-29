@@ -21,6 +21,7 @@ import { useNav } from "../nav/navStore";
 import { getRegion } from "../data/regions";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
 import { playSound } from "../sound";
+import { cityOf } from "../engine/where";
 
 const MILESTONES: Record<number, string> = {
   1: "Happy 1st birthday!",
@@ -154,7 +155,7 @@ export default function HomeScreen() {
                 {character.inJail ? "Incarcerated" : character.job ? character.job.title : character.inCollege ? "Student" : "Unemployed"}
               </Text>
             </View>
-            <Text style={styles.regionText}>{region.label}</Text>
+            <Text style={styles.regionText}>{cityOf(character).name}, {region.label}</Text>
           </TouchableOpacity>
           <View style={styles.moneyPill}>
             <Ionicons name="cash" size={14} color={colors.primary} />

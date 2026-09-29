@@ -1,0 +1,49 @@
+import type { NamePool } from "./names";
+
+// Name pools for the seven countries added in 2.4. Real, region-appropriate names.
+type NewKey = "canada" | "australia" | "germany" | "france" | "india" | "mexico" | "southkorea";
+
+export const MORE_NAME_POOLS: Record<NewKey, NamePool> = {
+  canada: {
+    male: ["Liam", "Noah", "Ethan", "Lucas", "Jacob", "Benjamin", "Owen", "Logan", "Nathan", "Jack", "Ryan", "Connor", "Mason", "Carter", "Wyatt", "Hunter", "Dylan", "Aiden", "Matthew", "Samuel", "Gabriel", "Étienne", "Olivier", "Mathieu", "Antoine", "Jasper", "Tyler", "Brayden", "Cole", "Dawson", "Gurpreet", "Harjot", "Wei", "Kevin", "Ahmed", "Omar", "Sebastian", "Felix", "William", "Alexander"],
+    female: ["Emma", "Olivia", "Charlotte", "Ava", "Sophia", "Mia", "Chloe", "Emily", "Abigail", "Ella", "Lily", "Hannah", "Grace", "Zoe", "Nora", "Avery", "Sarah", "Madison", "Brooklyn", "Léa", "Camille", "Juliette", "Éloïse", "Amélie", "Ariana", "Kaitlyn", "Jasmine", "Priya", "Simran", "Mei", "Fatima", "Layla", "Maya", "Isla", "Harper", "Paisley", "Scarlett", "Aurora", "Sienna", "Ruby"],
+    neutral: ["Quinn", "River", "Riley", "Avery", "Jordan", "Alex", "Sam", "Taylor", "Robin", "Charlie", "Sasha", "Rowan"],
+    last: ["Smith", "Brown", "Tremblay", "Martin", "Roy", "Wilson", "MacDonald", "Gagnon", "Johnson", "Taylor", "Côté", "Campbell", "Anderson", "Leblanc", "Lee", "Jones", "White", "Williams", "Miller", "Thompson", "Clark", "Singh", "Wong", "Chen", "Li", "Kaur", "Patel", "Bouchard", "Gauthier", "Morin", "Lavoie", "Fortin", "Gagné", "Ouellet", "Pelletier", "Bélanger", "Lévesque", "Bergeron", "Fraser", "Murray", "Stewart"],
+  },
+  australia: {
+    male: ["Oliver", "Jack", "William", "Noah", "Thomas", "Henry", "Leo", "Charlie", "Lucas", "James", "Ethan", "Oscar", "Harrison", "Archie", "Mason", "Hunter", "Cooper", "Max", "Lachlan", "Angus", "Callum", "Riley", "Flynn", "Finn", "Harvey", "Jaxon", "Xavier", "Levi", "Isaac", "Liam", "Daniel", "Nathan", "Joshua", "Tom", "Toby", "Zac", "Rohan", "Hamish", "Jai", "Kai"],
+    female: ["Charlotte", "Olivia", "Amelia", "Isla", "Mia", "Ava", "Grace", "Willow", "Harper", "Chloe", "Matilda", "Ruby", "Evie", "Sophie", "Ella", "Zoe", "Lily", "Emily", "Hannah", "Georgia", "Lucy", "Poppy", "Sienna", "Indiana", "Maddison", "Tahlia", "Jessica", "Sarah", "Milla", "Frankie", "Elsie", "Ivy", "Alice", "Freya", "Layla", "Scarlett", "Hayley", "Kayla", "Jasmine", "Bronte"],
+    neutral: ["Billie", "Charlie", "Sam", "Riley", "Jesse", "Kai", "Robin", "Alex", "Jordan", "Morgan", "Lennon", "Sasha"],
+    last: ["Smith", "Jones", "Williams", "Brown", "Wilson", "Taylor", "Johnson", "White", "Martin", "Anderson", "Thompson", "Nguyen", "Thomas", "Walker", "Harris", "Lee", "Ryan", "Robinson", "Kelly", "King", "Campbell", "Mitchell", "Clarke", "Murray", "Scott", "Stewart", "Evans", "Watson", "Young", "Hall", "Wong", "Singh", "Patel", "Chen", "Cooper", "Reid", "O'Brien", "McDonald", "Fraser", "Baker"],
+  },
+  germany: {
+    male: ["Noah", "Ben", "Leon", "Paul", "Finn", "Elias", "Luca", "Jonas", "Felix", "Maximilian", "Lukas", "Emil", "Henry", "Theo", "Anton", "Oskar", "Matteo", "Jakob", "Niklas", "Tim", "Moritz", "Fabian", "Julian", "Tobias", "Sebastian", "David", "Simon", "Philipp", "Johannes", "Stefan", "Andreas", "Markus", "Jan", "Erik", "Lars", "Kevin", "Marco", "Hans", "Klaus", "Dieter"],
+    female: ["Emma", "Hannah", "Mia", "Emilia", "Sofia", "Lina", "Mila", "Lea", "Ella", "Clara", "Marie", "Lena", "Leni", "Anna", "Lotte", "Frieda", "Greta", "Johanna", "Charlotte", "Amelie", "Paula", "Nele", "Laura", "Sarah", "Julia", "Katharina", "Lisa", "Jana", "Nina", "Miriam", "Sabine", "Petra", "Ursula", "Heike", "Anja", "Jasmin", "Elif", "Aylin", "Zeynep", "Maja"],
+    neutral: ["Alex", "Kim", "Sascha", "Toni", "Robin", "Noa", "Luca", "Jona", "Sam", "Eike", "Jules", "Charlie"],
+    last: ["Müller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner", "Becker", "Schulz", "Hoffmann", "Schäfer", "Koch", "Bauer", "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann", "Braun", "Krüger", "Hofmann", "Hartmann", "Lange", "Schmitt", "Werner", "Krause", "Meier", "Lehmann", "Schmid", "Schulze", "Maier", "Köhler", "Herrmann", "König", "Walter", "Mayer", "Huber", "Kaiser", "Fuchs", "Yilmaz", "Kaya", "Demir"],
+  },
+  france: {
+    male: ["Gabriel", "Léo", "Raphaël", "Arthur", "Louis", "Lucas", "Adam", "Jules", "Hugo", "Maël", "Liam", "Ethan", "Paul", "Nathan", "Tom", "Théo", "Noah", "Sacha", "Antoine", "Baptiste", "Maxime", "Alexandre", "Clément", "Romain", "Julien", "Nicolas", "Pierre", "Thomas", "Mathis", "Enzo", "Kevin", "Yanis", "Mehdi", "Karim", "Olivier", "Guillaume", "Étienne", "Victor", "Axel", "Benoît"],
+    female: ["Louise", "Emma", "Jade", "Alice", "Chloé", "Lina", "Rose", "Léa", "Anna", "Mila", "Inès", "Camille", "Manon", "Zoé", "Julia", "Sarah", "Lola", "Clara", "Juliette", "Charlotte", "Eva", "Nina", "Océane", "Margaux", "Élodie", "Amélie", "Marie", "Sophie", "Pauline", "Laure", "Aurélie", "Céline", "Anaïs", "Yasmine", "Leïla", "Fatou", "Salomé", "Apolline", "Solène", "Agathe"],
+    neutral: ["Camille", "Charlie", "Sacha", "Alex", "Dominique", "Claude", "Maxime", "Morgan", "Andrea", "Lou", "Noa", "Robin"],
+    last: ["Martin", "Bernard", "Dubois", "Thomas", "Robert", "Richard", "Petit", "Durand", "Leroy", "Moreau", "Simon", "Laurent", "Lefebvre", "Michel", "Garcia", "David", "Bertrand", "Roux", "Vincent", "Fournier", "Morel", "Girard", "André", "Lefèvre", "Mercier", "Dupont", "Lambert", "Bonnet", "François", "Martinez", "Legrand", "Garnier", "Faure", "Rousseau", "Blanc", "Guerin", "Muller", "Henry", "Roussel", "Nicolas", "Perrin", "Morin", "Mathieu", "Clément", "Gauthier", "Dumont", "Lopez", "Fontaine", "Chevalier", "Robin"],
+  },
+  india: {
+    male: ["Aarav", "Vivaan", "Aditya", "Vihaan", "Arjun", "Sai", "Reyansh", "Ayaan", "Krishna", "Ishaan", "Rohan", "Karan", "Rahul", "Amit", "Vikram", "Rajesh", "Suresh", "Manoj", "Sanjay", "Anil", "Deepak", "Ravi", "Nikhil", "Siddharth", "Pranav", "Harsh", "Yash", "Tarun", "Varun", "Naveen", "Ajay", "Abhishek", "Kunal", "Mohit", "Imran", "Faisal", "Gurpreet", "Harpreet", "Arnav", "Dev"],
+    female: ["Aadhya", "Saanvi", "Ananya", "Diya", "Pari", "Anika", "Myra", "Sara", "Ira", "Navya", "Priya", "Neha", "Pooja", "Kavya", "Sneha", "Anjali", "Divya", "Meera", "Riya", "Shreya", "Aishwarya", "Lakshmi", "Sunita", "Rekha", "Deepika", "Swati", "Nisha", "Tanvi", "Isha", "Kiran", "Radha", "Sita", "Fatima", "Aisha", "Zoya", "Simran", "Jasleen", "Harleen", "Nandini", "Bhavna"],
+    neutral: ["Kiran", "Jayanti", "Arya", "Ishan", "Rudra", "Sasha", "Ankit", "Alex", "Sam", "Noor", "Devi", "Tara"],
+    last: ["Sharma", "Verma", "Gupta", "Singh", "Kumar", "Patel", "Reddy", "Nair", "Iyer", "Menon", "Rao", "Joshi", "Mehta", "Shah", "Agarwal", "Bose", "Chatterjee", "Banerjee", "Mukherjee", "Das", "Pillai", "Naidu", "Desai", "Kulkarni", "Deshmukh", "Pandey", "Mishra", "Tiwari", "Yadav", "Chauhan", "Kapoor", "Malhotra", "Khan", "Ansari", "Sheikh", "Gill", "Sandhu", "Bhatia", "Saxena", "Thakur"],
+  },
+  mexico: {
+    male: ["Santiago", "Mateo", "Sebastián", "Emiliano", "Diego", "Leonardo", "Miguel", "Daniel", "Alejandro", "Carlos", "José", "Luis", "Juan", "Jorge", "Ricardo", "Fernando", "Eduardo", "Roberto", "Manuel", "Rafael", "Pablo", "Andrés", "Javier", "Francisco", "Héctor", "Óscar", "Raúl", "Iván", "Adrián", "Gael", "Ángel", "Luciano", "Bruno", "Erick", "Cristian", "Gerardo", "Rodrigo", "Salvador", "Arturo", "Tomás"],
+    female: ["Sofía", "Valentina", "Regina", "Camila", "Ximena", "María", "Fernanda", "Valeria", "Renata", "Isabella", "Mariana", "Daniela", "Victoria", "Paulina", "Andrea", "Gabriela", "Alejandra", "Guadalupe", "Rosa", "Carmen", "Patricia", "Leticia", "Verónica", "Claudia", "Lucía", "Ana", "Karla", "Jimena", "Natalia", "Abril", "Luz", "Elena", "Dulce", "Citlali", "Itzel", "Marisol", "Jazmín", "Yolanda", "Beatriz", "Rocío"],
+    neutral: ["Ariel", "Alex", "Guadalupe", "Jesús", "Ángel", "Cruz", "Sol", "Noa", "Andrea", "Dani", "Nico", "Luz"],
+    last: ["Hernández", "García", "Martínez", "López", "González", "Rodríguez", "Pérez", "Sánchez", "Ramírez", "Flores", "Torres", "Gómez", "Díaz", "Vázquez", "Cruz", "Morales", "Reyes", "Gutiérrez", "Ortiz", "Jiménez", "Ruiz", "Mendoza", "Aguilar", "Castillo", "Romero", "Álvarez", "Vargas", "Castro", "Ramos", "Herrera", "Medina", "Rojas", "Guerrero", "Salazar", "Ibarra", "Lozano", "Domínguez", "Navarro", "Delgado", "Fuentes", "Cortés", "Paredes", "Villanueva"],
+  },
+  southkorea: {
+    male: ["Min-jun", "Seo-jun", "Do-yun", "Ha-jun", "Ji-ho", "Joon-woo", "Ye-jun", "Hyun-woo", "Jin-woo", "Tae-yang", "Sung-min", "Dong-hyun", "Jae-won", "Seung-hyun", "Ji-hoon", "Woo-jin", "Kyung-soo", "Sang-woo", "Young-ho", "Chul-soo", "Min-ho", "Jun-seo", "Eun-woo", "Si-woo", "Tae-hyun", "Hyun-jun", "Jung-min", "Seok-jin", "Yoon-ho", "Byung-chul", "Ki-tae", "Dae-ho", "Hae-sung", "In-ho", "Ji-sung", "Kang-min", "Joo-won", "Sun-woo", "Yong-sik", "Jae-hyun"],
+    female: ["Seo-yeon", "Ha-yoon", "Ji-woo", "Seo-ah", "Ha-eun", "Ji-an", "Soo-ah", "Yoon-seo", "Ji-yoo", "Min-seo", "Chae-won", "Da-eun", "Yu-na", "Ye-eun", "Su-bin", "Eun-ji", "Hye-jin", "Mi-rae", "Ji-hye", "So-yeon", "Ga-eun", "Na-yeon", "Hana", "Bo-ra", "Soo-jin", "Yeon-woo", "Eun-seo", "Ji-min", "Hyo-jin", "Min-ji", "Seul-gi", "Yeon-hee", "Sun-hee", "Kyung-mi", "Young-ja", "Ji-eun", "Ara", "Da-hee", "Rin", "Ye-ji"],
+    neutral: ["Ha-neul", "Sae-rom", "Ga-ram", "Nuri", "Bit-na", "Seul", "Ji-an", "Do-hyun", "Yoon", "Woo-ri", "Ari", "Areum"],
+    last: ["Kim", "Lee", "Park", "Choi", "Jung", "Kang", "Cho", "Yoon", "Jang", "Lim", "Han", "Oh", "Seo", "Shin", "Kwon", "Hwang", "Ahn", "Song", "Yoo", "Hong", "Jeon", "Ko", "Moon", "Yang", "Son", "Bae", "Baek", "Heo", "Nam", "Shim", "Noh", "Ha", "Gwak", "Sung", "Cha", "Joo", "Woo", "Min", "Jin", "Ryu"],
+  },
+};

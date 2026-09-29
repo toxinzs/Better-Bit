@@ -115,7 +115,20 @@ the planning notes; each release below is shippable on its own.
   Pharmacist/Nurse/Teacher need the right degree, a matching degree/prestige/GPA/
   internships help at interview and on pay. ~14 new campus events; the legacy
   college screen and flat college list are gone.
-- **v2.4 "The World":** 12 regions / ~50 cities, renting/owning/moving, cost of living.
+- **v2.4 "The World" (done).** 12 regions (added Canada, Australia, Germany, France,
+  India, Mexico, South Korea: names, education systems, exams, 38 -> 81 institutions,
+  region defs) and 61 cities (`data/cities.ts`: tier, cost index, wage index, safety,
+  school quality, job strengths). `Character.residence` {city, housing: family / rent /
+  own / homeless, rentKey, rent, arrears}, `birthRegion`/`birthCity`, `lifestyle`,
+  `moves`, `budget`. `engine/where.ts` (pure lookups: `cityOf`, `cityWage`,
+  `livingIndex`, `priceIndex`), `engine/location.ts` (`ensureLocation`, `tickLocation`
+  = rent + living costs + property tax/upkeep + housing market + eviction / recovery,
+  `moveTo` / `previewMove` / `familyMove`, `rentPlace`, `homeListingsFor`). City wage is
+  applied in `effectiveSalary`, city quality in `buildSchool`, city tier/strengths in
+  `listingsFor`. UI: Home & Moving hub, Move (city list + preview), Rent, Budget
+  & lifestyle; birth-city picker in the creation flow; city shown in the header and
+  profile. 18 place events (`data/events/places.ts`). Living costs follow each
+  country's wage level so a typical wage stretches about as far everywhere.
 - **v2.5 "Across Borders":** emigration, immigration, citizenship, visas, travel.
 - **v2.6 "Working Life & Money":** career ladders, performance, promotions, firing,
   business, taxes per country, field-specific interview questions.

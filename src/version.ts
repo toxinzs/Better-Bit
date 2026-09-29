@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "2.3.0";
+export const APP_VERSION = "2.4.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,23 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "2.4.0",
+    title: "The World",
+    highlights: [
+      "Twelve countries to be born in: the United States, United Kingdom, Nigeria, Japan, Brazil - plus Canada, Australia, Germany, France, India, Mexico and South Korea, each with its own names, exams, universities, tax, healthcare and wages",
+      "Sixty-one cities. Pick where you're born or leave it to fate. Every city has a size (capital, big city, mid-size, small town), a cost of living, a wage level, a safety rating, school quality and the job fields it's strong in",
+      "Where you live matters: pay follows your city's wage index, schools follow its quality, job listings favour its strong industries, and safe or rough streets change what happens to you",
+      "Home & Moving is a proper hub: see your city, move to another one, rent a place, buy or sell a home, and manage your budget",
+      "Renting is real: a room in a shared house up to a whole rented house, with a deposit, rent that creeps up every year, rent-hike and landlord events, and eviction if you fall behind - back to family or, worst case, the street",
+      "Moving is a decision with consequences: a preview of the pay and rent change, whether your job comes with you, homesickness, friends who drift, a partner who may not follow, new neighbours and (for kids) a new school",
+      "Families relocate too - some childhoods now involve a move to another city",
+      "Everyday costs are finally charged: food, bills and getting around, scaled by country and city, with three lifestyles (frugal, comfortable, living well) that change your mood and your bank balance",
+      "A Budget screen shows last year's take-home, rent, living costs and what was left over",
+      "Home prices scale with the city and country, and the housing market moves - your home can gain or lose value, and you pay property tax and upkeep",
+      "18 new place-driven events: noisy neighbours, a friendly neighbour, unpaid-rent notices, burglaries, the festival that takes over your city, the small-town rumour mill, big-city loneliness, a sudden offer on your house",
+    ],
+  },
   {
     version: "2.3.0",
     title: "Beyond High School",

@@ -9,6 +9,7 @@ import { changeStat } from "./stats";
 import { finishDecision, queueDecision, registerDecision } from "./decisionQueue";
 import { effectiveSalary, hasActiveCondition, regionJobMultiplier } from "./worldState";
 import { incomeTax } from "./taxes";
+import { cityOf, cityWage, noteIncome } from "./where";
 import { refreshCoworkers } from "./people";
 import { traitMod } from "./character";
 import { attendanceFactor, gainFitness } from "./health";
@@ -56,12 +57,18 @@ export function difficultyFor(c: Character, job: Job, world?: WorldState): numbe
 
 export function listingsFor(c: Character, world: WorldState, kind: JobKind): Listing[] {
   const pool = (kind === "parttime" ? PARTTIME_JOBS : FULLTIME_JOBS).filter((j) => c.age >= jobMinAge(c, j) - 1);
-  const rng = rngFrom(hashKey(`${c.avatarSeed ?? 0}|${c.age}|${kind}`));
-  const want = kind === "parttime" ? 8 : 12;
-  return deterministicShuffle(pool, rng)
+  const rng = rngFrom(hashKey(`${c.avatarSeed ?? 0}|${c.age}|${kind}|${c.residence?.city ?? ""}`));
+  const city = cityOf(c);
+  // a bigger city has more openings; a city's strong fields turn up more often
+  const want = (kind === "parttime" ? 8 : 12) + ({ capital: 3, big: 3, mid: 0, small: -3 }[city.tier] ?? 0);
+  const ranked = deterministicShuffle(pool, rng)
+    .map((j) => ({ j, k: (j.field && city.strengths.includes(j.field) ? 0 : 0.45) + rng() }))
+    .sort((a, b) => a.k - b.k)
+    .map((x) => x.j);
+  return ranked
     .slice(0, want)
     .map((tpl) => {
-      const seedKey = `${c.avatarSeed ?? 0}|${c.age}|${tpl.title}|${c.originRegion ?? "us"}`;
+      const seedKey = `${c.avatarSeed ?? 0}|${c.age}|${tpl.title}|${c.originRegion ?? "us"}|${c.residence?.city ?? ""}`;
       const company = companyFor(tpl.field ?? "Office & Admin", c.originRegion, seedKey, tpl.title);
       const job: Job = { ...tpl, company };
       return { key: seedKey, job, interviewer: interviewerFor(company, c.originRegion, seedKey), difficulty: difficultyFor(c, job, world) };
@@ -234,7 +241,7 @@ function offerEvent(c: Character, world: WorldState, listing: Listing, margin: n
   const job = listing.job;
   const co = job.company!;
   // what you studied, and where, shows up in the offer
-  const gross = Math.round(effectiveSalary(job, world, c.originRegion) * (job.kind === "fulltime" ? degreeSalaryFactor(c, job) : 1));
+  const gross = Math.round(effectiveSalary(job, world, c.originRegion, cityWage(c)) * (job.kind === "fulltime" ? degreeSalaryFactor(c, job) : 1));
   return {
     id: `offer-${listing.key}`,
     minAge: 0,
@@ -499,9 +506,10 @@ export function tickWork(c: Character, world: WorldState): void {
   if (c.gigRep) c.gigRep = clamp(c.gigRep - 1);
   if (c.job || c.partTime) c.workYears = (c.workYears ?? 0) + 1;
   if (c.partTime && !c.inJail) {
-    const gross = Math.round(effectiveSalary(c.partTime, world, c.originRegion) * attendanceFactor(c));
+    const gross = Math.round(effectiveSalary(c.partTime, world, c.originRegion, cityWage(c)) * attendanceFactor(c));
     const tax = incomeTax(gross, c.originRegion);
     c.money += gross - tax;
+    noteIncome(c, gross - tax, tax);
     c.yearLog.push(`Your part-time job${c.partTime.company ? ` at ${c.partTime.company.name}` : ""} paid you ${money(gross - tax)}.`);
     // work and school pull against each other
     const inSchool = c.age >= 6 && c.age <= 22 && !c.job;

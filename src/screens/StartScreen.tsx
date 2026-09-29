@@ -8,6 +8,7 @@ import WhatsNewModal from "../components/WhatsNewModal";
 import { Appearance, Gender, RegionKey } from "../types";
 import { randomFirstName, randomLastName } from "../data/names";
 import { REGIONS } from "../data/regions";
+import { citiesFor, cityByKey } from "../data/cities";
 import {
   BUILDS, EYE_COLORS, FACIAL_HAIR, HAIR_COLORS, HAIR_COLOR_NAMES, HAIR_STYLES, HEIGHTS, SKIN_TONES, appearanceFromSeed,
 } from "../data/appearance";
@@ -29,7 +30,7 @@ const GENDER_OPTIONS: { key: Gender; label: string; icon: keyof typeof Ionicons.
 ];
 
 const REGION_OPTIONS = Object.values(REGIONS);
-const FLAGS: Record<RegionKey, string> = { us: "🇺🇸", uk: "🇬🇧", nigeria: "🇳🇬", japan: "🇯🇵", brazil: "🇧🇷" };
+const FLAGS: Record<RegionKey, string> = { us: "🇺🇸", uk: "🇬🇧", nigeria: "🇳🇬", japan: "🇯🇵", brazil: "🇧🇷", canada: "🇨🇦", australia: "🇦🇺", germany: "🇩🇪", france: "🇫🇷", india: "🇮🇳", mexico: "🇲🇽", southkorea: "🇰🇷" };
 
 const STEPS = ["Who are you?", "Where are you born?", "Your family", "How do you look?", "Ready?"] as const;
 
@@ -40,6 +41,7 @@ export default function StartScreen() {
   const [step, setStep] = useState(-1); // -1 = landing
   const [gender, setGender] = useState<Gender>("female");
   const [region, setRegion] = useState<RegionKey>("us");
+  const [cityKey, setCityKey] = useState<string | undefined>(undefined);
   const [firstName, setFirstName] = useState(() => randomFirstName("female", "us"));
   const [lastName, setLastName] = useState(() => randomLastName("us"));
   const [seed, setSeed] = useState(() => Date.now() % 999983);
@@ -55,9 +57,9 @@ export default function StartScreen() {
   // the family you meet on step 3 is the family you get: built once from the
   // choices so far, rebuilt only if those change or you ask for another roll
   const family = useMemo(
-    () => createCharacter(firstName.trim() || "Alex", lastName.trim() || "Smith", gender, region, seed, { appearance }),
+    () => createCharacter(firstName.trim() || "Alex", lastName.trim() || "Smith", gender, region, seed, { appearance, birthCity: cityKey }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [firstName, lastName, gender, region, seed, nonce],
+    [firstName, lastName, gender, region, seed, nonce, cityKey],
   );
 
   const begin = () => {
@@ -169,6 +171,7 @@ export default function StartScreen() {
                 style={[styles.regionCard, region === r.key && styles.regionCardActive]}
                 onPress={() => {
                   chooseRegion(r.key);
+                  setCityKey(undefined);
                   setFirstName(randomFirstName(gender, r.key));
                   setLastName(randomLastName(r.key));
                 }}
@@ -183,13 +186,24 @@ export default function StartScreen() {
                 {region === r.key && <Ionicons name="checkmark-circle" size={22} color={colors.primary} />}
               </TouchableOpacity>
             ))}
+            <Card>
+              <Text style={styles.cardKicker}>Which city?</Text>
+              <Text style={styles.cardText}>Big cities pay more and cost more; small towns are cheaper and safer. Or leave it to fate.</Text>
+              <View style={styles.cityWrap}>
+                {[{ key: undefined as string | undefined, name: "Surprise me" }, ...citiesFor(region)].map((c) => (
+                  <TouchableOpacity accessibilityRole="button" key={c.key ?? "random"} activeOpacity={0.75} style={[styles.cityChip, cityKey === c.key && styles.cityChipOn]} onPress={() => setCityKey(c.key)}>
+                    <Text style={[styles.cityChipText, cityKey === c.key && { color: colors.primary }]}>{c.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </Card>
           </FadeInUp>
         )}
 
         {step === 2 && (
           <FadeInUp>
             <Text style={styles.hint}>
-              You're {firstName.trim() || "Alex"} {lastName.trim() || "Smith"}, born in {REGIONS[region].label}. This is the family you're born into.
+              You're {firstName.trim() || "Alex"} {lastName.trim() || "Smith"}, born in {cityByKey(family.birthCity)?.name}, {REGIONS[region].label}. This is the family you're born into.
             </Text>
             <Card>
               <Text style={styles.cardKicker}>Your family</Text>
@@ -307,7 +321,7 @@ export default function StartScreen() {
               {firstName.trim() || "Alex"} {lastName.trim() || "Smith"}
             </Text>
             <Text style={[styles.hint, { textAlign: "center" }]}>
-              {gender === "nonbinary" ? "Nonbinary" : gender === "male" ? "Male" : "Female"} · born in {REGIONS[region].label} · {cls.label.toLowerCase()} family
+              {gender === "nonbinary" ? "Nonbinary" : gender === "male" ? "Male" : "Female"} · born in {cityByKey(family.birthCity)?.name}, {REGIONS[region].label} · {cls.label.toLowerCase()} family
             </Text>
             <Text style={[styles.hint, { textAlign: "center" }]}>Your life starts at age 0. Every choice from here is yours.</Text>
           </FadeInUp>
@@ -383,6 +397,10 @@ const styles = StyleSheet.create({
   },
   regionCardActive: { borderColor: colors.primary, backgroundColor: colors.primary + "18" },
   flag: { fontSize: 30 },
+  cityWrap: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginTop: spacing.md },
+  cityChip: { paddingHorizontal: spacing.md, paddingVertical: 8, borderRadius: radii.pill ?? 20, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: "transparent" },
+  cityChipOn: { borderColor: colors.primary, backgroundColor: colors.primary + "18" },
+  cityChipText: { color: colors.textSecondary, fontFamily: fonts.semiBold, fontSize: fontSize.md },
   regionName: { color: colors.textPrimary, fontFamily: fonts.bold, fontSize: fontSize.lg },
   regionSub: { color: colors.textSecondary, fontFamily: fonts.semiBold, fontSize: fontSize.sm, marginTop: 2 },
   cardKicker: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: fontSize.sm, textTransform: "uppercase", marginBottom: 4 },

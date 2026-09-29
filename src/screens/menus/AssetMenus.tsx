@@ -7,7 +7,9 @@ import MenuScreen, { MenuRow } from "../../nav/MenuScreen";
 import Card from "../../components/Card";
 import Button from "../../components/Button";
 import GradientBg from "../../components/GradientBg";
-import { availableCars, availableHomes } from "../../data/assets";
+import { availableCars } from "../../data/assets";
+import { homeListingsFor } from "../../engine/location";
+import { cityOf } from "../../engine/where";
 import { availablePersonalLoans, availableCreditCards } from "../../data/loans";
 import { STOCK_DEFS } from "../../data/stocks";
 import { totalNetWorth, creditScoreLabel, portfolioValue } from "../../engine/lifeEngine";
@@ -51,7 +53,8 @@ export function AssetsHub() {
         </View>
       </GradientBg>
 
-      <MenuRow icon="home" color={colors.gold} title="Home" summary={character.home ? `${character.home.name} · $${character.home.value.toLocaleString()}` : "You don't own a home"} delay={0} onPress={() => push("home")} />
+      <MenuRow icon="home" color={colors.gold} title="Home & Moving" summary={`${cityOf(character).name} · ${character.home ? character.home.name : character.residence?.housing === "rent" ? "Renting" : character.residence?.housing === "own" ? "Homeowner" : "With family"}`} delay={0} onPress={() => push("place")} />
+      <MenuRow icon="wallet" color={colors.primary} title="Budget" summary="Where the money goes" delay={20} onPress={() => push("budget")} />
       <MenuRow icon="car-sport" color={colors.smarts} title="Vehicle" summary={character.car ? `${character.car.name} · $${character.car.value.toLocaleString()}` : "No car"} delay={40} onPress={() => push("car")} />
       <MenuRow icon="card" color={colors.danger} title="Credit & Loans" summary={debtTotal > 0 ? `Debt $${debtTotal.toLocaleString()}` : `Credit score ${score}`} delay={80} onPress={() => push("loans")} />
       <MenuRow icon="trending-up" color={colors.primary} title="Investments" summary={investTotal > 0 ? `$${investTotal.toLocaleString()}` : "Nothing invested"} delay={120} onPress={() => push("invest")} />
@@ -116,7 +119,7 @@ export function HomeMenu() {
   const buyHome = useGameStore((s) => s.buyHome);
   const sellHome = useGameStore((s) => s.sellHome);
   if (!character) return null;
-  const homes = availableHomes(character.age);
+  const homes = character.age >= 18 ? homeListingsFor(character) : [];
   return (
     <MenuScreen title="Home" icon="home" color={colors.gold}>
       <Card>

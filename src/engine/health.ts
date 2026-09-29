@@ -8,6 +8,7 @@ import { changeStat } from "./stats";
 import { traitMod } from "./character";
 import { clamp, randomInt } from "./util";
 import { ageOf } from "./people";
+import { priceIndex } from "./where";
 
 // Your body and your head. Conditions can start, be treated, or wear you down;
 // stress and fitness (hidden) feed happiness, health and looks every year.
@@ -41,8 +42,7 @@ export const hasCondition = (c: Character, key: string) => !!c.conditions?.some(
 
 // the price level of the country you live in, relative to the US baseline
 export function priceLevel(c: Character): number {
-  const tier = getRegion(c.originRegion).costOfLivingTier;
-  return tier === "low" ? 0.35 : tier === "high" ? 1.1 : 1;
+  return priceIndex(c.originRegion);
 }
 
 export function hasCover(c: Character): boolean {

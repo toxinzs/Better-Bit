@@ -108,6 +108,7 @@ export function regionJobMultiplier(region?: RegionKey): number {
   return getRegion(region).jobMultiplier;
 }
 
-export function effectiveSalary(job: Job, world: WorldState, region?: RegionKey): number {
-  return Math.round(job.salary * salaryMultiplier(world) * regionJobMultiplier(region));
+// `cityWage` is the pay index of the city you live in (1 = the country's average)
+export function effectiveSalary(job: Job, world: WorldState, region?: RegionKey, cityWage = 1): number {
+  return Math.round(job.salary * salaryMultiplier(world) * regionJobMultiplier(region) * cityWage);
 }

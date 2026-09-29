@@ -1,4 +1,5 @@
 import { Gender, RegionKey } from "../types";
+import { MORE_NAME_POOLS } from "./moreNames";
 
 export type NamePool = {
   male: string[];
@@ -18,7 +19,7 @@ const pool = (p: NamePool): NamePool => ({
   last: uniq(p.last),
 });
 
-export const NAME_POOLS: Record<RegionKey, NamePool> = {
+const CORE_POOLS = {
   us: pool({
     male: [
       "James", "Michael", "Daniel", "Marcus", "Andre", "Elijah", "Noah", "Malik", "Ethan", "Jayden",
@@ -245,6 +246,13 @@ export const NAME_POOLS: Record<RegionKey, NamePool> = {
     ],
   }),
 };
+
+const morePools = Object.fromEntries(Object.entries(MORE_NAME_POOLS).map(([k, v]) => [k, pool(v)])) as Record<
+  "canada" | "australia" | "germany" | "france" | "india" | "mexico" | "southkorea",
+  NamePool
+>;
+
+export const NAME_POOLS: Record<RegionKey, NamePool> = { ...CORE_POOLS, ...morePools };
 
 export function randomFirstName(gender: Gender, region: RegionKey = "us"): string {
   const pools = NAME_POOLS[region];

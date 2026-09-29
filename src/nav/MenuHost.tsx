@@ -6,6 +6,7 @@ import { CampusMenu, CollegeHub, CollegeMoneyMenu, DegreeMenu, ApplyMenu, ExamMe
 import { ClubsMenu, MySchoolMenu, ReportCardMenu, SchoolMenu, SchoolSocialMenu, StudyMenu, TeachersMenu } from "../screens/menus/SchoolMenus";
 import { FindWorkMenu, OccupationMenu } from "../screens/menus/JobMenus";
 import { ProfileMenu, StatDetailMenu } from "../screens/menus/ProfileMenus";
+import { BudgetMenu, MoveCityMenu, MoveMenu, PlaceHub, RentMenu } from "../screens/menus/PlaceMenus";
 import PeopleTab from "../screens/tabs/PeopleTab";
 import { StatKey } from "../types";
 
@@ -43,6 +44,11 @@ export default function MenuHost({ route }: { route: Route }) {
     case "collegemoney": return <CollegeMoneyMenu />;
     case "degree": return <DegreeMenu />;
     case "transcript": return <TranscriptMenu />;
+    case "place": return <PlaceHub />;
+    case "move": return <MoveMenu />;
+    case "movecity": return <MoveCityMenu cityKey={String(route.params?.city ?? "")} />;
+    case "rent": return <RentMenu />;
+    case "budget": return <BudgetMenu />;
     case "peopleGroup": return <PeopleTab group={String(route.params?.group ?? "family")} />;
     case "profile": return <ProfileMenu />;
     case "statDetail": return <StatDetailMenu stat={(route.params?.stat as StatKey) ?? "health"} />;

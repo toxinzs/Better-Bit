@@ -78,7 +78,8 @@ the year, so `changeStat` reasons only ever describe the current year) →
 start/clear, premiums; `engine/health.ts`) → family pocket money → relatives/
 kids/exes → education → `tickSchool` (K-12 report card) → `tickHigher` (university grades, fees, student loan, graduation) → income (pay is scaled by `attendanceFactor`, so
 poor health costs money) → `tickWork` (part-time pay, experience, resets the
-yearly application/gig counters; `engine/jobs.ts`) → `tickAssets`/`tickDebt`
+yearly application/gig counters; `engine/jobs.ts`) → `tickAssets` → `tickLocation` (rent, food/bills, property tax, housing market,
+eviction; `engine/location.ts`) → `tickDebt`
 → death roll (death odds are multiplied by `conditionMortality`). New
 stat movement should go through `changeStat(c, key, delta, reason)`
 (`engine/stats.ts`) so the stat screens can show what moved it.
@@ -105,3 +106,25 @@ before the mutating call, not the object reference. This has already
 caused two false "bug" readings while verifying the debt and stock
 systems — both were test-script mistakes, not product bugs, but it'll
 happen again on the next system if this isn't kept in mind.
+
+## Where you live (v2.4)
+
+`Character.originRegion` means the country you live in *now* (the name is
+historic; `birthRegion` is where you were born). `Character.residence.city` is a
+key into `data/cities.ts`; read it through `cityOf(c)` (`engine/where.ts`), never
+raw, so old saves fall back to the country's default city. `ensureLocation(c)`
+backfills everything (called at creation, hydrate and each `tickLocation`).
+
+Three "index" numbers, don't mix them up: `priceIndex(region)` (0.35/1/1.1) is for
+medical bills; `livingIndex(region)` follows the country's wage level and prices
+rent, food and homes; `city.cost` / `city.wage` are per-city multipliers on top.
+Pay goes through `effectiveSalary(job, world, region, cityWage(c))` - pass the
+city wage everywhere pay is shown or paid.
+
+Money into and out of the year is noted on `c.budget` (`noteIncome` for pay,
+`tickLocation` fills rent/living/upkeep) for the Budget screen. Housing rules to
+keep: minors are always `family`; an owned home is `own` and is sold when you move
+(`moveTo` calls `sellHome`); running out of money downsizes you to a shared room
+first, then evicts (`family` if a parent is alive, else `homeless`); homeless
+people can be taken in by a friend or relative, or rent again once they can afford
+a deposit - nobody stays on the street forever by accident.

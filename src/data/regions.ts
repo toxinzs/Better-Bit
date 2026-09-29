@@ -1,4 +1,5 @@
 import { RegionKey } from "../types";
+import { MORE_REGIONS } from "./moreRegions";
 
 export type CostOfLivingTier = "low" | "mid" | "high";
 // the youngest you may legally do each kind of work: light = odd jobs and light
@@ -48,7 +49,7 @@ export type RegionDef = {
   appearanceFlavor: string[];
 };
 
-export const REGIONS: Record<RegionKey, RegionDef> = {
+const CORE_REGIONS = {
   us: {
     key: "us",
     healthcare: "private",
@@ -167,6 +168,8 @@ export const REGIONS: Record<RegionKey, RegionDef> = {
     ],
   },
 };
+
+export const REGIONS: Record<RegionKey, RegionDef> = { ...(CORE_REGIONS as unknown as Record<"us" | "uk" | "nigeria" | "japan" | "brazil", RegionDef>), ...MORE_REGIONS };
 
 export function getRegion(key?: RegionKey): RegionDef {
   return REGIONS[key ?? "us"];

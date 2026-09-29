@@ -15,6 +15,7 @@ import { effectiveSalary, takeHomePay } from "../../engine/lifeEngine";
 import { getRegion } from "../../data/regions";
 import { colors, fonts, fontSize, radii, spacing } from "../../theme";
 import { ms } from "./menuStyles";
+import { cityWage } from "../../engine/where";
 
 const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
 type Tab = "parttime" | "fulltime" | "gigs";
@@ -96,7 +97,7 @@ export function FindWorkMenu() {
           </Card>
         ) : (
           list.map((l, i) => {
-            const g = effectiveSalary(l.job, world, region);
+            const g = effectiveSalary(l.job, world, region, cityWage(character));
             const can = canApply(character, l);
             const co = l.job.company!;
             return (
@@ -197,8 +198,8 @@ export function OccupationMenu() {
   const quitWork = useGameStore((s) => s.quitWork);
   if (!character) return null;
   const region = character.originRegion;
-  const gross = character.job ? effectiveSalary(character.job, world, region) : 0;
-  const pgross = character.partTime ? effectiveSalary(character.partTime, world, region) : 0;
+  const gross = character.job ? effectiveSalary(character.job, world, region, cityWage(character)) : 0;
+  const pgross = character.partTime ? effectiveSalary(character.partTime, world, region, cityWage(character)) : 0;
   const nothing = !character.job && !character.partTime;
   return (
     <MenuScreen title="Occupation" icon="briefcase" color={colors.smarts}>

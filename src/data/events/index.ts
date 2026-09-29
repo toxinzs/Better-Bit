@@ -17,6 +17,7 @@ import { SCHOOL_HIGH_EVENTS } from "./school-high";
 import { SCHOOL_EXTRA_EVENTS } from "./school-extra";
 import { SCHOOL_COLLEGE_EVENTS } from "./school-college";
 import { COLLEGE_EXTRA_EVENTS } from "./college-extra";
+import { PLACE_EVENTS } from "./places";
 
 export const EVENTS: LifeEvent[] = [
   ...CHILDHOOD_EVENTS,
@@ -37,4 +38,5 @@ export const EVENTS: LifeEvent[] = [
   ...SCHOOL_EXTRA_EVENTS,
   ...SCHOOL_COLLEGE_EVENTS,
   ...COLLEGE_EXTRA_EVENTS,
+  ...PLACE_EVENTS,
 ];

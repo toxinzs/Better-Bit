@@ -2,6 +2,8 @@ import { LifeEvent } from "../../types";
 import { clamp, randomInt } from "../../engine/util";
 import { mother, father, sibling } from "./helpers";
 import { addPerson } from "../../engine/people";
+import { familyMove } from "../../engine/location";
+import { cityOf } from "../../engine/where";
 
 export const CHILDHOOD_EVENTS: LifeEvent[] = [
   {
@@ -257,18 +259,9 @@ export const CHILDHOOD_EVENTS: LifeEvent[] = [
     maxAge: 14,
     once: true,
     weight: 0.4,
-    text: () => "Your family is moving to a new city. New house, new school.",
+    text: (c) => `Your family moved to ${cityOf(c).name}. New house, new school, new everything.`,
     autoEffect: (c) => {
-      c.stats.happiness = clamp(c.stats.happiness - 8);
-      friendsLoseTouch(c);
+      familyMove(c, undefined, false);
     },
   },
 ];
-
-function friendsLoseTouch(c: Parameters<LifeEvent["text"]>[0]) {
-  c.relationships
-    .filter((r) => r.type === "friend")
-    .forEach((r) => {
-      r.level = clamp(r.level - 20);
-    });
-}

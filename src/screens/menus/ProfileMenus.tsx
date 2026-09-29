@@ -7,6 +7,8 @@ import Chip from "../../components/Chip";
 import Avatar, { moodFor } from "../../components/Avatar";
 import Sparkline from "../../components/Sparkline";
 import { getRegion } from "../../data/regions";
+import { cityByKey } from "../../data/cities";
+import { cityOf } from "../../engine/where";
 import { totalNetWorth } from "../../engine/lifeEngine";
 import { talentsKnown, traitWords } from "../../engine/character";
 import { CLASSES, TALENTS, quirkDef, talentWord } from "../../data/traits";
@@ -48,7 +50,7 @@ export function ProfileMenu() {
         <Text style={styles.sub}>
           {character.alive ? `Age ${character.age}` : `Died at ${character.age}`} · {character.gender === "nonbinary" ? "Nonbinary" : character.gender === "male" ? "Male" : "Female"}
         </Text>
-        <Text style={styles.sub}>Born in {region.label}</Text>
+        <Text style={styles.sub}>Born in {cityByKey(character.birthCity)?.name ? `${cityByKey(character.birthCity)!.name}, ` : ""}{getRegion(character.birthRegion ?? character.originRegion).label}</Text>
       </Card>
 
       <Card>
@@ -58,7 +60,8 @@ export function ProfileMenu() {
         {character.gpa != null && character.age >= 5 && <Row label="GPA" value={character.gpa.toFixed(2)} />}
         {character.currentSchool && <Row label="Attending" value={character.currentSchool} />}
         <Row label="Net worth" value={money(totalNetWorth(character, world))} />
-        <Row label="Living in" value={region.label} last />
+        <Row label="Living in" value={`${cityOf(character).name}, ${region.label}`} />
+        <Row label="Home" value={character.residence?.housing === "rent" ? "Renting" : character.residence?.housing === "own" ? "Owner" : character.residence?.housing === "homeless" ? "No fixed home" : "With family"} last />
       </Card>
 
       <Card>

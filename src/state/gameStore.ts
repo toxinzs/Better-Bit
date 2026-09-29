@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Character, Gender, JobKind, LifeEvent, SchoolKind, StudyMode, RegionKey, SkillKey, WorldState } from "../types";
+import { Character, Gender, JobKind, LifeEvent, Lifestyle, RentKey, SchoolKind, StudyMode, RegionKey, SkillKey, WorldState } from "../types";
 import type { CreationOptions } from "../engine/lifeEngine";
 import { CarListing, HomeListing } from "../data/assets";
 import { LoanListing, CreditCardListing } from "../data/loans";
@@ -81,6 +81,8 @@ import { doGig as engineDoGig, quitWork as engineQuitWork, startApplication as e
 import type { Listing } from "../engine/jobs";
 import { buyInsurance as engineBuyInsurance, treatCondition as engineTreatCondition } from "../engine/health";
 import { nextDecisionEvent } from "../engine/decisionQueue";
+import { afterBuyHome, afterSellHome, ensureLocation, moveBackHome, moveTo, rentPlace, setLifestyle } from "../engine/location";
+import { cityByKey } from "../data/cities";
 
 const STORAGE_KEY = "@better-bit/save/v1";
 
@@ -121,6 +123,10 @@ type GameState = {
   sellCar: () => void;
   buyHome: (listing: HomeListing) => void;
   sellHome: () => void;
+  moveToCity: (cityKey: string, rentKey?: RentKey) => void;
+  rentPlace: (rentKey: RentKey) => void;
+  moveBackHome: () => void;
+  setLifestyle: (key: Lifestyle) => void;
   takeOutLoan: (listing: LoanListing) => void;
   openCreditCard: (listing: CreditCardListing) => void;
   payDownLoan: (loanId: string, amount: number) => void;
@@ -253,6 +259,7 @@ export const useGameStore = create<GameState>((set, get) => {
             // an answer to when they closed the app comes back too
             ensurePeople(parsed.character);
             ensureSchool(parsed.character);
+            ensureLocation(parsed.character);
             const pendingEvent = parsed.screen === "home" ? nextDecisionEvent(parsed.character, worldState) : null;
             set({ character: parsed.character, screen: parsed.screen, worldState, pendingEvent, hydrated: true });
             return;
@@ -349,8 +356,12 @@ export const useGameStore = create<GameState>((set, get) => {
     sendGift: (relationshipId, amount) => applyToCharacter((c) => engineSendGift(c, relationshipId, amount)),
     buyCar: (listing) => applyToCharacter((c) => engineBuyCar(c, listing)),
     sellCar: () => applyToCharacter((c) => engineSellCar(c)),
-    buyHome: (listing) => applyToCharacter((c) => engineBuyHome(c, listing)),
-    sellHome: () => applyToCharacter((c) => engineSellHome(c)),
+    buyHome: (listing) => applyToCharacter((c) => { if (engineBuyHome(c, listing)) afterBuyHome(c); }),
+    sellHome: () => applyToCharacter((c) => { engineSellHome(c); afterSellHome(c); }),
+    moveToCity: (cityKey, rentKey) => applyToCharacter((c) => { const city = cityByKey(cityKey); if (city) moveTo(c, city, rentKey); }),
+    rentPlace: (rentKey) => applyToCharacter((c) => { rentPlace(c, rentKey); }),
+    moveBackHome: () => applyToCharacter((c) => { moveBackHome(c); }),
+    setLifestyle: (key) => applyToCharacter((c) => { setLifestyle(c, key); }),
     takeOutLoan: (listing) => applyToCharacter((c) => engineTakeOutLoan(c, listing)),
     openCreditCard: (listing) => applyToCharacter((c) => engineOpenCreditCard(c, listing)),
     payDownLoan: (loanId, amount) => applyToCharacter((c) => enginePayDownLoan(c, loanId, amount)),

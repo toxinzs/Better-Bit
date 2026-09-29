@@ -7,6 +7,7 @@ import { changeStat } from "./stats";
 import { finishDecision, queueDecision, registerDecision } from "./decisionQueue";
 import { easeStress, priceLevel } from "./health";
 import { clamp, randomInt } from "./util";
+import { cityOf } from "./where";
 
 // The school system: where you go, how you're doing (per-subject grades and a
 // yearly report card), how you behave, who you run with, whether you're being
@@ -33,11 +34,12 @@ function pickKind(c: Character, stage: EducationStage): SchoolKind {
 export function buildSchool(c: Character, stage: EducationStage, kind: SchoolKind): School {
   const cls = CLASS_RANK[c.background?.wealthClass ?? "middle"];
   // neighbourhoods roughly track family wealth: richer areas, better public schools
-  const base = 40 + cls * 5 + randomInt(-8, 8);
+  const city = cityOf(c);
+  const base = 40 + cls * 5 + Math.round((city.schools - 60) / 4) + randomInt(-8, 8);
   const def = SCHOOL_KINDS[kind];
   const st = stage === "elementary" || stage === "middle" || stage === "high" ? stage : "high";
   return {
-    name: schoolName(c.originRegion, st, kind, `${c.avatarSeed ?? 0}|${stage}|${kind}|${c.age}`),
+    name: schoolName(c.originRegion, st, kind, `${c.avatarSeed ?? 0}|${stage}|${kind}|${c.age}|${c.residence?.city ?? ""}`),
     kind,
     quality: clamp(base + def.qualityBoost),
     tuition: def.tuition,
