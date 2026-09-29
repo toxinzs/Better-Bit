@@ -8,6 +8,7 @@ import { PersonAvatar } from "./Avatar";
 import { FadeInUp } from "../motion";
 import { ActionCategory, ActionDef, ActionKey, actionsFor } from "../engine/interactions";
 import { ageOf, healthWord, jobLine } from "../engine/people";
+import { bracketOf } from "../engine/kids";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
 
 const TYPE_LABEL: Record<string, string> = {
@@ -15,9 +16,9 @@ const TYPE_LABEL: Record<string, string> = {
   child: "Child", ex: "Ex", classmate: "Classmate", teacher: "Teacher", coworker: "Coworker", grandchild: "Grandchild",
 };
 
-const CAT_ORDER: ActionCategory[] = ["Connect", "Outings", "Money", "Romance", "Conflict", "Remember"];
+const CAT_ORDER: ActionCategory[] = ["Connect", "Parenting", "Outings", "Money", "Romance", "Conflict", "Remember"];
 const CAT_COLOR: Record<ActionCategory, string> = {
-  Connect: colors.smarts, Outings: colors.happiness, Money: colors.primary, Romance: colors.love, Conflict: colors.danger, Remember: colors.looks,
+  Connect: colors.smarts, Outings: colors.happiness, Money: colors.primary, Romance: colors.love, Parenting: colors.smarts, Conflict: colors.danger, Remember: colors.looks,
 };
 
 function levelColor(level: number): string {
@@ -84,6 +85,9 @@ export default function PersonSheet({
             {!rel.alive ? <Chip label="IN MEMORY" color={colors.textSecondary} /> : null}
             {rel.alive ? <Chip label={healthWord(rel.health).toUpperCase()} color={(rel.health ?? 80) >= 50 ? colors.health : colors.danger} /> : null}
             {rel.alive && rel.order && rel.order.untilAge > character.age ? <Chip label="ORDER IN EFFECT" color={colors.danger} /> : null}
+            {rel.alive && rel.type === "child" && rel.status !== "placed" && ageOf(character, rel) < 18 ? (
+              <Chip label={bracketOf(ageOf(character, rel)).toUpperCase()} color={colors.smarts} />
+            ) : null}
             {rel.alive && rel.blocked ? <Chip label="BLOCKED" color={colors.danger} /> : null}
             {rel.married ? <Chip label="MARRIED" color={colors.love} /> : rel.engaged ? <Chip label="ENGAGED" color={colors.love} /> : null}
             {rel.type === "partner" && isMinor ? <Chip label="DATING" color={colors.love} /> : null}

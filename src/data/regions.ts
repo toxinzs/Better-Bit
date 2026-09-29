@@ -24,6 +24,11 @@ export type RegionDef = {
   startingWealthRange: [number, number];
   legalAges: LegalAges;
   drugsIllegal: boolean;
+  // How strongly the culture expects grown children to settle down and marry.
+  // `strength` 0-1 scales how receptive an adult child is to a parent nudging
+  // them (and how much a refusal is resented); `minChildAge` is the age below
+  // which nobody would raise it. Flavor only - never a gate on anything else.
+  marriagePressure: { strength: number; minChildAge: number };
   stateTaxRate: number; // flat add-on layered over taxes.ts's federal-shaped brackets
   jobMultiplier: number; // stacks multiplicatively with worldState.ts's existing boom/recession salaryMultiplier()
   // Flavor only - a rough regional plausibility skew, not a demographic
@@ -41,6 +46,7 @@ export const REGIONS: Record<RegionKey, RegionDef> = {
     startingWealthRange: [0, 400],
     legalAges: { drinking: 21, smoking: 21, gambling: 21, driving: 16, marriage: 18, consent: 16 },
     drugsIllegal: true,
+    marriagePressure: { strength: 0.2, minChildAge: 25 },
     stateTaxRate: 0.05, // approximate blended US state average; real range is 0%-13.3% depending on the state
     jobMultiplier: 1, // baseline - data/jobs.ts's salary table is already US-shaped
     skinTonePalette: ["#8d5524", "#c68642", "#e0ac69", "#f1c27d", "#ffdbac"],
@@ -59,6 +65,7 @@ export const REGIONS: Record<RegionKey, RegionDef> = {
     startingWealthRange: [0, 350],
     legalAges: { drinking: 18, smoking: 18, gambling: 18, driving: 17, marriage: 18, consent: 16 },
     drugsIllegal: true,
+    marriagePressure: { strength: 0.15, minChildAge: 26 },
     stateTaxRate: 0, // the UK's income tax is national, not layered with a separate regional add-on like US states
     jobMultiplier: 0.85, // approximates a lower average-wage baseline vs. the US-shaped job table
     skinTonePalette: ["#f1c27d", "#ffdbac", "#e0ac69", "#c68642", "#8d5524"],
@@ -80,6 +87,7 @@ export const REGIONS: Record<RegionKey, RegionDef> = {
     // complex real legal picture, stored here as data only, per the note above.
     legalAges: { drinking: 18, smoking: 18, gambling: 18, driving: 18, marriage: 18, consent: 18 },
     drugsIllegal: true,
+    marriagePressure: { strength: 0.7, minChildAge: 23 },
     stateTaxRate: 0, // Nigeria's PAYE income tax is federally set, not stacked with a separate state layer
     jobMultiplier: 0.35, // approximates a much lower average-wage baseline vs. the US-shaped job table - the biggest single lever here until Nigeria gets its own job table
     skinTonePalette: ["#3d2314", "#5c3317", "#8d5524", "#a86432"],
@@ -102,6 +110,7 @@ export const REGIONS: Record<RegionKey, RegionDef> = {
     // from 13 to 16 in a 2023 law change - reflected here, data only.
     legalAges: { drinking: 20, smoking: 20, gambling: 20, driving: 18, marriage: 18, consent: 16 },
     drugsIllegal: true,
+    marriagePressure: { strength: 0.5, minChildAge: 26 },
     stateTaxRate: 0.1, // approximates Japan's real flat-rate local inhabitant tax, genuinely layered on top of national income tax
     jobMultiplier: 0.9,
     skinTonePalette: ["#f1c27d", "#ffdbac", "#e0ac69"],
@@ -125,6 +134,7 @@ export const REGIONS: Record<RegionKey, RegionDef> = {
     // regulated sports betting/gaming.
     legalAges: { drinking: 18, smoking: 18, gambling: 18, driving: 18, marriage: 18, consent: 14 },
     drugsIllegal: true,
+    marriagePressure: { strength: 0.45, minChildAge: 24 },
     stateTaxRate: 0, // Brazil leans on consumption tax (ICMS) more than a layered state income tax
     jobMultiplier: 0.3, // approximates a much lower average-wage baseline vs. the US-shaped job table
     skinTonePalette: ["#8d5524", "#c68642", "#e0ac69", "#f1c27d", "#a86432"],

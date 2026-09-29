@@ -1,4 +1,4 @@
-import { LifeEvent } from "../../types";
+import { Character, LifeEvent } from "../../types";
 import { clamp } from "../../engine/util";
 import { mother, father, hasPartner, partner, children, hasChild, hasMinorChild, sibling } from "./helpers";
 import { ageOf, markDeceased } from "../../engine/people";
@@ -6,50 +6,59 @@ import { conceptionChance, couplePossible, partnerParty, playerParty, startPregn
 
 let tried = false; // read back by resultText after effect() has rolled
 
+// "Try for a baby": a year of trying at the "trying" odds (see intimacy.ts).
+function tryForBaby(c: Character): void {
+  const p = partner(c);
+  if (!couplePossible(c, p)) return;
+  const me = playerParty(c);
+  const them = partnerParty(c, p);
+  const odds = 1 - Math.pow(1 - conceptionChance(me, them, "trying"), 4);
+  if (Math.random() < odds) {
+    startPregnancy(c, {
+      carrier: me.bio === "female" ? "player" : "partner",
+      carrierId: me.bio === "female" ? undefined : p.id,
+      otherParentId: p.id,
+      plan: "keep",
+    });
+    c.stats.happiness = clamp(c.stats.happiness + 15);
+    p.level = clamp(p.level + 8);
+    tried = true;
+  } else {
+    c.stats.happiness = clamp(c.stats.happiness + 2);
+    tried = false;
+  }
+}
+
+const everHadChildren = (c: Character) => c.relationships.filter((r) => r.type === "child").length;
+
+const familyEvent = (id: string, minAge: number, maxAge: number, weight: number, extra: (c: Character) => boolean, text: string): LifeEvent => ({
+  id,
+  minAge,
+  maxAge,
+  weight,
+  condition: (c) => couplePossible(c, partner(c)) && extra(c),
+  text: () => text,
+  choices: [
+    {
+      label: "Try for a baby",
+      effect: (c) => tryForBaby(c),
+      resultText: () =>
+        tried
+          ? "It happened - you're expecting. The baby arrives next year."
+          : "No luck this year, but you had fun trying. There's always next year.",
+    },
+    {
+      label: "Not yet",
+      effect: () => {},
+    },
+  ],
+});
+
 export const FAMILY_EVENTS: LifeEvent[] = [
-  {
-    id: "have-a-kid",
-    minAge: 23,
-    maxAge: 45,
-    weight: 2,
-    condition: (c) => couplePossible(c, partner(c)),
-    text: () => "You and your partner have been talking about starting a family.",
-    choices: [
-      {
-        label: "Try for a baby",
-        effect: (c) => {
-          const p = partner(c);
-          if (!couplePossible(c, p)) return;
-          const me = playerParty(c);
-          const them = partnerParty(c, p);
-          // a year of trying: several chances at the "trying" odds
-          const odds = 1 - Math.pow(1 - conceptionChance(me, them, "trying"), 4);
-          if (Math.random() < odds) {
-            startPregnancy(c, {
-              carrier: me.bio === "female" ? "player" : "partner",
-              carrierId: me.bio === "female" ? undefined : p.id,
-              otherParentId: p.id,
-              plan: "keep",
-            });
-            c.stats.happiness = clamp(c.stats.happiness + 15);
-            p.level = clamp(p.level + 8);
-            tried = true;
-          } else {
-            c.stats.happiness = clamp(c.stats.happiness + 2);
-            tried = false;
-          }
-        },
-        resultText: () =>
-          tried
-            ? "It happened - you're expecting. The baby arrives next year."
-            : "No luck this year, but you had fun trying. There's always next year.",
-      },
-      {
-        label: "Not yet",
-        effect: () => {},
-      },
-    ],
-  },
+  // a first baby is the big conversation for most couples; a second or third
+  // comes up less often
+  familyEvent("have-a-kid", 23, 45, 12, (c) => everHadChildren(c) === 0, "You and your partner have been talking about starting a family."),
+  familyEvent("have-another-kid", 25, 42, 14, (c) => everHadChildren(c) >= 1 && everHadChildren(c) <= 2, "You and your partner wonder whether it's time for another baby."),
   {
     id: "parenting-style",
     minAge: 24,

@@ -11,6 +11,7 @@ import { deathChance } from "./mortality";
 import { tickRelatives } from "./relatives";
 import { tickAdoption, tickPregnancy } from "./intimacy";
 import { tickExes, tickSanity } from "./exes";
+import { tickKids } from "./kids";
 import "./decisions"; // registers the funeral/crisis/request decision builders
 import { nextDecisionEvent } from "./decisionQueue";
 import { tickAssets, netWorth } from "./assets";
@@ -257,6 +258,7 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
   // decisions that outrank random events below)
   tickRelatives(c, world);
   tickAdoption(c);
+  tickKids(c);
   tickExes(c);
   tickSanity(c);
   if ((c.griefYears ?? 0) > 0) {

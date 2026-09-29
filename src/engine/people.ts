@@ -130,6 +130,7 @@ export function newPerson(c: Character, spec: PersonSpec): Relationship {
     // couple starts from a first date
     dates: 0,
     kissed: spec.type === "partner" && age >= 18,
+    kid: spec.type === "child" ? { smarts: randomInt(35, 70), discipline: randomInt(35, 70), resent: 0 } : undefined,
     ...spec.fields,
   };
   return p;
@@ -204,7 +205,8 @@ export function backfillPeople(c: Character): void {
       r.favor !== undefined &&
       r.fertility !== undefined &&
       r.wealth !== undefined &&
-      r.bio !== undefined
+      r.bio !== undefined &&
+      (r.type !== "child" || r.kid !== undefined)
     ) {
       continue;
     }
@@ -226,6 +228,7 @@ export function backfillPeople(c: Character): void {
     r.wealth ??= age < 18 ? rint(rng, 5, 15) : rint(rng, 15, 85);
     r.status ??= "active";
     if (r.kissed === undefined) r.kissed = r.type === "partner" || r.type === "ex" ? true : false;
+    if (r.type === "child" && !r.kid) r.kid = { smarts: rint(rng, 35, 70), discipline: rint(rng, 35, 70), resent: 0 };
   }
 }
 

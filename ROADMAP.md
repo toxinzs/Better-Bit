@@ -1008,6 +1008,45 @@ counting, the order odds at both sanity levels, comply / contest win+lose / lett
 ignore, lock behaviour, violation arrest, expiry, volatile-ex harassment + your own
 order, ask back (teen ex, partnered), cheating caught, coworkers, therapy.
 
+**Relationships expansion — Phase 6, Kids + pressure (done, v1.12.0)** — the
+end of the plan. `engine/kids.ts`. **Age brackets** (`bracketOf`): baby 0-2,
+toddler 3-5, child 6-12, teen 13-17, adult 18+. **Parenting** (your own
+children only, capped per year): Play Together (≤ 8), Read a Story (1-10), Help
+with Homework (6-17: smarts +3), Discipline (4-17: a 4-way choice - talk it
+through / ground them or time-out / take the phone or a toy away / let it slide;
+nothing physical is on the menu) - hidden `Relationship.kid {smarts,
+discipline, resent, path, partnered, grandKids}` shapes how they turn out
+(created at birth, backfilled for old saves). **Pay for College** ($10,000, 17-24).
+**Pressure** exists only where it's the child's own call and it is consequence-
+driven, never coerced: *Encourage College* (guidance, 16-24), *Push for a Job*
+(20-50, only if they have none), *Nudge to Settle Down* and *Push for Marriage*
+(only from the region's `marriagePressure.minChildAge`: US 25 / UK 26 / Nigeria
+23 / Japan 26 / Brazil 24, and marriage only once they're partnered). A child
+complies with a chance built from bond, discipline, resentment and the region's
+`strength` (US 0.2, UK 0.15, Nigeria 0.7, Japan 0.5, Brazil 0.45): measured
+compliance for "settle down" at bond 70 = 40% in the US vs 59% in Nigeria. Even a
+yes costs 2 bond; a refusal costs 7 (job/college) or 5 + (1 − strength) × 8
+(settle/marriage) - so refusing stings more where the culture expects it less
+(US −11, Nigeria −7) - and adds `resent`, which lowers later compliance and fades
+over time. **Growing up** (`tickKids`): at 18 they pick college / work / a gap
+year (news), graduate at 22, and on their own time partner up (22-36), marry
+(24-40) and have babies (24-42, max 4 per child) - which creates real
+`grandchild` people (`coParent` = your child) and a news item. Family-planning
+events were split into **have-a-kid** (first baby) and **have-another-kid** so
+couples get the conversation again: measured over 150 committed couples who tend
+the relationship, 1.4 children on average (28% child-free), and a store guard now
+stops any person action from overwriting a popup that's still waiting.
+Full-game **monkey test**: 90 lives with random actions on random people
+(16,620 actions across every system: talking, gifts, money, outings, exes, orders,
+adoption, parenting, memorials...) and random popup answers - 0 exceptions, 0
+age-gate violations (no adult-only option ever offered to a minor pair, no
+pregnancy under 18), no out-of-range bonds, lives to 94, save 18 KB.
+
+**Relationships expansion complete (v1.7.1 → v1.12.0).** Ideas for later:
+in-laws and extended family, a "family tree" view, cheating/marriage counselling,
+weddings you plan and pay for, wills, pets as relationships, more conversation
+scenes (95 now), rematch scaling for teen exes.
+
 **Still open for later in this update**: a mute/volume toggle (there's no
 settings surface at all yet to put one on), a custom app icon/splash
 screen (still Expo's generic defaults), and a deeper visual pass beyond

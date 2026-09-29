@@ -330,8 +330,12 @@ export const useGameStore = create<GameState>((set, get) => {
     surrender: () => applyChained((c) => engineSurrender(c)),
     // one entry point for everything on a person's sheet (talk, gifts, money,
     // outings...) - conversations/pickers come back as chained popups
-    personAction: (relationshipId, key, amount) =>
-      applyChained((c, world) => engineRunPersonAction(c, world, relationshipId, key, amount)),
+    personAction: (relationshipId, key, amount) => {
+      // the sheet is hidden while a popup is up, but never let an action
+      // replace a decision that's still waiting for an answer
+      if (get().pendingEvent || get().character?.pendingBabyId) return;
+      applyChained((c, world) => engineRunPersonAction(c, world, relationshipId, key, amount));
+    },
 
     attack: (relationshipId) => {
       const character = get().character;

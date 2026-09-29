@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "1.11.0";
+export const APP_VERSION = "1.12.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,18 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "1.12.0",
+    title: "Raising a Family",
+    highlights: [
+      "Parenting depends on how old your kid is: play and stories for the little ones, homework help and discipline as they grow - with real choices, never anything physical",
+      "Your kids grow up: at 18 they head to college, find work or take time to figure things out, then meet someone, marry and maybe make you a grandparent",
+      "Grandchildren are people too - spend time with them, give gifts and watch them grow",
+      "Adult children can be nudged about a job, college, settling down or marriage - but it's their call. They can comply, refuse, and resent it. Refusals sting more where the culture expects it less",
+      "Or skip the pressure and just pay for their college",
+      "Couples who want kids now have a first-baby and a second-baby conversation as they get older",
+    ],
+  },
   {
     version: "1.11.0",
     title: "Exes and Consequences",

@@ -94,6 +94,15 @@ export type Relationship = {
   incidents?: number; // ex: how many times it's escalated (drive-bys, showing up, their own harassment)
   // a restraining order between you: by "them" (they filed against you) or "you"
   order?: { by: "you" | "them"; untilAge: number; ignoring?: boolean };
+  // a child of yours: hidden growth values that shape how they turn out
+  kid?: {
+    smarts: number;
+    discipline: number;
+    resent: number; // times you've pushed and been refused - makes them touchier
+    path?: "college" | "work" | "gap"; // what they did at 18
+    partnered?: boolean;
+    grandKids?: number;
+  };
   treated?: boolean; // their serious illness is being treated (lowers their mortality)
   lowYears?: number; // consecutive years the bond has been very low
   ledger?: number; // money owed: positive = they owe you, negative = you owe them

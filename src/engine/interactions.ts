@@ -2,6 +2,7 @@ import { Character, EventChoice, LifeEvent, Relationship, WorldState } from "../
 import { Venue, MINOR_VENUES, ADULT_VENUES, MINOR_DATE_VENUES, PARTY_VENUES, SLEEPOVER_MINOR, SLEEPOVER_ADULT } from "../data/outings";
 import { MIN_AGE_CONVERSATION } from "./lifeStage";
 import { romanceAllowed } from "./romanceRules";
+import { buildDisciplineEvent, helpHomework, kidLock, payForCollege, playWith, pressure, readStory } from "./kids";
 import {
   adjustSanity, buildArgueEvent, buildStalkEvent, bumpHarass, canAskBack, askBack as doAskBack, exCall as doExCall,
   exText as doExText, isViolation, orderLock, violationArrest,
@@ -21,9 +22,11 @@ export type ActionKey =
   | "talk" | "spendTime" | "goOut" | "party" | "sleepover" | "gift" | "giveMoney" | "askMoney"
   | "holdHands" | "firstKiss" | "askOut" | "breakUp" | "leaveFlowers" | "remember"
   | "makeLove" | "writeLetter" | "visitChild"
-  | "exText" | "exCall" | "argue" | "stalk" | "askBack" | "bootyCall" | "block" | "unblock";
+  | "exText" | "exCall" | "argue" | "stalk" | "askBack" | "bootyCall" | "block" | "unblock"
+  | "playWith" | "readStory" | "helpHomework" | "discipline" | "payCollege"
+  | "pushJob" | "pushCollege" | "pushSettle" | "pushMarriage";
 
-export type ActionCategory = "Connect" | "Outings" | "Money" | "Romance" | "Conflict" | "Remember";
+export type ActionCategory = "Connect" | "Outings" | "Money" | "Romance" | "Parenting" | "Conflict" | "Remember";
 
 export type ActionDef = {
   key: ActionKey;
@@ -41,13 +44,19 @@ const CAPS: Record<ActionKey, number> = {
   holdHands: 1, firstKiss: 1, askOut: 1, breakUp: 1, leaveFlowers: 1, remember: 1,
   makeLove: 3, writeLetter: 2, visitChild: 1,
   exText: 3, exCall: 2, argue: 2, stalk: 2, askBack: 1, bootyCall: 2, block: 1, unblock: 1,
+  playWith: 3, readStory: 2, helpHomework: 2, discipline: 2, payCollege: 1, pushJob: 1, pushCollege: 1, pushSettle: 1, pushMarriage: 1,
 };
+
+const KID_KEYS: ActionKey[] = [
+  "playWith", "readStory", "helpHomework", "discipline", "payCollege", "pushJob", "pushCollege", "pushSettle", "pushMarriage",
+];
 
 const EX_ONLY: ActionKey[] = ["exText", "exCall", "argue", "stalk", "askBack", "bootyCall", "block", "unblock"];
 // anything that reaches out to the person (so an order against you forbids it)
 const CONTACT_KEYS: ActionKey[] = [
   "talk", "spendTime", "goOut", "party", "sleepover", "gift", "giveMoney", "askMoney", "makeLove", "holdHands", "firstKiss",
   "askOut", "exText", "exCall", "argue", "stalk", "askBack", "bootyCall",
+  "playWith", "readStory", "helpHomework", "discipline", "payCollege", "pushJob", "pushCollege", "pushSettle", "pushMarriage",
 ];
 
 // ---------- age & romance gates (hardcoded) ----------
@@ -125,6 +134,7 @@ function lockFor(c: Character, r: Relationship, key: ActionKey): string | null {
   }
   if (key === "writeLetter" || key === "visitChild") return "n/a";
   if (EX_ONLY.includes(key) && r.type !== "ex") return "n/a";
+  if (KID_KEYS.includes(key)) return kidLock(c, r, key);
   // unblocking is the one thing you can do to somebody you've blocked
   if (key === "unblock") return r.blocked ? null : "n/a";
   if (key === "block") return r.blocked ? "n/a" : null;
@@ -211,9 +221,8 @@ function lockFor(c: Character, r: Relationship, key: ActionKey): string | null {
       // adults only, both of you - hardcoded, never a regional setting
       if (r.type !== "partner" || !adultPair) return "n/a";
       return blocked;
-    case "leaveFlowers":
-    case "remember":
-      return "n/a"; // memorial actions are only offered for the departed (see actionsFor)
+    default:
+      return "n/a"; // memorial and kid actions are handled before this switch
   }
 }
 
@@ -241,6 +250,15 @@ const META: Record<ActionKey, { label: string; icon: string; cat: ActionCategory
   bootyCall: { label: "Booty Call", icon: "flame", cat: "Romance" },
   block: { label: "Block", icon: "ban", cat: "Conflict" },
   unblock: { label: "Unblock", icon: "checkmark-circle", cat: "Conflict" },
+  playWith: { label: "Play Together", icon: "game-controller", cat: "Parenting" },
+  readStory: { label: "Read a Story", icon: "book", cat: "Parenting" },
+  helpHomework: { label: "Help with Homework", icon: "pencil", cat: "Parenting" },
+  discipline: { label: "Discipline", icon: "hand-left", cat: "Parenting" },
+  payCollege: { label: "Pay for College", icon: "school", cat: "Parenting" },
+  pushJob: { label: "Push Them to Get a Job", icon: "briefcase", cat: "Parenting" },
+  pushCollege: { label: "Encourage College", icon: "school", cat: "Parenting" },
+  pushSettle: { label: "Nudge Them to Settle Down", icon: "heart-half", cat: "Parenting" },
+  pushMarriage: { label: "Push for Marriage", icon: "ribbon", cat: "Parenting" },
   leaveFlowers: { label: "Leave Flowers", icon: "rose", cat: "Remember" },
   remember: { label: "Remember Them", icon: "images", cat: "Remember" },
 };
@@ -248,7 +266,9 @@ const META: Record<ActionKey, { label: string; icon: string; cat: ActionCategory
 const ORDER: ActionKey[] = [
   "talk", "spendTime", "goOut", "party", "sleepover", "gift", "giveMoney", "askMoney",
   "exText", "exCall", "askOut", "holdHands", "firstKiss", "makeLove", "askBack", "bootyCall",
-  "writeLetter", "visitChild", "argue", "stalk", "block", "unblock", "breakUp",
+  "writeLetter", "visitChild", "argue", "stalk", "block", "unblock",
+  "playWith", "readStory", "helpHomework", "discipline", "payCollege", "pushJob", "pushCollege", "pushSettle", "pushMarriage",
+  "breakUp",
 ];
 
 const MEMORY_LINES = [
@@ -463,10 +483,37 @@ export function runPersonAction(
   const n = first(r);
   const used = usedThisYear(c, r, key);
 
+  // (kid actions are only ever offered for your own children - see kidLock)
   // you chose to ignore the order and reached out anyway
   if (isViolation(c, r) && CONTACT_KEYS.includes(key)) return violationArrest(c, r);
 
   switch (key) {
+    case "playWith":
+      bump(c, r, key);
+      c.yearLog.push(playWith(c, r, dim(used)));
+      return null;
+    case "readStory":
+      bump(c, r, key);
+      c.yearLog.push(readStory(c, r, dim(used)));
+      return null;
+    case "helpHomework":
+      bump(c, r, key);
+      c.yearLog.push(helpHomework(c, r, dim(used)));
+      return null;
+    case "discipline":
+      bump(c, r, key);
+      return buildDisciplineEvent(c, r);
+    case "payCollege":
+      bump(c, r, key);
+      c.yearLog.push(payForCollege(c, r));
+      return null;
+    case "pushJob":
+    case "pushCollege":
+    case "pushSettle":
+    case "pushMarriage":
+      bump(c, r, key);
+      c.yearLog.push(pressure(c, r, key));
+      return null;
     case "exText":
       bump(c, r, key);
       c.yearLog.push(doExText(c, r, dim(used)));
