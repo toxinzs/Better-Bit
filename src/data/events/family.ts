@@ -130,31 +130,6 @@ export const FAMILY_EVENTS: LifeEvent[] = [
     ],
   },
   {
-    id: "parent-passes",
-    minAge: 30,
-    maxAge: 80,
-    weight: 0.35,
-    // only a parent who is actually old enough to die of old age - a 45-year-old
-    // mother can't "pass away" because the dice said so (see Phase 3: real
-    // parent mortality + funerals replace this event)
-    condition: (c) => [mother(c), father(c)].some((p) => p && ageOf(c, p) >= 58),
-    text: (c) => {
-      // autoEffect has already run by the time this is read, so the parent
-      // who just died is the one marked deceased this very year
-      const gone = c.relationships.find((r) => (r.type === "mother" || r.type === "father") && !r.alive && r.diedAge !== undefined && c.age - (r.bornOffset ?? 0) === r.diedAge);
-      return `${gone?.name ?? "Your parent"} passed away this year.`;
-    },
-    autoEffect: (c) => {
-      const old = [mother(c), father(c)].filter((p): p is NonNullable<typeof p> => !!p && ageOf(c, p) >= 58);
-      const parentGone = old[Math.floor(Math.random() * old.length)];
-      if (parentGone) {
-        markDeceased(c, parentGone, "natural causes");
-        c.stats.happiness = clamp(c.stats.happiness - 25);
-        c.money += 5000;
-      }
-    },
-  },
-  {
     id: "family-reunion",
     minAge: 20,
     maxAge: 90,

@@ -50,6 +50,7 @@ export default function PeopleTab({ onOpenThread }: { onOpenThread: (relationshi
   const pendingEvent = useGameStore((s) => s.pendingEvent);
   const actionResultLines = useGameStore((s) => s.actionResultLines);
   const [sheetId, setSheetId] = useState<string | null>(null);
+  const [showMemorial, setShowMemorial] = useState(false);
   const [picker, setPicker] = useState<{ kind: "giveMoney" | "askMoney"; id: string } | null>(null);
 
   if (!character) return null;
@@ -57,7 +58,10 @@ export default function PeopleTab({ onOpenThread }: { onOpenThread: (relationshi
   // The school roster (classmates, teachers) is shown here too so a crush or
   // a friend-to-be is one tap away; teachers stay in the School tab.
   const relationships = character.relationships.filter((r) => r.alive && r.type !== "teacher");
-  const sheetRel = sheetId ? character.relationships.find((r) => r.id === sheetId && r.alive) : undefined;
+  const sheetRel = sheetId ? character.relationships.find((r) => r.id === sheetId && (r.alive || r.diedAge !== undefined)) : undefined;
+  const memorial = character.relationships.filter(
+    (r) => !r.alive && r.diedAge !== undefined && r.type !== "classmate" && r.type !== "teacher",
+  );
   const pickerRel = picker ? character.relationships.find((r) => r.id === picker.id && r.alive) : undefined;
 
   // The sheet steps aside while a popup (a conversation, a result) is up and
@@ -107,6 +111,34 @@ export default function PeopleTab({ onOpenThread }: { onOpenThread: (relationshi
             </View>
           );
         })}
+        {memorial.length > 0 && (
+          <View style={styles.group}>
+            <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.groupHeader} onPress={() => setShowMemorial((v) => !v)}>
+              <Ionicons name="rose" size={15} color={colors.textSecondary} />
+              <Text style={styles.groupTitle}>In memory</Text>
+              <Text style={styles.groupCount}>{memorial.length}</Text>
+              <Ionicons name={showMemorial ? "chevron-up" : "chevron-down"} size={15} color={colors.textMuted} />
+            </TouchableOpacity>
+            {showMemorial &&
+              memorial.map((r) => (
+                <Card key={r.id} style={styles.person}>
+                  <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.personRow} onPress={() => setSheetId(r.id)}>
+                    <View style={[styles.avatarWrap, { borderColor: colors.border, opacity: 0.55 }]}>
+                      <PersonAvatar name={r.name} id={r.id} type={r.type} gender={r.gender} region={character.originRegion} size={46} />
+                    </View>
+                    <View style={styles.personBody}>
+                      <Text style={styles.personName} numberOfLines={1}>{r.name}</Text>
+                      <Text style={styles.subline}>
+                        {(RELATION_META[r.type]?.label ?? r.type)} · died at {r.diedAge}
+                        {r.causeOfDeath ? ` · ${r.causeOfDeath}` : ""}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                  </TouchableOpacity>
+                </Card>
+              ))}
+          </View>
+        )}
       </ScrollView>
 
       {sheetVisible && sheetRel && (

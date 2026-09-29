@@ -14,7 +14,7 @@ const TRAITS = [
   "dramatic", "loyal", "flirty", "grumpy", "curious", "patient", "competitive", "romantic",
 ];
 
-const JOBS = [
+export const PERSON_JOBS = [
   "Nurse", "Electrician", "Accountant", "Chef", "Mechanic", "Teacher", "Software developer",
   "Retail manager", "Barber", "Truck driver", "Paralegal", "Pharmacist", "Contractor",
   "Graphic designer", "Bartender", "Police officer", "Social worker", "Realtor", "Warehouse lead",
@@ -87,7 +87,7 @@ function jobFor(age: number, type: RelationType, rng: () => number, title?: stri
   if (age < 18) return "Student";
   if (age >= 66) return "Retired";
   if (rng() < 0.1) return "Between jobs";
-  return rpick(rng, JOBS);
+  return rpick(rng, PERSON_JOBS);
 }
 
 function healthFor(age: number, rng: () => number): number {

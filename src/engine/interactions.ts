@@ -13,9 +13,9 @@ import { clamp, randomInt } from "./util";
 
 export type ActionKey =
   | "talk" | "spendTime" | "goOut" | "party" | "sleepover" | "gift" | "giveMoney" | "askMoney"
-  | "holdHands" | "firstKiss" | "askOut" | "breakUp";
+  | "holdHands" | "firstKiss" | "askOut" | "breakUp" | "leaveFlowers" | "remember";
 
-export type ActionCategory = "Connect" | "Outings" | "Money" | "Romance";
+export type ActionCategory = "Connect" | "Outings" | "Money" | "Romance" | "Remember";
 
 export type ActionDef = {
   key: ActionKey;
@@ -30,7 +30,7 @@ export type ActionDef = {
 
 const CAPS: Record<ActionKey, number> = {
   talk: 3, spendTime: 3, goOut: 2, party: 1, sleepover: 2, gift: 3, giveMoney: 3, askMoney: 2,
-  holdHands: 1, firstKiss: 1, askOut: 1, breakUp: 1,
+  holdHands: 1, firstKiss: 1, askOut: 1, breakUp: 1, leaveFlowers: 1, remember: 1,
 };
 
 // ---------- age & romance gates (hardcoded) ----------
@@ -172,6 +172,9 @@ function lockFor(c: Character, r: Relationship, key: ActionKey): string | null {
       return blocked;
     case "breakUp":
       return r.type === "partner" ? null : "n/a";
+    case "leaveFlowers":
+    case "remember":
+      return "n/a"; // memorial actions are only offered for the departed (see actionsFor)
   }
 }
 
@@ -188,6 +191,8 @@ const META: Record<ActionKey, { label: string; icon: string; cat: ActionCategory
   firstKiss: { label: "First Kiss", icon: "heart", cat: "Romance" },
   askOut: { label: "Ask Out", icon: "heart-circle", cat: "Romance" },
   breakUp: { label: "Break Up", icon: "heart-dislike", cat: "Romance" },
+  leaveFlowers: { label: "Leave Flowers", icon: "rose", cat: "Remember" },
+  remember: { label: "Remember Them", icon: "images", cat: "Remember" },
 };
 
 const ORDER: ActionKey[] = [
@@ -195,8 +200,33 @@ const ORDER: ActionKey[] = [
   "askOut", "holdHands", "firstKiss", "breakUp",
 ];
 
+const MEMORY_LINES = [
+  "You looked through old photos and remembered the small, ordinary days.",
+  "You thought about a joke only the two of you understood, and smiled.",
+  "You replayed an old voicemail. It still sounds exactly like them.",
+  "You made their favorite meal and ate it slowly.",
+  "You visited a place that meant something to you both.",
+];
+
 export function actionsFor(c: Character, r: Relationship): ActionDef[] {
-  if (!r.alive) return [];
+  if (!r.alive) {
+    if (r.diedAge === undefined) return [];
+    return (["leaveFlowers", "remember"] as ActionKey[]).map((key) => {
+      const used = usedThisYear(c, r, key);
+      const meta = META[key];
+      const poor = key === "leaveFlowers" && c.money < 25;
+      return {
+        key,
+        label: meta.label,
+        icon: meta.icon,
+        cat: meta.cat,
+        state: poor ? "locked" : used >= CAPS[key] ? "capped" : "available",
+        reason: poor ? "$25" : undefined,
+        used,
+        cap: CAPS[key],
+      } as ActionDef;
+    });
+  }
   const out: ActionDef[] = [];
   for (const key of ORDER) {
     const reason = lockFor(c, r, key);
@@ -326,9 +356,11 @@ export function runPersonAction(
   key: ActionKey,
   amount?: number,
 ): LifeEvent | null {
-  const r = c.relationships.find((x) => x.id === relId && x.alive);
+  const memorial = key === "leaveFlowers" || key === "remember";
+  const r = c.relationships.find((x) => x.id === relId && (x.alive || (memorial && x.diedAge !== undefined)));
   if (!r) return null;
-  const reason = lockFor(c, r, key);
+  if (memorial && r.alive) return null;
+  const reason = memorial ? null : lockFor(c, r, key);
   if (reason) {
     c.yearLog.push(reason === "n/a" ? "That isn't possible." : `${reason}.`);
     return null;
@@ -341,6 +373,18 @@ export function runPersonAction(
   const used = usedThisYear(c, r, key);
 
   switch (key) {
+    case "leaveFlowers":
+      if (c.money < 25) return null;
+      bump(c, r, key);
+      c.money -= 25;
+      c.stats.happiness = clamp(c.stats.happiness + 3);
+      c.yearLog.push(`You left flowers for ${n}. Standing there helped a little. (-$25)`);
+      return null;
+    case "remember":
+      bump(c, r, key);
+      c.stats.happiness = clamp(c.stats.happiness + 2);
+      c.yearLog.push(MEMORY_LINES[randomInt(0, MEMORY_LINES.length - 1)].replace(/^You /, `You thought of ${n}. You `));
+      return null;
     case "talk": {
       const ev = buildTalkEvent(c, r, used);
       if (ev) bump(c, r, "talk");

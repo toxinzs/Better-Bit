@@ -1,4 +1,5 @@
 import { Character, LifeEvent } from "../types";
+import { markDeceased } from "./people";
 import { clamp, randomInt } from "./util";
 import { CrimeDef } from "../data/crimes";
 import { buildArrestEvent } from "./crime";
@@ -63,7 +64,7 @@ export function attack(c: Character, relationshipId: string): LifeEvent | null {
       return null;
     }
 
-    r.alive = false;
+    markDeceased(c, r, "killed in a fight");
     const witnessed = Math.random() < WITNESSED_CHANCE;
     if (witnessed) {
       c.yearLog.push(`The fight with ${r.name} went too far. They didn't survive, and people saw.`);

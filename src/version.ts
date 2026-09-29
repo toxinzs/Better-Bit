@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "1.8.0";
+export const APP_VERSION = "1.9.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,19 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "1.9.0",
+    title: "Life Goes On",
+    highlights: [
+      "The people in your life now age, get sick, change jobs, get married, have babies - and eventually pass away",
+      "A new \"Around you\" section in your Life tab shows what's happening to everyone else, year by year",
+      "When someone close dies you plan the funeral: cremation, a traditional burial, a lavish farewell, donating their body to science, or leaving it to the family - and you can give a eulogy",
+      "Inheritance from parents and spouses, lingering grief, and an \"In memory\" list where you can leave flowers or remember them",
+      "A relative can be diagnosed with something serious and you decide whether to be there, pay for treatment or keep your distance",
+      "People ask you for money - give it, lend it, or say no - and friends slowly pay back what they owe",
+      "Neglect people and your bond slips; friends you never see can drift away completely",
+    ],
+  },
   {
     version: "1.8.0",
     title: "People You Can Actually Talk To",

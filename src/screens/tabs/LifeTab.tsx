@@ -8,7 +8,8 @@ import Chip from "../../components/Chip";
 import { FadeInUp } from "../../motion";
 import { getRegion } from "../../data/regions";
 import { getLifeStage } from "../../engine/lifeEngine";
-import { Character, YearRecord } from "../../types";
+import { PersonAvatar } from "../../components/Avatar";
+import { Character, NewsItem, NewsKind, YearRecord } from "../../types";
 import { colors, fonts, fontSize, radii, spacing } from "../../theme";
 
 type LineKind = { icon: keyof typeof Ionicons.glyphMap; color: string };
@@ -25,6 +26,19 @@ const KINDS: { test: RegExp; kind: LineKind }[] = [
   { test: /\b(sick|cold|doctor|hospital|injur\w*|ill|illness|health|surgery|flu|virus|fever|checkup|medical)\b/i, kind: { icon: "medkit", color: colors.health } },
   { test: /\b(friend|friends|party|fun|laugh\w*|trip|vacation|concert|beach|hung out|motivated|dream|dance\w*)\b/i, kind: { icon: "happy", color: colors.happiness } },
 ];
+const NEWS_ICON: Record<NewsKind, LineKind> = {
+  job: { icon: "briefcase", color: colors.smarts },
+  promotion: { icon: "trending-up", color: colors.primary },
+  layoff: { icon: "trending-down", color: colors.danger },
+  retired: { icon: "cafe", color: colors.gold },
+  wedding: { icon: "heart", color: colors.love },
+  baby: { icon: "happy", color: colors.happiness },
+  health: { icon: "medkit", color: colors.health },
+  death: { icon: "rose", color: colors.textSecondary },
+  move: { icon: "airplane", color: colors.looks },
+  breakup: { icon: "heart-dislike", color: colors.danger },
+  milestone: { icon: "star", color: colors.gold },
+};
 const DEFAULT_KIND: LineKind = { icon: "chatbubble-ellipses", color: colors.textSecondary };
 
 function kindFor(text: string): LineKind {
@@ -87,6 +101,20 @@ export default function LifeTab() {
       </GradientBg>
       </FadeInUp>
 
+      {(character.yearNews?.length ?? 0) > 0 ? (
+        <FadeInUp key={`news-${character.age}`} delay={350}>
+          <Card style={styles.aroundYou}>
+            <View style={styles.aroundHeader}>
+              <Ionicons name="people-circle" size={18} color={colors.looks} />
+              <Text style={styles.aroundTitle}>Around you</Text>
+            </View>
+            {character.yearNews!.map((n, i) => (
+              <NewsRow key={i} item={n} character={character} />
+            ))}
+          </Card>
+        </FadeInUp>
+      ) : null}
+
       {cond || news.length > 0 ? (
         <View style={[styles.news, cond && styles.newsAlert]}>
           <Ionicons name="globe" size={16} color={cond ? colors.gold : colors.textSecondary} />
@@ -123,6 +151,9 @@ export default function LifeTab() {
                 {y.lines.map((line, i) => (
                   <FeedLine key={i} text={line} />
                 ))}
+                {(y.news ?? []).map((n, i) => (
+                  <NewsRow key={`n${i}`} item={n} character={character} small />
+                ))}
               </Card>
             </FadeInUp>
           ))}
@@ -141,6 +172,26 @@ export default function LifeTab() {
         </Card>
       )}
     </ScrollView>
+  );
+}
+
+function NewsRow({ item, character, small }: { item: NewsItem; character: Character; small?: boolean }) {
+  const k = NEWS_ICON[item.kind] ?? DEFAULT_KIND;
+  const who = item.relId ? character.relationships.find((r) => r.id === item.relId) : undefined;
+  return (
+    <View style={styles.line}>
+      {who ? (
+        <View style={styles.newsAvatar}>
+          <PersonAvatar name={who.name} id={who.id} type={who.type} gender={who.gender} region={character.originRegion} size={small ? 22 : 26} />
+        </View>
+      ) : (
+        <View style={[styles.lineIcon, { backgroundColor: k.color + "22" }]}>
+          <Ionicons name={k.icon} size={12} color={k.color} />
+        </View>
+      )}
+      <Text style={[styles.lineText, !small && { color: colors.textPrimary }]}>{item.text}</Text>
+      {who ? <Ionicons name={k.icon} size={14} color={k.color} style={{ marginTop: 3 }} /> : null}
+    </View>
   );
 }
 
@@ -230,6 +281,29 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semiBold,
     fontSize: fontSize.base,
     lineHeight: 21,
+  },
+  aroundYou: {
+    marginBottom: spacing.md,
+  },
+  aroundHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: spacing.sm,
+  },
+  aroundTitle: {
+    color: colors.textSecondary,
+    fontFamily: fonts.bold,
+    fontSize: fontSize.sm,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
+  newsAvatar: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    overflow: "hidden",
+    backgroundColor: colors.surfaceRaised,
   },
   news: {
     flexDirection: "row",

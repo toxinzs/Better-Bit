@@ -15,9 +15,9 @@ const TYPE_LABEL: Record<string, string> = {
   child: "Child", ex: "Ex", classmate: "Classmate", teacher: "Teacher", coworker: "Coworker", grandchild: "Grandchild",
 };
 
-const CAT_ORDER: ActionCategory[] = ["Connect", "Outings", "Money", "Romance"];
+const CAT_ORDER: ActionCategory[] = ["Connect", "Outings", "Money", "Romance", "Remember"];
 const CAT_COLOR: Record<ActionCategory, string> = {
-  Connect: colors.smarts, Outings: colors.happiness, Money: colors.primary, Romance: colors.love,
+  Connect: colors.smarts, Outings: colors.happiness, Money: colors.primary, Romance: colors.love, Remember: colors.looks,
 };
 
 function levelColor(level: number): string {
@@ -72,10 +72,17 @@ export default function PersonSheet({
           </View>
           <Text style={styles.name} numberOfLines={2}>{rel.name}</Text>
           <Text style={styles.sub}>
-            {TYPE_LABEL[rel.type] ?? rel.type} · {jobLine(character, rel)}
+            {TYPE_LABEL[rel.type] ?? rel.type} · {rel.alive ? jobLine(character, rel) : `died at ${ageOf(character, rel)}`}
           </Text>
+          {!rel.alive ? (
+            <Text style={styles.memorial}>
+              {rel.causeOfDeath ? `Of ${rel.causeOfDeath}. ` : ""}
+              {rel.funeral ? rel.funeral[0].toUpperCase() + rel.funeral.slice(1) + "." : ""}
+            </Text>
+          ) : null}
           <View style={styles.chips}>
-            <Chip label={healthWord(rel.health).toUpperCase()} color={(rel.health ?? 80) >= 50 ? colors.health : colors.danger} />
+            {!rel.alive ? <Chip label="IN MEMORY" color={colors.textSecondary} /> : null}
+            {rel.alive ? <Chip label={healthWord(rel.health).toUpperCase()} color={(rel.health ?? 80) >= 50 ? colors.health : colors.danger} /> : null}
             {rel.married ? <Chip label="MARRIED" color={colors.love} /> : rel.engaged ? <Chip label="ENGAGED" color={colors.love} /> : null}
             {rel.type === "partner" && isMinor ? <Chip label="DATING" color={colors.love} /> : null}
             {(rel.traits ?? []).slice(0, 2).map((t) => (
@@ -84,15 +91,19 @@ export default function PersonSheet({
           </View>
         </View>
 
-        <View style={styles.levelRow}>
-          <Text style={styles.levelLabel}>Bond</Text>
-          <Text style={[styles.levelNum, { color: lc }]}>{Math.round(rel.level)}</Text>
-        </View>
-        <View style={styles.track}>
-          <Animated.View
-            style={[styles.fill, { backgroundColor: lc, width: bar.interpolate({ inputRange: [0, 100], outputRange: ["2%", "100%"] }) }]}
-          />
-        </View>
+        {rel.alive ? (
+          <>
+            <View style={styles.levelRow}>
+              <Text style={styles.levelLabel}>Bond</Text>
+              <Text style={[styles.levelNum, { color: lc }]}>{Math.round(rel.level)}</Text>
+            </View>
+            <View style={styles.track}>
+              <Animated.View
+                style={[styles.fill, { backgroundColor: lc, width: bar.interpolate({ inputRange: [0, 100], outputRange: ["2%", "100%"] }) }]}
+              />
+            </View>
+          </>
+        ) : null}
         {ledger !== 0 && (
           <Text style={[styles.ledger, { color: ledger < 0 ? colors.danger : colors.primary }]}>
             {ledger < 0 ? `You owe them $${Math.round(-ledger).toLocaleString()}` : `They owe you $${Math.round(ledger).toLocaleString()}`}
@@ -116,10 +127,12 @@ export default function PersonSheet({
           );
         })}
 
-        <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.messages} onPress={onMessages}>
-          <Ionicons name="chatbubble-ellipses" size={16} color={colors.textPrimary} />
-          <Text style={styles.messagesText}>Messages</Text>
-        </TouchableOpacity>
+        {rel.alive ? (
+          <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.messages} onPress={onMessages}>
+            <Ionicons name="chatbubble-ellipses" size={16} color={colors.textPrimary} />
+            <Text style={styles.messagesText}>Messages</Text>
+          </TouchableOpacity>
+        ) : null}
       </ScrollView>
     </ModalBase>
   );
@@ -174,6 +187,7 @@ const styles = StyleSheet.create({
   },
   name: { color: colors.textPrimary, fontFamily: fonts.extraBold, fontSize: fontSize.xl, marginTop: spacing.sm, textAlign: "center" },
   sub: { color: colors.textSecondary, fontFamily: fonts.semiBold, fontSize: fontSize.md, marginTop: 2 },
+  memorial: { color: colors.textMuted, fontFamily: fonts.semiBold, fontSize: fontSize.sm, marginTop: 2, textAlign: "center" },
   chips: { flexDirection: "row", gap: 6, flexWrap: "wrap", justifyContent: "center", marginTop: spacing.sm },
   levelRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" },
   levelLabel: { color: colors.textSecondary, fontFamily: fonts.bold, fontSize: fontSize.sm, letterSpacing: 0.5 },

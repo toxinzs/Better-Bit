@@ -898,6 +898,44 @@ Deferred to later phases per plan: news feed, aging/dying relatives, funerals,
 intimacy/pregnancy/adoption (18+), ex stalking/restraining orders, kid
 parenting + pressure.
 
+**Relationships expansion — Phases 2 + 3, Lifecycle, news feed, death and
+funerals (done, v1.9.0)** — `engine/relatives.ts` `tickRelatives()` runs every
+`ageUp()`: relatives' health drifts with age, they develop conditions (`engine/
+mortality.ts` `CONDITIONS`: hypertension, diabetes, cancer, heart disease,
+stroke, COPD, kidney disease, arthritis, dementia, depression - each with an
+onset age/chance, a mortality multiplier and, for the serious ones, a treatment
+cost), roll a death chance (`relativeDeathChance`: your own `deathChance` ×0.6,
+× their conditions capped at 8, ×0.55 if treated, ×1.8 for 60+ in a pandemic,
+a tiny `MINOR_DEATH_RATE` under 18), drift apart if a year passes with no
+contact (per-type rate, family floors at 12; a friend under 20 for 3 years
+becomes "distant"), repay what they owe you, and generate news. **News**:
+`data/news.ts` templates → `Character.yearNews` → archived on
+`YearRecord.news`; a budget of 4 non-death items a year (6 for a serious
+diagnosis in the family) so it never floods; LifeTab has an **Around you**
+card (avatar + kind icon) and archived years show their news too. **Decisions**
+(`engine/decisions.ts`, registered into `decisionQueue.ts`): `funeral`,
+`crisis` (serious diagnosis) and `request` (money ask). All three commit their
+effects only on the terminal choice, so a reload mid-chain re-offers them and
+can never double-charge - the funeral is a two-step chain (pick a send-off →
+say a few words) that only pays on the eulogy step. **`killRelative()`** is
+the single death entry (marks deceased via `markDeceased`, grief hit scaled by
+closeness, `griefYears` lingering sadness, obituary line + news, queues the
+funeral for family/partner/kids and friends at bond ≥ 80). Funeral tiers: county
+$600, cremation $1,500, traditional $9,000, lavish $24,000, donate to science
+(free, mourners −3), let the family handle it (free, mourners −8); a minor at a
+funeral gets three coping choices and no costs. **Estates**: hidden wealth² →
+a parent's estate goes to the surviving parent, you inherit from the last parent
+(split with living siblings) and from a married partner. **Memorial**: PeopleTab
+"In memory" group (collapsed) → PersonSheet in memorial mode with Leave Flowers
+($25) and Remember Them. The random `parent-passes` event is gone (real
+mortality replaces it); a fatal fight now goes through `markDeceased`. Balance
+sim over 220 lives across all five regions: 2.8 funerals/life (max 5), parent
+dies when you are ~43 (P10 30, P90 56), 1.1 diagnoses and 4.4 money requests per
+life, ≤ 8 news items in the busiest year, save ≈ 129 KB at ~78, zero exceptions.
+Playwright: funeral options, two-step commit, estate maths, donate/family
+options, reload mid-decision, two deaths queued in order, minor branch, memorial
+sheet.
+
 **Still open for later in this update**: a mute/volume toggle (there's no
 settings surface at all yet to put one on), a custom app icon/splash
 screen (still Expo's generic defaults), and a deeper visual pass beyond

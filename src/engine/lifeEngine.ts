@@ -8,6 +8,8 @@ import { tickWorldState, hasActiveCondition, effectiveSalary } from "./worldStat
 import { ambientMessageTick } from "./relationships";
 import { addPerson, ensurePeople, newPerson } from "./people";
 import { deathChance } from "./mortality";
+import { tickRelatives } from "./relatives";
+import "./decisions"; // registers the funeral/crisis/request decision builders
 import { nextDecisionEvent } from "./decisionQueue";
 import { tickAssets, netWorth } from "./assets";
 import { tickDebt } from "./debt";
@@ -208,12 +210,13 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
 
   // archive the year that's ending into the life story before it's wiped,
   // so the Life tab can show a real by-age history, not just event lines
-  if (c.yearLog.length > 0) {
-    (c.lifeLog ??= []).push({ age: c.age, lines: c.yearLog });
+  if (c.yearLog.length > 0 || (c.yearNews?.length ?? 0) > 0) {
+    (c.lifeLog ??= []).push({ age: c.age, lines: c.yearLog, news: c.yearNews && c.yearNews.length > 0 ? c.yearNews : undefined });
   }
 
   c.age += 1;
   c.yearLog = [];
+  c.yearNews = [];
 
   // a pregnancy kept from the year before comes to term now - the baby
   // exists as a real relationship right away (so parenting-style/kid-
@@ -260,6 +263,15 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
   }
 
   ambientMessageTick(c);
+  // the people around you live their year: ageing, illness, news, and - the
+  // hard part - some of them die (funerals and money requests queue up as
+  // decisions that outrank random events below)
+  tickRelatives(c, world);
+  if ((c.griefYears ?? 0) > 0) {
+    c.griefYears = (c.griefYears ?? 0) - 1;
+    c.stats.happiness = clamp(c.stats.happiness - 4);
+    c.yearLog.push("Grief still weighs on you this year.");
+  }
 
   // education auto-progression (doesn't override college/graduated)
   if (!c.inCollege && c.educationStage !== "graduated") {

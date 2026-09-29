@@ -72,6 +72,8 @@ export type Relationship = {
   funeral?: string; // how they were laid to rest
   blocked?: boolean; // you or they cut contact off
   wealth?: number; // hidden 0-100: how much money they could spare
+  treated?: boolean; // their serious illness is being treated (lowers their mortality)
+  lowYears?: number; // consecutive years the bond has been very low
   ledger?: number; // money owed: positive = they owe you, negative = you owe them
   // how many times each interaction has been used this year (the year is the
   // player's age when it started; the counters reset when it changes)
@@ -150,7 +152,8 @@ export type YearRecord = {
   news?: NewsItem[]; // "Around you": what happened to other people
 };
 
-export type NewsKind = "job" | "wedding" | "baby" | "health" | "death" | "move" | "breakup" | "milestone";
+export type NewsKind =
+  | "job" | "promotion" | "layoff" | "retired" | "wedding" | "baby" | "health" | "death" | "move" | "breakup" | "milestone";
 
 export type NewsItem = {
   kind: NewsKind;
@@ -239,6 +242,7 @@ export type Character = {
   fertility?: number; // 0-100
   decisions?: PendingDecision[];
   yearNews?: NewsItem[];
+  griefYears?: number; // years of lingering sadness after losing someone close
   originRegion?: RegionKey;
   appearanceFlavor?: string;
   avatarSeed?: number;
