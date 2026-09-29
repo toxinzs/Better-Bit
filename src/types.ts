@@ -71,6 +71,16 @@ export type Relationship = {
   causeOfDeath?: string;
   funeral?: string; // how they were laid to rest
   blocked?: boolean; // you or they cut contact off
+  wealth?: number; // hidden 0-100: how much money they could spare
+  ledger?: number; // money owed: positive = they owe you, negative = you owe them
+  // how many times each interaction has been used this year (the year is the
+  // player's age when it started; the counters reset when it changes)
+  yr?: { age: number; n: Record<string, number> };
+  giftLog?: { age: number; item: string }[];
+  likesKnown?: string[]; // taste tags you've learned from how they reacted
+  seen?: string[]; // conversation scenes already played with them
+  dates?: number; // teen dating: dates/outings had together
+  kissed?: boolean; // teen dating: first kiss happened
 };
 
 export type Job = {
@@ -270,7 +280,7 @@ export type LifeEvent = {
   logText?: (c: Character, world: WorldState) => string;
   // the relationship this popup is about - EventModal shows their portrait
   // and name above the text
-  who?: string;
+  who?: string | ((c: Character) => string | undefined);
   choices?: EventChoice[];
   autoEffect?: (c: Character, world: WorldState) => void;
 };

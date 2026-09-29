@@ -115,7 +115,12 @@ export function newPerson(c: Character, spec: PersonSpec): Relationship {
     conditions: [],
     favor: randomInt(35, 65),
     fertility: randomInt(35, 95),
+    wealth: age < 18 ? randomInt(5, 15) : randomInt(15, 85),
     status: "active",
+    // grown-up partners already have a romantic history behind them; a teen
+    // couple starts from a first date
+    dates: 0,
+    kissed: spec.type === "partner" && age >= 18,
     ...spec.fields,
   };
   return p;
@@ -188,7 +193,8 @@ export function backfillPeople(c: Character): void {
       r.traits !== undefined &&
       r.health !== undefined &&
       r.favor !== undefined &&
-      r.fertility !== undefined
+      r.fertility !== undefined &&
+      r.wealth !== undefined
     ) {
       continue;
     }
@@ -206,7 +212,9 @@ export function backfillPeople(c: Character): void {
     r.conditions ??= [];
     r.favor ??= clamp(Math.round(r.level * 0.5) + rint(rng, 15, 40));
     r.fertility ??= rint(rng, 35, 95);
+    r.wealth ??= age < 18 ? rint(rng, 5, 15) : rint(rng, 15, 85);
     r.status ??= "active";
+    if (r.kissed === undefined) r.kissed = r.type === "partner" || r.type === "ex" ? true : false;
   }
 }
 

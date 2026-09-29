@@ -13,9 +13,11 @@ import StartScreen from "./src/screens/StartScreen";
 import HomeScreen from "./src/screens/HomeScreen";
 import GameOverScreen from "./src/screens/GameOverScreen";
 import { colors } from "./src/theme";
+import { actionsFor, romanceCandidates, runPersonAction } from "./src/engine/lifeEngine";
 
 if (typeof window !== "undefined") {
   (window as any).__store = useGameStore;
+  (window as any).__engine = { actionsFor, romanceCandidates, runPersonAction };
 }
 
 export default function App() {

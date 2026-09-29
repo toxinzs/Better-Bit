@@ -28,7 +28,8 @@ export default function EventModal({
   onChoose: (choiceIndex: number) => void;
 }) {
   const { height } = useWindowDimensions();
-  const who = event.who ? character.relationships.find((r) => r.id === event.who) : undefined;
+  const whoId = typeof event.who === "function" ? event.who(character) : event.who;
+  const who = whoId ? character.relationships.find((r) => r.id === whoId) : undefined;
 
   return (
     <ModalBase icon={who ? undefined : "sparkles"}>

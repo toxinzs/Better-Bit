@@ -50,6 +50,8 @@ import {
   seduceFaculty as engineSeduceFaculty,
   attack as engineAttack,
   surrender as engineSurrender,
+  runPersonAction as engineRunPersonAction,
+  ActionKey,
   DatingCandidate,
 } from "../engine/lifeEngine";
 
@@ -119,6 +121,7 @@ type GameState = {
   seduceFaculty: (relationshipId: string) => void;
   attack: (relationshipId: string) => void;
   surrender: () => void;
+  personAction: (relationshipId: string, key: ActionKey, amount?: number) => void;
   restart: () => void;
 };
 
@@ -322,6 +325,10 @@ export const useGameStore = create<GameState>((set, get) => {
     hookup: () => applyChained((c) => engineHookup(c)),
     commitCrime: (crimeId) => applyChained((c, world) => engineCommitCrime(c, crimeId, world)),
     surrender: () => applyChained((c) => engineSurrender(c)),
+    // one entry point for everything on a person's sheet (talk, gifts, money,
+    // outings...) - conversations/pickers come back as chained popups
+    personAction: (relationshipId, key, amount) =>
+      applyChained((c, world) => engineRunPersonAction(c, world, relationshipId, key, amount)),
 
     attack: (relationshipId) => {
       const character = get().character;

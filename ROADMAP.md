@@ -852,6 +852,52 @@ ambient texts ignored blocked/estranged people; faded-out classmates/teachers
 were marked `alive: false` (that flag now only ever means a real death — they
 are removed instead); `getSterilized` copy assumed a gender.
 
+**Relationships expansion — Phase 1, Interactions core + teen dating (done,
+v1.8.0)** — `engine/interactions.ts` is the one place everything you can do
+with a person lives: `actionsFor(c, r)` is the pure catalog the UI renders
+(available / used-up / locked-with-reason, with `used/cap` pips) and
+`runPersonAction()` performs one (store: `personAction(relId, key, amount?)`,
+chained through `applyChained` so conversations/pickers come back as popups).
+Yearly caps per person (talk 3, spend time 3, go out 2, party 1, sleepover 2,
+gift 3, give 3, ask 2, ask-out 1) with `dim()` diminishing returns
+`[1, .75, .5, .3, .2]`, stored in `Relationship.yr` (resets when the player's
+age changes). **Talk** → `engine/conversations.ts` + `data/conversations/*`
+(95 scenes across parent/sibling/friend/partner/child/grandchild/coworker/
+classmate/ex, 2-4 choices each, `{n}/{he}/{him}/{his}` tokens with they/them
+grammar fixes, a `seen` list so scenes don't repeat). **Gifts** →
+`data/gifts.ts` (123 items with taste tags + audience) and `engine/gifts.ts`:
+ten offers per person per year seeded by id + age (stable within a year,
+different across years/people, mixed across price tiers by how much money you
+have), hidden per-person tastes (3 likes / 2 dislikes), reactions ×2 / ×1 /
+×0.4 with a repeat-gift penalty, and what you learn shows up as a hint next
+year. **Money**: `AmountPicker` (drag slider, log-scaled when the range is
+wide, ± steppers, 25/50/Max chips); ask success uses favor/level/amount vs the
+person's capacity/what you already owe, shown to the player only as
+"Likely / Could go either way / Unlikely"; borrowing writes `Relationship.
+ledger` and giving to someone you owe pays it down. **Outings** (`data/
+outings.ts`): separate venue lists for minors / adults / couples / parties /
+sleepovers. **PersonSheet** replaces the expanding cards (hero, chips, animated
+bond bar, ledger, categorised action grid, Messages). The sheet steps aside
+while a popup is open and returns refreshed. **Teen dating from 13**:
+`romanceAllowed()` = adults with adults, or 13-17s with 13-17s within a year -
+never across 18; classmates/friends get **Ask Out**; `data/events/
+teen-romance.ts` (a classmate asks you out, you have a crush, school dances
+solo/as a couple, drifting apart); teen couples get dates → hold hands (needs
+a date) → first kiss (needs two dates, bond ≥ 60) and nothing beyond that;
+**Break Up** turns a partner into an ex (divorce costs money and can't be
+undone), which unlocks the Exes group at any age. Hardcoded gates: party is
+adults-only, sleepovers never cross the age-18 line, booty call requires both
+18+, the old fake `first-crush` event in teen.ts was removed. **Real bug found
+by the test**: a popup's choice closures captured the character object from
+when it opened, but the store swaps in a shallow copy afterwards, so plain
+fields like `money` written by a popup choice were silently lost — popup
+effects now use the character passed at resolve time (`effect(cc)`). Verified
+by a 120-life sim (0 age-gate violations, 0 errors) + Playwright UI tests
+(sheet, talk, gift, slider drag, ask, outings, caps, teen couple → ex).
+Deferred to later phases per plan: news feed, aging/dying relatives, funerals,
+intimacy/pregnancy/adoption (18+), ex stalking/restraining orders, kid
+parenting + pressure.
+
 **Still open for later in this update**: a mute/volume toggle (there's no
 settings surface at all yet to put one on), a custom app icon/splash
 screen (still Expo's generic defaults), and a deeper visual pass beyond

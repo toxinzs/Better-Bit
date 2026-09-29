@@ -4,29 +4,6 @@ import { mother } from "./helpers";
 
 export const TEEN_EVENTS: LifeEvent[] = [
   {
-    id: "first-crush",
-    minAge: 13,
-    maxAge: 17,
-    once: true,
-    text: () => "You caught yourself thinking about someone in your class... a lot.",
-    choices: [
-      {
-        label: "Ask them out",
-        effect: (c) => {
-          const success = c.stats.looks + c.stats.happiness / 2 > 90;
-          c.stats.happiness = clamp(c.stats.happiness + (success ? 12 : -8));
-        },
-        resultText: (c) => (c.stats.happiness > 50 ? "They said yes!" : "They let you down easy."),
-      },
-      {
-        label: "Keep it to yourself",
-        effect: (c) => {
-          c.stats.happiness = clamp(c.stats.happiness - 2);
-        },
-      },
-    ],
-  },
-  {
     id: "house-party",
     minAge: 14,
     maxAge: 17,

@@ -1,5 +1,5 @@
-import React, { useRef, useState } from "react";
-import { Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useState } from "react";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../../state/gameStore";
 import Card from "../../components/Card";
@@ -7,8 +7,12 @@ import Chip from "../../components/Chip";
 import { FadeInUp } from "../../motion";
 import { PersonAvatar } from "../../components/Avatar";
 import { Character, Relationship, RelationType, RegionKey } from "../../types";
-import { MIN_AGE_CONVERSATION } from "../../engine/lifeStage";
+import PersonSheet from "../../components/PersonSheet";
+import AmountPicker from "../../components/AmountPicker";
+import { askCeiling, askChance, giveCeiling } from "../../engine/lifeEngine";
+import type { ActionKey } from "../../engine/lifeEngine";
 import { jobLine } from "../../engine/people";
+import { playSound } from "../../sound";
 import { colors, fonts, fontSize, radii, spacing } from "../../theme";
 import { tabStyles } from "./sharedStyles";
 
@@ -20,12 +24,17 @@ const RELATION_META: Record<string, { label: string; color: string }> = {
   partner: { label: "Partner", color: colors.love },
   child: { label: "Child", color: colors.smarts },
   ex: { label: "Ex", color: colors.danger },
+  classmate: { label: "Classmate", color: colors.smarts },
+  coworker: { label: "Coworker", color: colors.smarts },
+  grandchild: { label: "Grandchild", color: colors.smarts },
 };
 
 const GROUPS: { title: string; icon: keyof typeof Ionicons.glyphMap; color: string; types: RelationType[] }[] = [
   { title: "Partner", icon: "heart", color: colors.love, types: ["partner"] },
-  { title: "Family", icon: "home", color: colors.looks, types: ["mother", "father", "sibling", "child"] },
+  { title: "Family", icon: "home", color: colors.looks, types: ["mother", "father", "sibling", "child", "grandchild"] },
   { title: "Friends", icon: "happy", color: colors.happiness, types: ["friend"] },
+  { title: "Classmates", icon: "school", color: colors.smarts, types: ["classmate"] },
+  { title: "Work", icon: "briefcase", color: colors.smarts, types: ["coworker"] },
   { title: "Exes", icon: "flame", color: colors.danger, types: ["ex"] },
 ];
 
@@ -37,106 +46,133 @@ function levelColor(level: number): string {
 
 export default function PeopleTab({ onOpenThread }: { onOpenThread: (relationshipId: string) => void }) {
   const character = useGameStore((s) => s.character);
-  const spendTimeWith = useGameStore((s) => s.spendTimeWith);
-  const haveConversation = useGameStore((s) => s.haveConversation);
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const personAction = useGameStore((s) => s.personAction);
+  const pendingEvent = useGameStore((s) => s.pendingEvent);
+  const actionResultLines = useGameStore((s) => s.actionResultLines);
+  const [sheetId, setSheetId] = useState<string | null>(null);
+  const [picker, setPicker] = useState<{ kind: "giveMoney" | "askMoney"; id: string } | null>(null);
 
   if (!character) return null;
 
-  // Classmates/faculty live in the School tab's own roster instead, so they
-  // don't get lost among family/friends/exes here - see engine/school.ts.
-  const relationships = character.relationships.filter(
-    (r) => r.alive && r.type !== "classmate" && r.type !== "teacher",
-  );
+  // The school roster (classmates, teachers) is shown here too so a crush or
+  // a friend-to-be is one tap away; teachers stay in the School tab.
+  const relationships = character.relationships.filter((r) => r.alive && r.type !== "teacher");
+  const sheetRel = sheetId ? character.relationships.find((r) => r.id === sheetId && r.alive) : undefined;
+  const pickerRel = picker ? character.relationships.find((r) => r.id === picker.id && r.alive) : undefined;
 
-  const toggle = (id: string) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  // The sheet steps aside while a popup (a conversation, a result) is up and
+  // comes back, refreshed, once it's dismissed.
+  const sheetVisible = !!sheetRel && !pendingEvent && !actionResultLines && !picker;
+
+  const doAction = (key: ActionKey) => {
+    if (!sheetRel) return;
+    playSound("choice");
+    personAction(sheetRel.id, key);
   };
 
+  const teenDatingOpen = character.age >= 13 && character.age < 18 && !relationships.some((r) => r.type === "partner");
+
   return (
-    <ScrollView contentContainerStyle={tabStyles.scroll}>
-      {relationships.length === 0 && (
-        <Card style={styles.empty}>
-          <Ionicons name="people" size={24} color={colors.looks} />
-          <Text style={styles.emptyTitle}>No one in your life yet</Text>
-        </Card>
-      )}
-      {GROUPS.map((g) => {
-        const members = relationships.filter((r) => g.types.includes(r.type)).sort((a, b) => b.level - a.level);
-        if (members.length === 0) return null;
-        return (
-          <View key={g.title} style={styles.group}>
-            <View style={styles.groupHeader}>
-              <Ionicons name={g.icon} size={15} color={g.color} />
-              <Text style={styles.groupTitle}>{g.title}</Text>
-              <Text style={styles.groupCount}>{members.length}</Text>
+    <>
+      <ScrollView contentContainerStyle={tabStyles.scroll}>
+        {relationships.length === 0 && (
+          <Card style={styles.empty}>
+            <Ionicons name="people" size={24} color={colors.looks} />
+            <Text style={styles.emptyTitle}>No one in your life yet</Text>
+          </Card>
+        )}
+        {teenDatingOpen && (
+          <Card style={styles.hint}>
+            <Ionicons name="heart-circle" size={20} color={colors.love} />
+            <Text style={styles.hintText}>
+              Dating is open. Tap a classmate or friend your age and choose Ask Out - or wait, someone might ask you.
+            </Text>
+          </Card>
+        )}
+        {GROUPS.map((g) => {
+          const members = relationships.filter((r) => g.types.includes(r.type)).sort((a, b) => b.level - a.level);
+          if (members.length === 0) return null;
+          return (
+            <View key={g.title} style={styles.group}>
+              <View style={styles.groupHeader}>
+                <Ionicons name={g.icon} size={15} color={g.color} />
+                <Text style={styles.groupTitle}>{g.title}</Text>
+                <Text style={styles.groupCount}>{members.length}</Text>
+              </View>
+              {members.map((r, idx) => (
+                <FadeInUp key={r.id} delay={Math.min(idx, 8) * 50}>
+                  <PersonCard c={character} r={r} region={character.originRegion} onOpen={() => setSheetId(r.id)} />
+                </FadeInUp>
+              ))}
             </View>
-            {members.map((r, idx) => (
-              <FadeInUp key={r.id} delay={Math.min(idx, 8) * 50}>
-              <PersonCard
-                c={character}
-                r={r}
-                region={character.originRegion}
-                expanded={expandedIds.has(r.id)}
-                onToggle={() => toggle(r.id)}
-                canTalk={character.age >= MIN_AGE_CONVERSATION}
-                onSpendTime={() => spendTimeWith(r.id)}
-                onTalk={() => haveConversation(r.id)}
-                onOpenThread={() => onOpenThread(r.id)}
-              />
-              </FadeInUp>
-            ))}
-          </View>
-        );
-      })}
-    </ScrollView>
+          );
+        })}
+      </ScrollView>
+
+      {sheetVisible && sheetRel && (
+        <PersonSheet
+          character={character}
+          rel={sheetRel}
+          onClose={() => setSheetId(null)}
+          onAction={doAction}
+          onMoney={(kind) => setPicker({ kind, id: sheetRel.id })}
+          onMessages={() => {
+            setSheetId(null);
+            onOpenThread(sheetRel.id);
+          }}
+        />
+      )}
+
+      {picker && pickerRel && picker.kind === "giveMoney" && (
+        <AmountPicker
+          title={`Give ${pickerRel.name.split(" ")[0]} money`}
+          subtitle={`You have $${Math.floor(character.money).toLocaleString()}`}
+          min={5}
+          max={giveCeiling(character)}
+          confirmLabel="Give"
+          onConfirm={(amt) => {
+            setPicker(null);
+            playSound("choice");
+            personAction(pickerRel.id, "giveMoney", amt);
+          }}
+          onCancel={() => setPicker(null)}
+        />
+      )}
+      {picker && pickerRel && picker.kind === "askMoney" && (
+        <AmountPicker
+          title={`Ask ${pickerRel.name.split(" ")[0]} for money`}
+          subtitle="The more you ask, the harder it is to say yes"
+          min={10}
+          max={askCeiling(character, pickerRel)}
+          confirmLabel="Ask"
+          caption={(amt) => {
+            const p = askChance(character, pickerRel, amt);
+            return p > 0.6
+              ? { text: "Likely to say yes", color: colors.primary }
+              : p > 0.35
+                ? { text: "Could go either way", color: colors.happiness }
+                : { text: "Unlikely", color: colors.danger };
+          }}
+          onConfirm={(amt) => {
+            setPicker(null);
+            playSound("choice");
+            personAction(pickerRel.id, "askMoney", amt);
+          }}
+          onCancel={() => setPicker(null)}
+        />
+      )}
+    </>
   );
 }
 
-function PersonCard({
-  c,
-  r,
-  region,
-  expanded,
-  onToggle,
-  canTalk,
-  onSpendTime,
-  onTalk,
-  onOpenThread,
-}: {
-  c: Character;
-  r: Relationship;
-  region?: RegionKey;
-  expanded: boolean;
-  onToggle: () => void;
-  canTalk: boolean;
-  onSpendTime: () => void;
-  onTalk: () => void;
-  onOpenThread: () => void;
-}) {
+function PersonCard({ c, r, region, onOpen }: { c: Character; r: Relationship; region?: RegionKey; onOpen: () => void }) {
   const meta = RELATION_META[r.type] ?? { label: r.type, color: colors.textSecondary };
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const chevronAnim = useRef(new Animated.Value(0)).current;
-
-  const handleToggle = () => {
-    onToggle();
-    Animated.timing(chevronAnim, { toValue: expanded ? 0 : 1, duration: 180, useNativeDriver: true }).start();
-    if (!expanded) {
-      fadeAnim.setValue(0);
-      Animated.timing(fadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
-    }
-  };
-
   const lc = levelColor(r.level);
+  const ledger = r.ledger ?? 0;
 
   return (
     <Card style={styles.person}>
-      <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.personRow} onPress={handleToggle}>
+      <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.personRow} onPress={onOpen}>
         <View style={[styles.avatarWrap, { borderColor: meta.color + "88" }]}>
           <PersonAvatar name={r.name} id={r.id} type={r.type} gender={r.gender} region={region} size={46} />
         </View>
@@ -146,6 +182,7 @@ function PersonCard({
               {r.name}
             </Text>
             {r.married ? <Chip label="MARRIED" color={colors.love} /> : r.engaged ? <Chip label="ENGAGED" color={colors.love} /> : null}
+            {ledger !== 0 ? <Chip label={ledger < 0 ? "YOU OWE" : "OWES YOU"} color={ledger < 0 ? colors.danger : colors.primary} /> : null}
           </View>
           <View style={styles.metaRow}>
             <View style={styles.metaLeft}>
@@ -160,39 +197,8 @@ function PersonCard({
             <View style={[styles.fill, { width: `${Math.max(3, Math.min(100, r.level))}%`, backgroundColor: lc }]} />
           </View>
         </View>
-        <Animated.View
-          style={{ transform: [{ rotate: chevronAnim.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "180deg"] }) }] }}
-        >
-          <Ionicons name="chevron-down" size={18} color={colors.textMuted} />
-        </Animated.View>
+        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
       </TouchableOpacity>
-
-      {expanded && (
-        <Animated.View style={[styles.actions, { opacity: fadeAnim }]}>
-          {r.type === "ex" ? (
-            <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.actionBtn} onPress={onOpenThread}>
-              <Ionicons name="chatbubble-ellipses" size={15} color={colors.textPrimary} />
-              <Text style={styles.actionText}>Messages</Text>
-            </TouchableOpacity>
-          ) : (
-            <>
-              <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.actionBtn} onPress={onSpendTime}>
-                <Ionicons name="time" size={15} color={colors.textPrimary} />
-                <Text style={styles.actionText}>Spend Time</Text>
-              </TouchableOpacity>
-              {canTalk && (
-                <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.actionBtn} onPress={onTalk}>
-                  <Ionicons name="chatbox" size={15} color={colors.textPrimary} />
-                  <Text style={styles.actionText}>Talk</Text>
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.iconBtn} onPress={onOpenThread}>
-                <Ionicons name="chatbubble-ellipses" size={17} color={colors.textPrimary} />
-              </TouchableOpacity>
-            </>
-          )}
-        </Animated.View>
-      )}
     </Card>
   );
 }
@@ -207,6 +213,18 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontFamily: fonts.semiBold,
     fontSize: fontSize.base,
+  },
+  hint: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  hintText: {
+    flex: 1,
+    color: colors.textSecondary,
+    fontFamily: fonts.semiBold,
+    fontSize: fontSize.md,
+    lineHeight: 19,
   },
   group: {
     marginBottom: spacing.sm,

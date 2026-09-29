@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "1.7.1";
+export const APP_VERSION = "1.8.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,19 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "1.8.0",
+    title: "People You Can Actually Talk To",
+    highlights: [
+      "Tap anyone in People to open their profile: bond, health, personality and everything you can do with them",
+      "Talk to someone and you get a real conversation with choices - almost a hundred different scenes for parents, siblings, friends, partners, kids and more",
+      "Go out, throw a party or have a sleepover - different places for kids, teens and adults",
+      "Give money or ask for money with a slider - and what you borrow is remembered",
+      "Ten gifts to choose from that change every year and for every person; watch how they react to learn what they like",
+      "Dating opens at 13 through school: classmates can ask you out, first dates, holding hands, a first kiss, school dances - and breaking up gives you an ex at any age",
+      "Every action has a yearly limit with diminishing returns, so you can't just spam one button",
+    ],
+  },
   {
     version: "1.7.1",
     title: "Real People",

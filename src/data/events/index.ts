@@ -2,6 +2,7 @@ import { LifeEvent } from "../../types";
 import { CHILDHOOD_EVENTS } from "./childhood";
 import { TEEN_EVENTS } from "./teen";
 import { ROMANCE_EVENTS } from "./romance";
+import { TEEN_ROMANCE_EVENTS } from "./teen-romance";
 import { FAMILY_EVENTS } from "./family";
 import { HEALTH_EVENTS } from "./health";
 import { MONEY_EVENTS } from "./money";
@@ -18,6 +19,7 @@ export const EVENTS: LifeEvent[] = [
   ...CHILDHOOD_EVENTS,
   ...TEEN_EVENTS,
   ...ROMANCE_EVENTS,
+  ...TEEN_ROMANCE_EVENTS,
   ...FAMILY_EVENTS,
   ...HEALTH_EVENTS,
   ...MONEY_EVENTS,

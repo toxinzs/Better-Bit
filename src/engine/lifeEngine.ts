@@ -74,6 +74,8 @@ export {
   skipClass,
 } from "./school";
 export { attack } from "./fighting";
+export { runPersonAction, actionsFor, romanceCandidates, askCeiling, askChance, giveCeiling, romanceAllowed, bothAdults } from "./interactions";
+export type { ActionKey, ActionDef } from "./interactions";
 export { surrender } from "./surrender";
 
 export function totalNetWorth(c: Character, world: WorldState): number {
