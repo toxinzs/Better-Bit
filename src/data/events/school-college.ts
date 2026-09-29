@@ -7,11 +7,11 @@ import {
   setFlag,
   hasFlag,
   throwParty,
-  dropOutOfCollege,
-  graduateCollege,
-  changeMajor,
 } from "../../engine/school";
-import { GREEK_HOUSES, MAJORS, COLLEGES } from "../../data/school";
+import { changeMajor, dropOut as dropOutOfCollege, gainInternship } from "../../engine/higher";
+import { GREEK_HOUSES } from "../../data/school";
+import { MAJORS, majorDef } from "../../data/majors";
+import { institutionById } from "../../data/institutions";
 
 function isRushing(c: import("../../types").Character): boolean {
   return (c.flags ?? []).some((f) => f.startsWith("rushing-"));
@@ -197,7 +197,7 @@ export const SCHOOL_COLLEGE_EVENTS: LifeEvent[] = [
     minAge: 18,
     maxAge: 26,
     weight: 0.8,
-    condition: (c) => c.inCollege && (c.gpa ?? 4) < 2.5,
+    condition: (c) => c.inCollege && (c.higher?.gpa ?? c.gpa ?? 4) < 2.5,
     text: () => "You failed a class.",
     choices: [
       {
@@ -226,8 +226,8 @@ export const SCHOOL_COLLEGE_EVENTS: LifeEvent[] = [
       {
         label: "Switch majors",
         effect: (c) => {
-          const options = MAJORS.filter((m) => m !== c.currentMajor);
-          const newMajor = options[randomInt(0, options.length - 1)];
+          const options = MAJORS.filter((m) => m !== c.currentMajor && (majorDef(m)?.difficulty ?? 50) <= c.stats.smarts + 12);
+          const newMajor = options[randomInt(0, options.length - 1)] ?? MAJORS[0];
           changeMajor(c, newMajor);
         },
       },
@@ -269,6 +269,10 @@ export const SCHOOL_COLLEGE_EVENTS: LifeEvent[] = [
         label: "Buckle down",
         effect: (c) => {
           bumpGpa(c, 0.4);
+          if (c.higher) {
+            c.higher.gpa = c.gpa ?? c.higher.gpa;
+            c.higher.probation = 0;
+          }
           c.flags = (c.flags ?? []).filter((f) => f !== "on-probation");
         },
       },
@@ -276,18 +280,8 @@ export const SCHOOL_COLLEGE_EVENTS: LifeEvent[] = [
         label: "It keeps slipping",
         effect: (c) => {
           bumpGpa(c, -0.2);
-          const college = COLLEGES.find((cl) => cl.name === c.currentSchool);
-          if (college && (c.gpa ?? 4) < college.probationGpa - 0.4) {
-            c.inCollege = false;
-            c.educationStage = "graduated";
-            c.currentSchool = undefined;
-            c.currentMajor = undefined;
-            c.currentOnline = undefined;
-            c.currentHousing = undefined;
-            c.stats.happiness = clamp(c.stats.happiness - 20);
-            setFlag(c, "expelled");
-            c.yearLog.push("Your grades finally caught up with you. You were expelled.");
-          }
+          if (c.higher) c.higher.gpa = c.gpa ?? c.higher.gpa;
+          c.stats.happiness = clamp(c.stats.happiness - 6);
         },
       },
     ],
@@ -329,6 +323,7 @@ export const SCHOOL_COLLEGE_EVENTS: LifeEvent[] = [
           if (got_it) {
             c.money += 2000;
             setFlag(c, "had-internship");
+            gainInternship(c);
             c.stats.happiness = clamp(c.stats.happiness + 10);
           } else {
             c.stats.happiness = clamp(c.stats.happiness - 3);
@@ -340,23 +335,5 @@ export const SCHOOL_COLLEGE_EVENTS: LifeEvent[] = [
         effect: () => {},
       },
     ],
-  },
-  {
-    id: "graduation-college",
-    minAge: 18,
-    maxAge: 60,
-    weight: 3,
-    // Deliberately not `once: true` - with multiple degrees now real, this
-    // needs to be able to fire again for a second enrollment later in
-    // life, and c.inCollege turning false the moment it fires is what
-    // actually stops it from repeating within the same enrollment.
-    // Gated on real years enrolled (a ~4-year degree), not raw age - so a
-    // character going back for a second degree at 30 doesn't "graduate"
-    // the moment they walk in, and freshman year gets to actually happen
-    // before the rest of the college pool gets crowded out by this firing
-    // (a real pacing bug this update's own verification caught).
-    condition: (c) => c.inCollege && c.collegeStartAge != null && c.age - c.collegeStartAge >= 3,
-    text: () => "Graduation day.",
-    autoEffect: (c) => graduateCollege(c),
   },
 ];

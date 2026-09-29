@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "2.2.0";
+export const APP_VERSION = "2.3.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,22 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "2.3.0",
+    title: "Beyond High School",
+    highlights: [
+      "Getting into university is a real process: sit your country's entrance exam (SAT, A-levels, JAMB, Japan's Common Test, ENEM), take a prep course, and ask teachers for recommendation letters",
+      "38 institutions across the five countries - community colleges, state and private universities, elite schools, online universities and trade schools - each with its own admissions bar, cost, prestige and campus",
+      "Apply to up to five with a major from 32 (each with its own difficulty, pay and job field). Every school shows Safety / Match / Reach odds for you, and results come with scholarships, need-based grants and what your family will chip in",
+      "Pay for it yourself: your cash first, then a student loan that builds interest while you study and starts repayment when you leave",
+      "Real university years: grades depend on the major, the school's prestige and how you study; make the dean's list; get put on probation - and dismissed. Change major, transfer schools, choose where to live, or drop out",
+      "Associate degrees carry two years of credit into a university. Graduating gives a degree with honours (cum laude, First-class...) and a graduation to mark",
+      "Trades and apprenticeships: certificates in electrical, plumbing, carpentry, welding, culinary and more - and paid apprenticeships that pay you to learn",
+      "Grad school: master's, MBA, law, medicine, pharmacy, teaching and PhD, with real entry requirements",
+      "What you studied matters at work: Doctor, Lawyer, Pharmacist, Nurse and Teacher now need the right degree; a matching degree, a prestigious school, a good GPA and internships help at interviews and lift your starting salary",
+      "New campus events: career fairs, research offers, roommate wars, tuition hikes, scholarship reviews, thesis crunch, return offers",
+    ],
+  },
   {
     version: "2.2.0",
     title: "Growing Up",

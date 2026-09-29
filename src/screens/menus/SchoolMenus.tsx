@@ -7,7 +7,6 @@ import MenuScreen, { MenuRow } from "../../nav/MenuScreen";
 import Card from "../../components/Card";
 import Chip from "../../components/Chip";
 import Button from "../../components/Button";
-import SchoolTab from "../tabs/SchoolTab";
 import { CLUBS } from "../../data/school";
 import { CLIQUE_INFO, SCHOOL_KINDS, eduSystem, gradeLabel, stageLabel, subjectsFor } from "../../data/education";
 import { getRegion } from "../../data/regions";
@@ -61,7 +60,7 @@ export function SchoolMenu() {
             <MenuRow icon="business" color={colors.primary} title="My school" summary={c.diploma === "none" ? "No diploma - GED available" : "Finished school"} delay={80} onPress={() => push("myschool")} />
           )}
           {(c.age >= 16 || c.inCollege) && (
-            <MenuRow icon="school" color={colors.smarts} title="College & beyond" summary={c.inCollege ? `${c.currentSchool} · ${c.currentMajor}` : (c.degrees?.length ?? 0) > 0 ? `${c.degrees![0].major}` : "Apply and enrol"} delay={240} onPress={() => push("college")} />
+            <MenuRow icon="school" color={colors.smarts} title="College & beyond" summary={c.higher ? `${c.higher.major} · ${c.higher.institution}` : (c.degrees?.length ?? 0) > 0 ? `${c.degrees![c.degrees!.length - 1].major}` : "Exams, applications, trades"} delay={240} onPress={() => push("college")} />
           )}
         </>
       )}
@@ -446,16 +445,6 @@ export function TeachersMenu() {
           </View>
         </Card>
       ))}
-    </MenuScreen>
-  );
-}
-
-// ---------------------------------------------------------------- college (still the older screen)
-
-export function CollegeMenu() {
-  return (
-    <MenuScreen title="College & beyond" icon="school" color={colors.smarts} scroll={false}>
-      <SchoolTab />
     </MenuScreen>
   );
 }

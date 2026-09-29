@@ -96,6 +96,15 @@ export function tickDebt(c: Character): void {
         const utilization = loan.limit ? loan.balance / loan.limit : 0;
         scoreDelta += utilization > 0.7 ? -3 : utilization > 0.3 ? 0 : 2;
       }
+    } else if (loan.kind === "student") {
+      // interest builds the whole time; payments wait until you've left university
+      loan.balance += Math.round(loan.balance * loan.apr);
+      if (!loan.deferred) {
+        const payment = Math.min(loan.minPayment, loan.balance);
+        c.money -= payment;
+        loan.balance -= payment;
+        scoreDelta += 2;
+      }
     } else {
       const payment = Math.min(loan.minPayment, loan.balance);
       c.money -= payment;

@@ -4,6 +4,8 @@ import { CLASSES } from "../data/traits";
 import { resetStatNotes } from "./stats";
 import { tickWork } from "./jobs";
 import { ensureSchool, tickSchool } from "./education";
+import { ensureHigher, tickHigher } from "./higher";
+export { changeMajor, dropOutOfCollege } from "./higher";
 import { attendanceFactor, causeFromConditions, conditionMortality, tickHealth, tickWellbeing } from "./health";
 import { classFamilyBlurb, familyAllowance, rollClass, rollPersonality, rollQuirks, rollTalents, tickCharacter } from "./character";
 import { clamp, randomInt, pickWeighted } from "./util";
@@ -40,7 +42,7 @@ import {
   tryConception,
   takeVacation,
 } from "./activities";
-import { onEnterSchoolStage, tickCollegeCosts } from "./school";
+import { onEnterSchoolStage } from "./school";
 
 export { getLifeStage } from "./lifeStage";
 export type { LifeStage } from "./lifeStage";
@@ -79,9 +81,6 @@ export {
   hasFlag,
   joinClub,
   facultyAction,
-  enrollInCollege,
-  changeMajor,
-  dropOutOfCollege,
   seduceFaculty,
   throwParty,
   skipClass,
@@ -243,6 +242,7 @@ export type AgeUpResult = {
 export function ageUp(c: Character, world: WorldState): AgeUpResult {
   ensurePeople(c);
   ensureSchool(c);
+  ensureHigher(c);
   tickWorldState(world);
   tickMarket(world);
   tickRetirementGrowth(c, world);
@@ -331,7 +331,7 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
       onEnterSchoolStage(c, stage);
     }
   }
-  tickCollegeCosts(c);
+  tickHigher(c);
 
   // income
   if (c.job) {

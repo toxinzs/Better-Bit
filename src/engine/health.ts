@@ -3,6 +3,7 @@ import { finishDecision, queueDecision, registerDecision } from "./decisionQueue
 import { getRegion } from "../data/regions";
 import { CONDITIONS, ConditionDef, conditionDef } from "./mortality";
 import { hasActiveCondition } from "./worldState";
+import { majorDef } from "../data/majors";
 import { changeStat } from "./stats";
 import { traitMod } from "./character";
 import { clamp, randomInt } from "./util";
@@ -274,6 +275,7 @@ export function tickWellbeing(c: Character, world: WorldState): void {
   // a job is pressure, and a high-paying one more so
   if (c.job) t += 26 + Math.min(10, c.job.salary / 15000);
   if (c.partTime) t += (c.partTime.hours ?? 12) / 3; // hours add up
+  if (c.higher) t += 12 + (majorDef(c.higher.major.replace(/^(Master's|PhD) in /, ""))?.stress ?? 3);
   if (inSchool && c.studyMode === "hard") t += 8;
   if (inSchool && c.studyMode === "slack") t -= 5;
   if (c.bullying?.role === "victim") t += 12;

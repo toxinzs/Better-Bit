@@ -19,10 +19,12 @@ import { nextDecisionEvent } from "./src/engine/decisionQueue";
 import { tickExes, craziness } from "./src/engine/exes";
 import { listingsFor, requirements, preparedness } from "./src/engine/jobs";
 import { QUESTIONS } from "./src/data/interviews";
+import { INSTITUTIONS } from "./src/data/institutions";
+import { MAJORS } from "./src/data/majors";
 
 if (typeof window !== "undefined") {
   (window as any).__store = useGameStore;
-  (window as any).__engine = { actionsFor, romanceCandidates, runPersonAction, killRelative, nextDecisionEvent, tickExes, craziness, listingsFor, requirements, preparedness, QUESTIONS };
+  (window as any).__engine = { actionsFor, romanceCandidates, runPersonAction, killRelative, nextDecisionEvent, tickExes, craziness, listingsFor, requirements, preparedness, QUESTIONS, institutions: (r: string) => INSTITUTIONS.filter((i) => i.region === r), majors: MAJORS };
 }
 
 export default function App() {

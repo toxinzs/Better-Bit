@@ -126,7 +126,7 @@ export function ProfileMenu() {
         <Card>
           <Text style={styles.heading}>Degrees</Text>
           {character.degrees!.map((d, i) => (
-            <Row key={i} label={d.major} value={d.school} last={i === character.degrees!.length - 1} />
+            <Row key={i} label={d.major} value={`${d.school}${d.honors ? ` · ${d.honors}` : ""}`} last={i === character.degrees!.length - 1} />
           ))}
         </Card>
       )}

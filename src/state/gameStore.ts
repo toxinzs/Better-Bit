@@ -43,7 +43,6 @@ import {
   takeVacation as engineTakeVacation,
   joinClub as engineJoinClub,
   facultyAction as engineFacultyAction,
-  enrollInCollege as engineEnrollInCollege,
   changeMajor as engineChangeMajor,
   dropOutOfCollege as engineDropOutOfCollege,
   seduceFaculty as engineSeduceFaculty,
@@ -56,6 +55,15 @@ import {
 } from "../engine/lifeEngine";
 
 import { ensurePeople } from "../engine/people";
+import {
+  applyToGrad as engineApplyToGrad,
+  applyToUniversities as engineApplyToUniversities,
+  askForLetter as engineAskForLetter,
+  setHousing as engineSetHousing,
+  sitExam as engineSitExam,
+  startTrade as engineStartTrade,
+  transferTo as engineTransferTo,
+} from "../engine/higher";
 import {
   askTeacherForHelp as engineAskTeacherForHelp,
   changeSchool as engineChangeSchool,
@@ -135,9 +143,15 @@ type GameState = {
   takeVacation: (vacation: VacationKey) => void;
   joinClub: (club: ClubKey) => void;
   facultyAction: (relationshipId: string, kind: "suckup" | "insult" | "report") => void;
-  enrollInCollege: (school: string, major: string, online: boolean, housing: HousingListing["key"]) => void;
   changeMajor: (major: string) => void;
   dropOutOfCollege: () => void;
+  sitExam: (prep: boolean) => void;
+  askForLetter: (teacherId: string) => void;
+  applyToUniversities: (ids: string[], major: string) => void;
+  applyToGrad: (ids: string[], programme: string) => void;
+  startTrade: (programme: string) => void;
+  setHousing: (key: "dorm" | "greek" | "apartment" | "commute") => void;
+  transferTo: (instId: string) => void;
   seduceFaculty: (relationshipId: string) => void;
   attack: (relationshipId: string) => void;
   surrender: () => void;
@@ -369,10 +383,15 @@ export const useGameStore = create<GameState>((set, get) => {
     takeVacation: (vacation) => applyToCharacter((c) => engineTakeVacation(c, vacation)),
     joinClub: (club) => applyToCharacter((c) => engineJoinClub(c, club)),
     facultyAction: (relationshipId, kind) => applyToCharacter((c) => engineFacultyAction(c, relationshipId, kind)),
-    enrollInCollege: (school, major, online, housing) =>
-      applyToCharacter((c) => engineEnrollInCollege(c, school, major, online, housing)),
     changeMajor: (major) => applyToCharacter((c) => engineChangeMajor(c, major)),
     dropOutOfCollege: () => applyToCharacter((c) => engineDropOutOfCollege(c)),
+    sitExam: (prep) => applyToCharacter((c) => engineSitExam(c, prep)),
+    askForLetter: (id) => applyToCharacter((c) => engineAskForLetter(c, id)),
+    applyToUniversities: (ids, major) => applyChained((c) => engineApplyToUniversities(c, ids, major)),
+    applyToGrad: (ids, prog) => applyChained((c) => engineApplyToGrad(c, ids, prog)),
+    startTrade: (key) => applyToCharacter((c) => engineStartTrade(c, key)),
+    setHousing: (key) => applyToCharacter((c) => engineSetHousing(c, key)),
+    transferTo: (id) => applyToCharacter((c) => engineTransferTo(c, id)),
     seduceFaculty: (relationshipId) => applyToCharacter((c) => engineSeduceFaculty(c, relationshipId)),
 
     // hookup/commitCrime/surrender/attack can all chain a real multi-step

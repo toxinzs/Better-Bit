@@ -144,6 +144,7 @@ export type Job = {
   field?: string; // "Retail & Service", "Healthcare"...
   hours?: number; // per week
   minSkill?: { skill: SkillKey; level: number };
+  needsMajor?: string[]; // a specific degree (Medicine, Law...)
   day?: string; // "a typical day"
   growth?: string; // where it leads
   company?: Company; // set once you actually work somewhere
@@ -166,6 +167,7 @@ export type LoanKind = "personal" | "creditCard" | "student";
 export type Loan = {
   id: string;
   kind: LoanKind;
+  deferred?: boolean; // student loans: no payments while you're enrolled
   name: string;
   balance: number;
   apr: number;
@@ -187,11 +189,40 @@ export type Retirement = {
 export type SkillKey = "music" | "singing" | "art" | "martialArts" | "acting" | "athletics" | "debate" | "coding" | "leadership";
 export type Skills = Partial<Record<SkillKey, number>>;
 
+export type DegreeLevel = "certificate" | "associate" | "bachelor" | "master" | "professional" | "doctorate";
+
 export type Degree = {
   school: string;
   major: string;
   online: boolean;
+  // ---- v2.3 (all optional so older degrees still load) ----
+  level?: DegreeLevel;
+  gpa?: number;
+  honors?: string;
+  age?: number; // when you finished
 };
+
+// A programme you're enrolled in right now (university, grad school, trade school).
+export type Enrollment = {
+  instId: string;
+  institution: string;
+  major: string; // the major, or the programme for grad/trade
+  level: DegreeLevel;
+  online: boolean;
+  housing: "dorm" | "greek" | "apartment" | "commute";
+  startAge: number;
+  years: number; // length of the programme
+  done: number; // years completed
+  gpa: number; // running, 0-4
+  tuition: number; // sticker price per year
+  scholarship: number; // per year
+  family: number; // what your family covers per year
+  wage: number; // apprenticeships pay you
+  probation: number; // consecutive years on probation
+  deans: number; // dean's list years
+};
+
+export type ExamResult = { age: number; score: number; name: string };
 
 export type CrimeTier = "petty" | "moderate" | "serious";
 
@@ -350,6 +381,13 @@ export type Character = {
   currentMajor?: string;
   currentOnline?: boolean;
   currentHousing?: "dorm" | "greek" | "apartment" | "commute";
+  // ---- higher education (v2.3) ----
+  higher?: Enrollment | null;
+  exams?: ExamResult[];
+  appliedAge?: number; // last year you sent college applications
+  prepped?: number; // age you last did test prep
+  internships?: number;
+  recLetters?: string[]; // relationship ids of teachers who agreed to write for you
   collegeStartAge?: number;
   degrees?: Degree[];
   flags?: string[];

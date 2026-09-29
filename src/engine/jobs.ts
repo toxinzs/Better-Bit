@@ -13,6 +13,7 @@ import { refreshCoworkers } from "./people";
 import { traitMod } from "./character";
 import { attendanceFactor, gainFitness } from "./health";
 import { hasDiploma } from "./education";
+import { degreePrep, degreeSalaryFactor, meetsMajorNeed } from "./degrees";
 import { clamp, randomInt } from "./util";
 
 // Finding, applying for and doing work: three separate kinds (part-time,
@@ -83,7 +84,8 @@ export function requirements(c: Character, job: Job): Requirement[] {
   reqs.push({ label: `Age ${minAge}+`, met: c.age >= minAge, note: job.kind === "fulltime" ? `Full-time work starts at ${wa.fulltime} here` : `Part-time work starts at ${wa.parttime} here` });
   if (job.minSmarts) reqs.push({ label: `Smarts ${job.minSmarts}+`, met: c.stats.smarts >= job.minSmarts, note: `Yours: ${Math.round(c.stats.smarts)}` });
   if (job.kind === "fulltime" && ((job.minSmarts ?? 0) >= 45 || job.requiresCollege)) reqs.push({ label: "High school diploma or equivalent", met: hasDiploma(c), note: "Finish school or pass the GED" });
-  if (job.requiresCollege) reqs.push({ label: "College degree", met: c.hasCollegeDegree });
+  if (job.needsMajor) reqs.push({ label: `A degree in ${job.needsMajor.join(" or ")}`, met: meetsMajorNeed(c, job), note: "Your qualifications don't cover it" });
+  else if (job.requiresCollege) reqs.push({ label: "College degree", met: c.hasCollegeDegree });
   if (job.requiresCleanRecord) reqs.push({ label: "Clean criminal record", met: !c.criminalRecord });
   if (job.minSkill) {
     const have = c.skills?.[job.minSkill.skill] ?? 0;
@@ -195,11 +197,12 @@ export function preparedness(c: Character, job: Job): number {
   let p = (c.stats.smarts - 50) / 25 + (c.stats.looks - 50) / 30;
   p += ((c.talents?.verbal ?? 50) - 50) / 40 + ((c.talents?.social ?? 50) - 50) / 50;
   p += Math.min(3, (c.workYears ?? 0) / 2);
-  if (c.hasCollegeDegree) p += 1;
+  p += degreePrep(c, job);
   if (job.minSkill) p += ((c.skills?.[job.minSkill.skill] ?? 0) - job.minSkill.level) / 20;
   if ((c.sanity ?? 75) < 40) p -= 1;
   if (c.stats.health < 35) p -= 1;
   if ((c.stress ?? 0) >= 75) p -= 0.5;
+  if (c.flags?.includes("return-offer")) p += 1.5;
   if (job.kind === "parttime" && (c.gigRep ?? 0) >= 50) p += 0.5;
   return p;
 }
@@ -230,7 +233,8 @@ export function acceptJob(c: Character, listing: Listing, salary: number): void 
 function offerEvent(c: Character, world: WorldState, listing: Listing, margin: number, onDone: (cc: Character) => void): LifeEvent {
   const job = listing.job;
   const co = job.company!;
-  const gross = effectiveSalary(job, world, c.originRegion);
+  // what you studied, and where, shows up in the offer
+  const gross = Math.round(effectiveSalary(job, world, c.originRegion) * (job.kind === "fulltime" ? degreeSalaryFactor(c, job) : 1));
   return {
     id: `offer-${listing.key}`,
     minAge: 0,

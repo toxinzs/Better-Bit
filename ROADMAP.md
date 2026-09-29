@@ -101,11 +101,20 @@ the planning notes; each release below is shippable on its own.
   Childhood 0-12: ~32 new events (milestones at 0-4, birthdays, camps, screen time,
   lemonade stand, road trips, presents, sibling forts...) plus chores as a gig from 6.
   Balance pass: childhood happiness and smarts no longer sit near their maximum.
-- **v2.3 "Beyond High School" (next):** admissions (SAT/ACT, GCSE/A-level + UCAS, WAEC/
-  JAMB, entrance exams, ENEM), applications with recommendation letters, scholarships
-  and aid, student loans, 30+ colleges and ~30 majors with real effects, trade school
-  and apprenticeships, grad/professional school, and the education-to-career link. The
-  college screen is still the pre-2.0 one (wrapped as "College & beyond").
+- **v2.3 "Beyond High School" (done).** Higher education rebuilt (`engine/higher.ts`,
+  `data/institutions.ts`, `data/majors.ts`, `data/admissions.ts`, `engine/degrees.ts`):
+  a per-country entrance exam with prep courses and recommendation letters; 38
+  institutions (community, state, private, elite, tech, online, trade) with bars,
+  fees and prestige; 32 majors with difficulty, talent, pay and job field; an
+  application flow with Safety/Match/Reach odds, merit/need/athletic/arts aid and
+  family contributions; funding by cash then a deferred-interest student loan;
+  yearly grades, dean's list, probation and dismissal; associate degrees that
+  transfer, changing major, transferring, housing, dropping out; honours on
+  graduation; trade certificates and paid apprenticeships; grad school (master's,
+  MBA, law, medicine, pharmacy, teaching, PhD). Jobs read the result: Doctor/Lawyer/
+  Pharmacist/Nurse/Teacher need the right degree, a matching degree/prestige/GPA/
+  internships help at interview and on pay. ~14 new campus events; the legacy
+  college screen and flat college list are gone.
 - **v2.4 "The World":** 12 regions / ~50 cities, renting/owning/moving, cost of living.
 - **v2.5 "Across Borders":** emigration, immigration, citizenship, visas, travel.
 - **v2.6 "Working Life & Money":** career ladders, performance, promotions, firing,

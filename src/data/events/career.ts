@@ -2,10 +2,7 @@ import { LifeEvent } from "../../types";
 import { clamp } from "../../engine/util";
 import { hasActiveCondition } from "../../engine/worldState";
 import { randomInt } from "../../engine/util";
-import { availableColleges, MAJORS } from "../school";
-import { enrollInCollege } from "../../engine/school";
-
-let collegeResult = ""; // read back by resultText after effect() runs
+import { quickApply, tradePickerEvent } from "../../engine/higher";
 
 export const CAREER_EVENTS: LifeEvent[] = [
   // What comes after high school. Enrollment itself is the real thing in
@@ -17,32 +14,25 @@ export const CAREER_EVENTS: LifeEvent[] = [
     maxAge: 20,
     weight: 30,
     once: true,
-    condition: (c) => !c.inCollege && !c.hasCollegeDegree && (c.educationStage === "graduated" || c.educationStage === "high"),
+    condition: (c) => !c.higher && !c.hasCollegeDegree && (c.educationStage === "graduated" || c.educationStage === "high") && c.diploma !== "none",
     text: (c) => `You finished school with a ${(c.gpa ?? 3).toFixed(2)} GPA. What now?`,
     choices: [
       {
-        label: "Go to college",
-        sublabel: "The best school your grades allow",
-        effect: (c) => {
-          const options = availableColleges(c.gpa ?? 0);
-          const affordable = options.filter((o) => o.tier !== "ivy" || c.stats.smarts >= 70);
-          const pick = affordable[affordable.length - 1] ?? options[options.length - 1];
-          if (!pick) {
-            c.stats.happiness = clamp(c.stats.happiness - 10);
-            collegeResult = "Your grades weren't enough for any school that would take you. It stings.";
-            return;
-          }
-          enrollInCollege(c, pick.name, MAJORS[randomInt(0, MAJORS.length - 1)], false, pick.tier === "community" ? "commute" : "dorm");
-          collegeResult = `You got in to ${pick.name}. You can change your major any time from the School menu.`;
-        },
-        resultText: () => collegeResult,
+        label: "Apply to university",
+        sublabel: "We'll pick a sensible list - or choose your own in College & beyond",
+        effect: (c) => quickApply(c),
+      },
+      {
+        label: "Learn a trade",
+        sublabel: "Certificates and paid apprenticeships",
+        effect: (c) => tradePickerEvent(c),
       },
       {
         label: "Go straight to work",
         effect: (c) => {
           c.educationStage = "graduated";
         },
-        resultText: () => "You're joining the workforce. Check the Career menu for openings.",
+        resultText: () => "You're joining the workforce. Check Find Work for openings.",
       },
       {
         label: "Take a gap year",

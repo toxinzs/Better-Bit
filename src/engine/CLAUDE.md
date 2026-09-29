@@ -76,7 +76,7 @@ the year, so `changeStat` reasons only ever describe the current year) →
 (personality/quirks/talents, `engine/character.ts`) → `tickWellbeing`
 (hidden stress + fitness and what they do) → `tickHealth` (conditions
 start/clear, premiums; `engine/health.ts`) → family pocket money → relatives/
-kids/exes → education → income (pay is scaled by `attendanceFactor`, so
+kids/exes → education → `tickSchool` (K-12 report card) → `tickHigher` (university grades, fees, student loan, graduation) → income (pay is scaled by `attendanceFactor`, so
 poor health costs money) → `tickWork` (part-time pay, experience, resets the
 yearly application/gig counters; `engine/jobs.ts`) → `tickAssets`/`tickDebt`
 → death roll (death odds are multiplied by `conditionMortality`). New

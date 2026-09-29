@@ -3,7 +3,6 @@ import { clamp, randomInt } from "./util";
 import { SKILL_TALENT, talentMult } from "./character";
 import { randomLastName } from "../data/names";
 import { addPerson, randomGender, uid } from "./people";
-import { COLLEGES, COLLEGE_HOUSING, HousingListing } from "../data/school";
 import { awardDiploma, enterSchool, misbehave, registerRosterReset } from "./education";
 export { joinClub } from "./education";
 
@@ -166,92 +165,6 @@ export function facultyAction(c: Character, relationshipId: string, kind: "sucku
   });
   setFlag(c, "reported-a-classmate");
   c.yearLog.push(`You reported ${target.name} to ${teacher.name}. Word got around.`);
-}
-
-// ---------- college ----------
-
-export function enrollInCollege(
-  c: Character,
-  school: string,
-  major: string,
-  online: boolean,
-  housing: HousingListing["key"],
-): void {
-  const listing = COLLEGES.find((cl) => cl.name === school);
-  if (!listing) return;
-  if ((c.gpa ?? 0) < listing.minGpa) {
-    c.yearLog.push(`Your GPA isn't high enough for ${school}.`);
-    return;
-  }
-  c.inCollege = true;
-  c.currentSchool = school;
-  c.currentMajor = major;
-  c.currentOnline = online;
-  c.currentHousing = online ? "commute" : housing;
-  c.collegeStartAge = c.age;
-  c.educationStage = "college";
-  onEnterSchoolStage(c, "college");
-  c.yearLog.push(`You enrolled at ${school}, majoring in ${major}${online ? " (online)" : ""}.`);
-}
-
-export function changeMajor(c: Character, major: string): void {
-  if (!c.inCollege) return;
-  c.currentMajor = major;
-  c.money = Math.max(0, c.money - 500);
-  c.yearLog.push(`You changed your major to ${major}.`);
-}
-
-export function dropOutOfCollege(c: Character): void {
-  if (!c.inCollege) return;
-  c.inCollege = false;
-  c.educationStage = "graduated";
-  c.currentSchool = undefined;
-  c.currentMajor = undefined;
-  c.currentOnline = undefined;
-  c.currentHousing = undefined;
-  c.collegeStartAge = undefined;
-  c.stats.happiness = clamp(c.stats.happiness - 10);
-  c.yearLog.push("You dropped out. No degree from this one.");
-  onEnterSchoolStage(c, "graduated");
-}
-
-export function graduateCollege(c: Character): void {
-  if (!c.inCollege || !c.currentSchool || !c.currentMajor) return;
-  const degrees = c.degrees ?? [];
-  degrees.push({ school: c.currentSchool, major: c.currentMajor, online: c.currentOnline ?? false });
-  c.degrees = degrees;
-  c.hasCollegeDegree = true;
-  c.inCollege = false;
-  c.educationStage = "graduated";
-  c.currentSchool = undefined;
-  c.currentMajor = undefined;
-  c.currentOnline = undefined;
-  c.currentHousing = undefined;
-  c.collegeStartAge = undefined;
-  c.stats.happiness = clamp(c.stats.happiness + 20);
-  c.yearLog.push("You graduated!");
-  onEnterSchoolStage(c, "graduated");
-}
-
-// Called from ageUp() every year c.inCollege is true - real recurring
-// tuition + housing cost, same "no bankruptcy system, so overspending has a
-// real visible consequence" precedent the mortgage/car-upkeep ticks already
-// set (see engine/CLAUDE.md). Also the entry point into academic
-// probation: falls below the school's real probation bar, gets flagged.
-export function tickCollegeCosts(c: Character): void {
-  if (!c.inCollege || !c.currentSchool) return;
-  const college = COLLEGES.find((cl) => cl.name === c.currentSchool);
-  if (!college) return;
-  const housing = COLLEGE_HOUSING.find((h) => h.key === c.currentHousing);
-  const tuition = c.currentOnline ? Math.round(college.cost * 0.6) : college.cost;
-  const housingCost = c.currentOnline ? 0 : housing?.costPerYear ?? 0;
-  const total = tuition + housingCost;
-  c.money -= total;
-  c.yearLog.push(`Tuition${housingCost > 0 ? " and housing" : ""} cost you $${total.toLocaleString()} this year.`);
-
-  if ((c.gpa ?? 4) < college.probationGpa) {
-    setFlag(c, "on-probation");
-  }
 }
 
 // ---------- dual entry-point actions: a button on SchoolTab AND something
