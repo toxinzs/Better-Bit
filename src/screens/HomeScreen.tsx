@@ -12,10 +12,12 @@ import GradientBg from "../components/GradientBg";
 import StatStrip from "../components/StatStrip";
 import ThemePicker from "../components/ThemePicker";
 import LifeTab from "./tabs/LifeTab";
-import PeopleTab from "./tabs/PeopleTab";
-import AssetsTab from "./tabs/AssetsTab";
-import WorkTab from "./tabs/WorkTab";
-import DoTab from "./tabs/DoTab";
+import PeopleHub from "./menus/PeopleHub";
+import { ActivitiesHub } from "./menus/ActivityMenus";
+import { AssetsHub } from "./menus/AssetMenus";
+import { WorkHub } from "./menus/WorkHub";
+import MenuHost from "../nav/MenuHost";
+import { useNav } from "../nav/navStore";
 import { getRegion } from "../data/regions";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
 import { playSound } from "../sound";
@@ -60,7 +62,11 @@ export default function HomeScreen() {
   const ageUp = useGameStore((s) => s.ageUp);
   const chooseEventOption = useGameStore((s) => s.chooseEventOption);
   const [tab, setTab] = useState<Tab>("life");
-  const [viewingThreadId, setViewingThreadId] = useState<string | null>(null);
+  const viewingThreadId = useNav((s) => s.thread);
+  const setViewingThreadId = useNav((s) => s.setThread);
+  const stack = useNav((s) => s.stack);
+  const push = useNav((s) => s.push);
+  const resetNav = useNav((s) => s.reset);
   const [showThemes, setShowThemes] = useState(false);
   const [confetti, setConfetti] = useState(0);
   const [milestone, setMilestone] = useState<string | null>(null);
@@ -74,7 +80,7 @@ export default function HomeScreen() {
       Animated.timing(fadeAnim, { toValue: 1, duration: 260, useNativeDriver: true }),
       Animated.spring(slideAnim, { toValue: 1, friction: 9, tension: 70, useNativeDriver: true }),
     ]).start();
-  }, [tab, fadeAnim, slideAnim]);
+  }, [tab, stack.length, fadeAnim, slideAnim]);
 
   const ageScale = useRef(new Animated.Value(1)).current;
   const prevAge = useRef(character?.age);
@@ -101,6 +107,9 @@ export default function HomeScreen() {
     return () => clearTimeout(t);
   }, [milestone]);
 
+  // a new life (or a game over) shouldn't inherit the old menu stack
+  useEffect(() => () => useNav.setState({ stack: [], thread: null }), []);
+
   const ageBtnScale = useRef(new Animated.Value(1)).current;
   const ageBtnPressIn = () => Animated.spring(ageBtnScale, { toValue: 0.96, friction: 5, useNativeDriver: true }).start();
   const ageBtnPressOut = () => Animated.spring(ageBtnScale, { toValue: 1, friction: 4, useNativeDriver: true }).start();
@@ -126,12 +135,12 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container}>
       <GradientBg id="homeHeader" from={colors.gradHeader} to={colors.surface} radius={0} vertical style={styles.header}>
         <View style={styles.identityRow}>
-          <View style={styles.avatarRing}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Open profile" activeOpacity={0.8} style={styles.avatarRing} onPress={() => push("profile")}>
             <Pop trigger={character.age} strength={1.18}>
               <Avatar character={character} size={50} mood={moodFor(character.stats.happiness)} />
             </Pop>
-          </View>
-          <View style={styles.identityText}>
+          </TouchableOpacity>
+          <TouchableOpacity accessibilityRole="button" activeOpacity={0.8} style={styles.identityText} onPress={() => push("profile")}>
             <Text style={styles.name} numberOfLines={1}>
               {character.firstName} {character.lastName}
             </Text>
@@ -146,7 +155,7 @@ export default function HomeScreen() {
               </Text>
             </View>
             <Text style={styles.regionText}>{region.label}</Text>
-          </View>
+          </TouchableOpacity>
           <View style={styles.moneyPill}>
             <Ionicons name="cash" size={14} color={colors.primary} />
             <CountUp value={character.money} style={styles.moneyText} />
@@ -161,7 +170,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
       </GradientBg>
-      <StatStrip stats={character.stats} />
+      <StatStrip stats={character.stats} onPressStat={(stat) => push("statDetail", { stat })} />
 
       <Animated.View
         style={[
@@ -169,11 +178,17 @@ export default function HomeScreen() {
           { opacity: fadeAnim, transform: [{ translateY: slideAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }] },
         ]}
       >
-        {tab === "life" && <LifeTab />}
-        {tab === "do" && <DoTab />}
-        {tab === "people" && <PeopleTab onOpenThread={setViewingThreadId} />}
-        {tab === "work" && <WorkTab initial={character.inCollege || character.age < 18 ? "school" : "job"} />}
-        {tab === "money" && <AssetsTab />}
+        {stack.length > 0 ? (
+          <MenuHost route={stack[stack.length - 1]} />
+        ) : (
+          <>
+            {tab === "life" && <LifeTab />}
+            {tab === "do" && <ActivitiesHub />}
+            {tab === "people" && <PeopleHub />}
+            {tab === "work" && <WorkHub />}
+            {tab === "money" && <AssetsHub />}
+          </>
+        )}
       </Animated.View>
 
       <View style={styles.bottomArea}>
@@ -194,7 +209,11 @@ export default function HomeScreen() {
         </Pressable>
         <View style={styles.tabBar}>
           {TABS.map((t) => (
-            <TabButton key={t.key} tab={t} active={tab === t.key} activeColor={activeTab.color} onPress={() => setTab(t.key)} />
+            <TabButton key={t.key} tab={t} active={tab === t.key} activeColor={activeTab.color} onPress={() => {
+              resetNav();
+              setTab(t.key);
+            }}
+            />
           ))}
         </View>
       </View>

@@ -223,6 +223,11 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
     (c.lifeLog ??= []).push({ age: c.age, lines: c.yearLog, news: c.yearNews && c.yearNews.length > 0 ? c.yearNews : undefined });
   }
 
+  // remember how the four stats stood as this year closed
+  const hist = (c.statHistory ??= []);
+  hist.push({ age: c.age, health: c.stats.health, happiness: c.stats.happiness, smarts: c.stats.smarts, looks: c.stats.looks });
+  if (hist.length > 110) hist.shift();
+
   c.age += 1;
   c.yearLog = [];
   c.yearNews = [];

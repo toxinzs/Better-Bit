@@ -275,6 +275,9 @@ export type Character = {
   fertility?: number; // 0-100
   decisions?: PendingDecision[];
   yearNews?: NewsItem[];
+  // one entry per year lived (age, then the four stats as the year closed) -
+  // drives the sparkline on the stat detail screens
+  statHistory?: { age: number; health: number; happiness: number; smarts: number; looks: number }[];
   griefYears?: number; // years of lingering sadness after losing someone close
   originRegion?: RegionKey;
   appearanceFlavor?: string;

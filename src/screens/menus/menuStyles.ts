@@ -1,0 +1,73 @@
+import { StyleSheet } from "react-native";
+import { colors, fonts, fontSize, radii, spacing } from "../../theme";
+
+// Styles shared by the drill-down menus (they used to be copy-pasted into
+// every tab file).
+export const ms = StyleSheet.create({
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  gridBtn: {
+    width: "31%",
+    alignItems: "center",
+    backgroundColor: colors.surfaceRaised,
+    paddingVertical: spacing.md,
+    borderRadius: radii.md,
+    gap: 4,
+  },
+  gridBtnDisabled: { opacity: 0.4 },
+  gridLabel: { color: colors.textPrimary, fontSize: fontSize.sm, fontFamily: fonts.semiBold, textAlign: "center" },
+  gridSub: { color: colors.textMuted, fontSize: fontSize.xs, fontFamily: fonts.regular },
+  inlineBtn: { marginTop: spacing.md, alignSelf: "flex-start" },
+  skillsWrap: { marginBottom: spacing.sm },
+  btnRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginTop: spacing.xs + 2 },
+  list: { marginTop: spacing.sm },
+  rowBlock: {
+    marginBottom: spacing.sm + 2,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  rowHead: { flexDirection: "row", justifyContent: "space-between", marginBottom: 2 },
+  ownedRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: spacing.sm },
+  ownedName: { color: colors.textPrimary, fontFamily: fonts.semiBold, fontSize: fontSize.base },
+  ownedValue: { color: colors.primary, fontFamily: fonts.bold, fontSize: fontSize.base },
+  subheading: {
+    color: colors.textMuted,
+    fontFamily: fonts.semiBold,
+    fontSize: fontSize.sm,
+    marginTop: spacing.sm,
+    marginBottom: 4,
+    textTransform: "uppercase",
+  },
+  listingRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: spacing.sm + 2,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  listingDisabled: { opacity: 0.4 },
+  listingName: { color: colors.textPrimary, fontFamily: fonts.regular, fontSize: fontSize.base },
+  listingSub: { color: colors.textMuted, fontFamily: fonts.regular, fontSize: fontSize.sm },
+  listingPrice: { color: colors.primary, fontFamily: fonts.bold, fontSize: fontSize.base },
+  statRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.md,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  statLabel: { color: colors.textSecondary, fontFamily: fonts.semiBold, fontSize: fontSize.base },
+  statValue: { fontFamily: fonts.extraBold, fontSize: fontSize.xl },
+  stepper: {
+    backgroundColor: colors.surfaceRaised,
+    width: 30,
+    height: 30,
+    borderRadius: radii.sm,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  note: { color: colors.textSecondary, fontFamily: fonts.regular, fontSize: fontSize.md, lineHeight: 19, marginBottom: 4 },
+});

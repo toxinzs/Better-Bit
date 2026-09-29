@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
+import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Stats } from "../types";
 import { FloatingDelta, Pop } from "../motion";
@@ -15,11 +15,11 @@ const META: { key: keyof Stats; label: string; color: string; icon: keyof typeof
 // The four core stats, always visible under the header on every tab - the
 // same job BitLife's stat bars do, in about a third of the vertical space
 // the old full-width StatBar card took.
-export default function StatStrip({ stats }: { stats: Stats }) {
+export default function StatStrip({ stats, onPressStat }: { stats: Stats; onPressStat?: (key: keyof Stats) => void }) {
   return (
     <View style={styles.wrap}>
       {META.map((m) => (
-        <Meter key={m.key} label={m.label} color={m.color} icon={m.icon} value={stats[m.key]} />
+        <Meter key={m.key} label={m.label} color={m.color} icon={m.icon} value={stats[m.key]} onPress={onPressStat ? () => onPressStat(m.key) : undefined} />
       ))}
     </View>
   );
@@ -30,7 +30,9 @@ function Meter({
   color,
   icon,
   value,
+  onPress,
 }: {
+  onPress?: () => void;
   label: string;
   color: string;
   icon: keyof typeof Ionicons.glyphMap;
@@ -44,7 +46,7 @@ function Meter({
   }, [v, width]);
 
   return (
-    <View style={styles.meter}>
+    <TouchableOpacity accessibilityRole="button" accessibilityLabel={`${label} details`} activeOpacity={0.7} disabled={!onPress} style={styles.meter} onPress={onPress}>
       <View style={styles.topRow}>
         <Ionicons name={icon} size={12} color={color} />
         <Text style={styles.label}>{label}</Text>
@@ -63,7 +65,7 @@ function Meter({
           ]}
         />
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

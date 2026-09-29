@@ -13,6 +13,8 @@ import { askCeiling, askChance, giveCeiling } from "../../engine/lifeEngine";
 import type { ActionKey } from "../../engine/lifeEngine";
 import { jobLine } from "../../engine/people";
 import { playSound } from "../../sound";
+import { useNav } from "../../nav/navStore";
+import MenuScreen from "../../nav/MenuScreen";
 import { colors, fonts, fontSize, radii, spacing } from "../../theme";
 import { tabStyles } from "./sharedStyles";
 
@@ -29,13 +31,13 @@ const RELATION_META: Record<string, { label: string; color: string }> = {
   grandchild: { label: "Grandchild", color: colors.smarts },
 };
 
-const GROUPS: { title: string; icon: keyof typeof Ionicons.glyphMap; color: string; types: RelationType[] }[] = [
-  { title: "Partner", icon: "heart", color: colors.love, types: ["partner"] },
-  { title: "Family", icon: "home", color: colors.looks, types: ["mother", "father", "sibling", "child", "grandchild"] },
-  { title: "Friends", icon: "happy", color: colors.happiness, types: ["friend"] },
-  { title: "Classmates", icon: "school", color: colors.smarts, types: ["classmate"] },
-  { title: "Work", icon: "briefcase", color: colors.smarts, types: ["coworker"] },
-  { title: "Exes", icon: "flame", color: colors.danger, types: ["ex"] },
+export const GROUPS: { key: string; title: string; icon: keyof typeof Ionicons.glyphMap; color: string; types: RelationType[] }[] = [
+  { key: "partner", title: "Partner", icon: "heart", color: colors.love, types: ["partner"] },
+  { key: "family", title: "Family", icon: "home", color: colors.looks, types: ["mother", "father", "sibling", "child", "grandchild"] },
+  { key: "friends", title: "Friends", icon: "happy", color: colors.happiness, types: ["friend"] },
+  { key: "classmates", title: "Classmates", icon: "school", color: colors.smarts, types: ["classmate"] },
+  { key: "work", title: "Work", icon: "briefcase", color: colors.smarts, types: ["coworker"] },
+  { key: "exes", title: "Exes", icon: "flame", color: colors.danger, types: ["ex"] },
 ];
 
 function levelColor(level: number): string {
@@ -44,13 +46,15 @@ function levelColor(level: number): string {
   return colors.primary;
 }
 
-export default function PeopleTab({ onOpenThread }: { onOpenThread: (relationshipId: string) => void }) {
+// One group of people (Family, Friends, Exes, In memory...) as a drill-down
+// list; tapping a person opens their sheet.
+export default function PeopleTab({ group }: { group: string }) {
+  const setThread = useNav((s) => s.setThread);
   const character = useGameStore((s) => s.character);
   const personAction = useGameStore((s) => s.personAction);
   const pendingEvent = useGameStore((s) => s.pendingEvent);
   const actionResultLines = useGameStore((s) => s.actionResultLines);
   const [sheetId, setSheetId] = useState<string | null>(null);
-  const [showMemorial, setShowMemorial] = useState(false);
   const [picker, setPicker] = useState<{ kind: "giveMoney" | "askMoney"; id: string } | null>(null);
 
   if (!character) return null;
@@ -74,84 +78,44 @@ export default function PeopleTab({ onOpenThread }: { onOpenThread: (relationshi
     personAction(sheetRel.id, key);
   };
 
-  const teenDatingOpen = character.age >= 13 && character.age < 18 && !relationships.some((r) => r.type === "partner");
+  const groupDef = GROUPS.find((g) => g.key === group);
+  const members = groupDef ? relationships.filter((r) => groupDef.types.includes(r.type)).sort((a, b) => b.level - a.level) : [];
 
   return (
-    <>
-      <ScrollView contentContainerStyle={tabStyles.scroll}>
-        {relationships.length === 0 && (
+    <MenuScreen title={groupDef ? groupDef.title : "In memory"} icon={groupDef ? groupDef.icon : "rose"} color={groupDef ? groupDef.color : colors.textSecondary} scroll={false}>
+      <ScrollView contentContainerStyle={tabStyles.scroll} showsVerticalScrollIndicator={false}>
+        {groupDef && members.length === 0 && (
           <Card style={styles.empty}>
-            <Ionicons name="people" size={24} color={colors.looks} />
-            <Text style={styles.emptyTitle}>No one in your life yet</Text>
+            <Ionicons name={groupDef.icon} size={24} color={groupDef.color} />
+            <Text style={styles.emptyTitle}>No one here right now</Text>
           </Card>
         )}
-        {character.pregnancy && (
-          <Card style={styles.hint}>
-            <Ionicons name="egg" size={20} color={colors.love} />
-            <Text style={styles.hintText}>
-              {character.pregnancy.carrier === "player"
-                ? "You're expecting. The baby arrives next year."
-                : character.pregnancy.carrier === "surrogate"
-                  ? "Your surrogate is expecting. The baby arrives next year."
-                  : `${character.relationships.find((x) => x.id === character.pregnancy!.carrierId)?.name.split(" ")[0] ?? "Your partner"} is expecting. The baby arrives next year.`}
-              {character.pregnancy.plan === "adopt" ? " You've planned an adoption." : ""}
-            </Text>
-          </Card>
-        )}
-        {teenDatingOpen && (
-          <Card style={styles.hint}>
-            <Ionicons name="heart-circle" size={20} color={colors.love} />
-            <Text style={styles.hintText}>
-              Dating is open. Tap a classmate or friend your age and choose Ask Out - or wait, someone might ask you.
-            </Text>
-          </Card>
-        )}
-        {GROUPS.map((g) => {
-          const members = relationships.filter((r) => g.types.includes(r.type)).sort((a, b) => b.level - a.level);
-          if (members.length === 0) return null;
-          return (
-            <View key={g.title} style={styles.group}>
-              <View style={styles.groupHeader}>
-                <Ionicons name={g.icon} size={15} color={g.color} />
-                <Text style={styles.groupTitle}>{g.title}</Text>
-                <Text style={styles.groupCount}>{members.length}</Text>
-              </View>
-              {members.map((r, idx) => (
-                <FadeInUp key={r.id} delay={Math.min(idx, 8) * 50}>
-                  <PersonCard c={character} r={r} region={character.originRegion} onOpen={() => setSheetId(r.id)} />
-                </FadeInUp>
-              ))}
-            </View>
-          );
-        })}
-        {memorial.length > 0 && (
-          <View style={styles.group}>
-            <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.groupHeader} onPress={() => setShowMemorial((v) => !v)}>
-              <Ionicons name="rose" size={15} color={colors.textSecondary} />
-              <Text style={styles.groupTitle}>In memory</Text>
-              <Text style={styles.groupCount}>{memorial.length}</Text>
-              <Ionicons name={showMemorial ? "chevron-up" : "chevron-down"} size={15} color={colors.textMuted} />
-            </TouchableOpacity>
-            {showMemorial &&
-              memorial.map((r) => (
-                <Card key={r.id} style={styles.person}>
-                  <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.personRow} onPress={() => setSheetId(r.id)}>
-                    <View style={[styles.avatarWrap, { borderColor: colors.border, opacity: 0.55 }]}>
-                      <PersonAvatar name={r.name} id={r.id} type={r.type} gender={r.gender} region={character.originRegion} size={46} />
-                    </View>
-                    <View style={styles.personBody}>
-                      <Text style={styles.personName} numberOfLines={1}>{r.name}</Text>
-                      <Text style={styles.subline}>
-                        {(RELATION_META[r.type]?.label ?? r.type)} · died at {r.diedAge}
-                        {r.causeOfDeath ? ` · ${r.causeOfDeath}` : ""}
-                      </Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-                  </TouchableOpacity>
-                </Card>
-              ))}
-          </View>
-        )}
+        {groupDef &&
+          members.map((r, idx) => (
+            <FadeInUp key={r.id} delay={Math.min(idx, 8) * 50}>
+              <PersonCard c={character} r={r} region={character.originRegion} onOpen={() => setSheetId(r.id)} />
+            </FadeInUp>
+          ))}
+        {!groupDef &&
+          memorial.map((r, idx) => (
+            <FadeInUp key={r.id} delay={Math.min(idx, 8) * 50}>
+              <Card style={styles.person}>
+                <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.personRow} onPress={() => setSheetId(r.id)}>
+                  <View style={[styles.avatarWrap, { borderColor: colors.border, opacity: 0.55 }]}>
+                    <PersonAvatar name={r.name} id={r.id} type={r.type} gender={r.gender} region={character.originRegion} size={46} />
+                  </View>
+                  <View style={styles.personBody}>
+                    <Text style={styles.personName} numberOfLines={1}>{r.name}</Text>
+                    <Text style={styles.subline}>
+                      {(RELATION_META[r.type]?.label ?? r.type)} · died at {r.diedAge}
+                      {r.causeOfDeath ? ` · ${r.causeOfDeath}` : ""}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                </TouchableOpacity>
+              </Card>
+            </FadeInUp>
+          ))}
       </ScrollView>
 
       {sheetVisible && sheetRel && (
@@ -163,7 +127,7 @@ export default function PeopleTab({ onOpenThread }: { onOpenThread: (relationshi
           onMoney={(kind) => setPicker({ kind, id: sheetRel.id })}
           onMessages={() => {
             setSheetId(null);
-            onOpenThread(sheetRel.id);
+            setThread(sheetRel.id);
           }}
         />
       )}
@@ -206,7 +170,7 @@ export default function PeopleTab({ onOpenThread }: { onOpenThread: (relationshi
           onCancel={() => setPicker(null)}
         />
       )}
-    </>
+    </MenuScreen>
   );
 }
 
