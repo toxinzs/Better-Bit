@@ -43,6 +43,19 @@ export type TextMessage = {
 // falling-out), "placed" = a child placed for adoption.
 export type PersonStatus = "active" | "distant" | "estranged" | "placed";
 
+// Biological role for conception logic, separate from gender identity.
+export type Bio = "female" | "male";
+
+export type AdoptionKind = "open" | "semiOpen" | "closed";
+
+export type Pregnancy = {
+  carrier: "player" | "partner" | "surrogate";
+  carrierId?: string; // the relationship who is carrying, when it isn't you
+  otherParentId?: string; // the other parent (a partner, or someone from a hookup)
+  conceivedAge: number; // the player's age when it began; the baby arrives the year after
+  plan: "keep" | "adopt";
+};
+
 export type Relationship = {
   id: string;
   name: string;
@@ -71,6 +84,11 @@ export type Relationship = {
   causeOfDeath?: string;
   funeral?: string; // how they were laid to rest
   blocked?: boolean; // you or they cut contact off
+  bio?: Bio;
+  onBC?: boolean; // they're on birth control
+  coParent?: string; // relationship id of the child's other parent, when known
+  adoption?: { kind: AdoptionKind; age: number }; // this child was placed for adoption
+  hidden?: boolean; // not shown (a closed adoption until they find you)
   wealth?: number; // hidden 0-100: how much money they could spare
   treated?: boolean; // their serious illness is being treated (lowers their mortality)
   lowYears?: number; // consecutive years the bond has been very low
@@ -235,7 +253,9 @@ export type Character = {
   collegeStartAge?: number;
   degrees?: Degree[];
   flags?: string[];
-  pregnant?: boolean;
+  pregnant?: boolean; // legacy flag from before pregnancy had a carrier - migrated to `pregnancy`
+  pregnancy?: Pregnancy;
+  bio?: Bio;
   pendingBabyId?: string;
   // hidden stats (never shown as a number)
   sanity?: number; // 0-100, default 75; "craziness" = 100 - sanity

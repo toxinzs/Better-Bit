@@ -936,6 +936,41 @@ Playwright: funeral options, two-step commit, estate maths, donate/family
 options, reload mid-decision, two deaths queued in order, minor branch, memorial
 sheet.
 
+**Relationships expansion — Phase 4, Intimacy, pregnancy, adoption (done,
+v1.10.0)** — `engine/intimacy.ts`. Everything here is gated on **both people
+being 18+** (hardcoded, never a regional setting) and intimacy is
+fade-to-black text only. **Fertility**: `fertilityFactor = ageCurve × (0.35 +
+0.65·fertility/100) × (0.6 + 0.4·health/100)` with separate curves for a
+biologically female / male person (`Bio`, fixed by gender, picked once by id for
+nonbinary; `Character.bio`/`Relationship.bio`), and conception per encounter
+`0.30 × Fa × Fb × mult` (condom ×0.08, birth control ×0.05, both ×0.01,
+trying ×1.8; sterilized or same-bio = 0). Measured over 900 fresh couples each:
+unprotected at 30 = 15.7%, condom 1.2%, trying 28.8%, unprotected at 42 = 2.1%.
+**Make Love** (partner sheet, cap 3/yr) shows a protection popup only when a
+baby is actually possible (options disabled when nobody is on birth control), a
+"not in the mood" roll from the hidden `favor` + bond, and chains the reveal on a
+pregnancy. **Reveal**: when you carry - keep / plan an adoption / not right now;
+when your partner carries - four things you can say, and *their* decision
+(`partnerDecides`, shaped by what you said, bond and mood) decides; opposing them
+costs bond. `Character.pregnancy {carrier, carrierId, otherParentId,
+conceivedAge, plan}` replaces the old `pregnant` boolean (old saves migrate in
+`ensurePeople`). **Birth** is the year after (`tickPregnancy` in `ageUp`, with a
+miscarriage roll: 7%, +8% at 35+, +5% low health, 3% via surrogate): a kept
+baby is a real child with `coParent` and the naming prompt; a planned adoption
+queues an `adoption` decision (open / semi-open / closed - initial bond 60 /
+45 / 30, a closed one is `hidden`). **Placed children**: only *Write to Them*
+(2/yr) and, for open adoptions, *Visit Them* ($150, 1/yr); closed/semi-open
+children who reach 18 have a 6%/yr chance of a `reunion` decision (meet /
+write back / not ready). **Also rerouted**: the random hookup uses the same
+model with a generated one-night partner (`ex`, bond 20) if it leads to a
+pregnancy; `have-a-kid` (a year of trying) and `unplanned-pregnancy` events
+only fire for couples where a baby is possible; Assisted Conception picks a
+carrier (you if female-bio, else a female-bio partner, else "you'd need a
+surrogate") and gained **Surrogacy** ($60,000, 50%). Age-gate tests: no Make Love
+at 17+17, 20+17, 17+25; hookup/IVF refused at 17; 18+18 allowed. Verified
+(`Playwright`, forced RNG): every branch above incl. reload mid-pregnancy,
+adoption kinds, reunion, miscarriage, legacy migration, same-gender + surrogacy.
+
 **Still open for later in this update**: a mute/volume toggle (there's no
 settings surface at all yet to put one on), a custom app icon/splash
 screen (still Expo's generic defaults), and a deeper visual pass beyond

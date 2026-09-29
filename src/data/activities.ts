@@ -67,7 +67,7 @@ export const VACATIONS: { key: VacationKey; label: string; cost: number }[] = [
   { key: "international", label: "International Trip", cost: 4000 },
 ];
 
-export type ConceptionMethod = "ivf" | "insemination" | "donor";
+export type ConceptionMethod = "ivf" | "insemination" | "donor" | "surrogacy";
 
 export const CONCEPTION_METHODS: {
   key: ConceptionMethod;
@@ -78,6 +78,7 @@ export const CONCEPTION_METHODS: {
   { key: "ivf", label: "IVF", cost: 15000, successChance: 0.45 },
   { key: "insemination", label: "Insemination", cost: 3500, successChance: 0.35 },
   { key: "donor", label: "Use a Donor", cost: 2000, successChance: 0.35 },
+  { key: "surrogacy", label: "Surrogacy", cost: 60000, successChance: 0.5 },
 ];
 
 export const STERILIZATION_COST = 800;

@@ -1,9 +1,10 @@
-import { Character, LifeEvent, Relationship, WorldState } from "../types";
+import { Character, EventChoice, LifeEvent, Relationship, WorldState } from "../types";
 import { Venue, MINOR_VENUES, ADULT_VENUES, MINOR_DATE_VENUES, PARTY_VENUES, SLEEPOVER_MINOR, SLEEPOVER_ADULT } from "../data/outings";
 import { MIN_AGE_CONVERSATION } from "./lifeStage";
 import { ageOf, uid } from "./people";
 import { buildTalkEvent, categoryOf, dim, fillTokens, hasScene } from "./conversations";
 import { buildGiftEvent } from "./gifts";
+import { Protection, bothAdults, canConceive, makeLove, partnerParty, playerParty, visitPlacedChild, writeToPlacedChild } from "./intimacy";
 import { clamp, randomInt } from "./util";
 
 // Everything you can do with a person from their sheet. `actionsFor()` is the
@@ -13,7 +14,8 @@ import { clamp, randomInt } from "./util";
 
 export type ActionKey =
   | "talk" | "spendTime" | "goOut" | "party" | "sleepover" | "gift" | "giveMoney" | "askMoney"
-  | "holdHands" | "firstKiss" | "askOut" | "breakUp" | "leaveFlowers" | "remember";
+  | "holdHands" | "firstKiss" | "askOut" | "breakUp" | "leaveFlowers" | "remember"
+  | "makeLove" | "writeLetter" | "visitChild";
 
 export type ActionCategory = "Connect" | "Outings" | "Money" | "Romance" | "Remember";
 
@@ -31,13 +33,12 @@ export type ActionDef = {
 const CAPS: Record<ActionKey, number> = {
   talk: 3, spendTime: 3, goOut: 2, party: 1, sleepover: 2, gift: 3, giveMoney: 3, askMoney: 2,
   holdHands: 1, firstKiss: 1, askOut: 1, breakUp: 1, leaveFlowers: 1, remember: 1,
+  makeLove: 3, writeLetter: 2, visitChild: 1,
 };
 
 // ---------- age & romance gates (hardcoded) ----------
 
-export function bothAdults(c: Character, r: Relationship): boolean {
-  return c.age >= 18 && ageOf(c, r) >= 18;
-}
+export { bothAdults };
 
 // Who may start a romance: adults with adults, or teens (13-17) with
 // classmate-age peers (within a year, also 13-17). Never across the 18 line.
@@ -109,6 +110,13 @@ function contactBlocked(r: Relationship): string | null {
 }
 
 function lockFor(c: Character, r: Relationship, key: ActionKey): string | null {
+  // a child placed for adoption: only the contact the adoption allows
+  if (r.status === "placed") {
+    if (key === "writeLetter") return null;
+    if (key === "visitChild") return r.adoption?.kind === "open" ? (c.money < 150 ? "$150 to travel" : null) : "n/a";
+    return "n/a";
+  }
+  if (key === "writeLetter" || key === "visitChild") return "n/a";
   const blocked = contactBlocked(r);
   const theirAge = ageOf(c, r);
   const adultPair = bothAdults(c, r);
@@ -172,6 +180,10 @@ function lockFor(c: Character, r: Relationship, key: ActionKey): string | null {
       return blocked;
     case "breakUp":
       return r.type === "partner" ? null : "n/a";
+    case "makeLove":
+      // adults only, both of you - hardcoded, never a regional setting
+      if (r.type !== "partner" || !adultPair) return "n/a";
+      return blocked;
     case "leaveFlowers":
     case "remember":
       return "n/a"; // memorial actions are only offered for the departed (see actionsFor)
@@ -191,13 +203,16 @@ const META: Record<ActionKey, { label: string; icon: string; cat: ActionCategory
   firstKiss: { label: "First Kiss", icon: "heart", cat: "Romance" },
   askOut: { label: "Ask Out", icon: "heart-circle", cat: "Romance" },
   breakUp: { label: "Break Up", icon: "heart-dislike", cat: "Romance" },
+  makeLove: { label: "Make Love", icon: "heart", cat: "Romance" },
+  writeLetter: { label: "Write to Them", icon: "mail", cat: "Connect" },
+  visitChild: { label: "Visit Them", icon: "car", cat: "Connect" },
   leaveFlowers: { label: "Leave Flowers", icon: "rose", cat: "Remember" },
   remember: { label: "Remember Them", icon: "images", cat: "Remember" },
 };
 
 const ORDER: ActionKey[] = [
   "talk", "spendTime", "goOut", "party", "sleepover", "gift", "giveMoney", "askMoney",
-  "askOut", "holdHands", "firstKiss", "breakUp",
+  "askOut", "holdHands", "firstKiss", "makeLove", "writeLetter", "visitChild", "breakUp",
 ];
 
 const MEMORY_LINES = [
@@ -298,6 +313,46 @@ function venueEvent(c: Character, r: Relationship, key: ActionKey, prompt: strin
   };
 }
 
+// "Make love": a protection choice when a baby is even possible, then fade to
+// black. Anything that ends in a pregnancy chains its own reveal popup.
+function buildLoveEvent(c: Character, r: Relationship, usedBefore: number): LifeEvent | null {
+  const me = playerParty(c);
+  const them = partnerParty(c, r);
+  const dampen = dim(usedBefore);
+
+  if (!canConceive(c, me, them)) {
+    bump(c, r, "makeLove");
+    c.yearLog.push(makeLove(c, r, "none", dampen).line);
+    return null;
+  }
+
+  let result = "";
+  const anyBC = me.onBC || them.onBC;
+  const go = (p: Protection): EventChoice["effect"] => (cc) => {
+    const rr = cc.relationships.find((x) => x.id === r.id) ?? r;
+    bump(cc, rr, "makeLove");
+    const out = makeLove(cc, rr, p, dampen);
+    result = out.line;
+    return out.next;
+  };
+  return {
+    id: uid("love"),
+    minAge: 0,
+    maxAge: 999,
+    who: r.id,
+    logText: () => "",
+    text: () => `The evening with ${first(r)} is heading somewhere. Before it does...`,
+    choices: [
+      { label: "Use a condom", sublabel: "Very low chance of pregnancy", effect: go("condom"), resultText: () => result },
+      { label: "Rely on birth control", sublabel: anyBC ? "Low chance" : "Neither of you is on it", disabled: !anyBC, effect: go("bc"), resultText: () => result },
+      { label: "Condom and birth control", sublabel: anyBC ? "Almost no chance" : "Neither of you is on birth control", disabled: !anyBC, effect: go("both"), resultText: () => result },
+      { label: "No protection", sublabel: "A real chance of pregnancy", tone: "danger", effect: go("none"), resultText: () => result },
+      { label: "We're trying for a baby", sublabel: "Best odds", tone: "good", effect: go("trying"), resultText: () => result },
+      { label: "Not tonight", effect: () => {} },
+    ],
+  };
+}
+
 function confirmBreakUp(c: Character, r: Relationship): LifeEvent {
   const first_ = first(r);
   const married = !!r.married;
@@ -373,6 +428,16 @@ export function runPersonAction(
   const used = usedThisYear(c, r, key);
 
   switch (key) {
+    case "writeLetter":
+      bump(c, r, key);
+      c.yearLog.push(writeToPlacedChild(c, r));
+      return null;
+    case "visitChild":
+      bump(c, r, key);
+      c.yearLog.push(visitPlacedChild(c, r));
+      return null;
+    case "makeLove":
+      return buildLoveEvent(c, r, used);
     case "leaveFlowers":
       if (c.money < 25) return null;
       bump(c, r, key);

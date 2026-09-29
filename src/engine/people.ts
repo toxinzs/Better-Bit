@@ -1,4 +1,4 @@
-import { Character, Gender, Relationship, RelationType } from "../types";
+import { Bio, Character, Gender, Relationship, RelationType } from "../types";
 import { NAME_POOLS, randomFirstName, randomLastName } from "../data/names";
 import { clamp, randomInt } from "./util";
 
@@ -49,6 +49,14 @@ function seededRng(seed: number): () => number {
 }
 const rint = (rng: () => number, min: number, max: number) => Math.floor(rng() * (max - min + 1)) + min;
 const rpick = <T,>(rng: () => number, xs: T[]): T => xs[Math.floor(rng() * xs.length)];
+
+// A person's biological role for conception: fixed by gender for men and
+// women, and picked once (deterministically, by id) for a nonbinary person.
+export function bioFor(gender: Gender | undefined, key: string): Bio {
+  if (gender === "male") return "male";
+  if (gender === "female") return "female";
+  return hashString("bio:" + key) % 2 === 0 ? "female" : "male";
+}
 
 export function randomGender(): Gender {
   const r = Math.random();
@@ -108,6 +116,7 @@ export function newPerson(c: Character, spec: PersonSpec): Relationship {
     level: spec.level ?? randomInt(45, 70),
     alive: true,
     gender,
+    bio: bioFor(gender, spec.id ?? name),
     bornOffset: c.age - age,
     traits: [rpick(rng, TRAITS), rpick(rng, TRAITS)].filter((t, i, a) => a.indexOf(t) === i),
     job: jobFor(age, spec.type, rng, name),
@@ -194,12 +203,14 @@ export function backfillPeople(c: Character): void {
       r.health !== undefined &&
       r.favor !== undefined &&
       r.fertility !== undefined &&
-      r.wealth !== undefined
+      r.wealth !== undefined &&
+      r.bio !== undefined
     ) {
       continue;
     }
     const rng = seededRng(hashString(r.id + ":" + (c.avatarSeed ?? 0)));
     r.gender ??= guessGender(r, rng);
+    r.bio ??= bioFor(r.gender, r.id);
     if (r.bornOffset === undefined) {
       const age = guessAge(c, r, rng);
       r.bornOffset = c.age - age;
@@ -224,6 +235,12 @@ export function ensurePeople(c: Character): void {
   backfillPeople(c);
   c.sanity ??= 75;
   c.fertility ??= randomInt(35, 95);
+  c.bio ??= bioFor(c.gender, `${c.firstName}${c.avatarSeed ?? 0}`);
+  // an old-format pregnancy becomes a real one (carried by you, being kept)
+  if (c.pregnant && !c.pregnancy) {
+    c.pregnancy = { carrier: "player", conceivedAge: c.age - 1, plan: "keep" };
+  }
+  c.pregnant = false;
   c.decisions ??= [];
 }
 

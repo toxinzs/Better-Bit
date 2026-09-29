@@ -57,7 +57,7 @@ export default function PeopleTab({ onOpenThread }: { onOpenThread: (relationshi
 
   // The school roster (classmates, teachers) is shown here too so a crush or
   // a friend-to-be is one tap away; teachers stay in the School tab.
-  const relationships = character.relationships.filter((r) => r.alive && r.type !== "teacher");
+  const relationships = character.relationships.filter((r) => r.alive && r.type !== "teacher" && !r.hidden);
   const sheetRel = sheetId ? character.relationships.find((r) => r.id === sheetId && (r.alive || r.diedAge !== undefined)) : undefined;
   const memorial = character.relationships.filter(
     (r) => !r.alive && r.diedAge !== undefined && r.type !== "classmate" && r.type !== "teacher",
@@ -83,6 +83,19 @@ export default function PeopleTab({ onOpenThread }: { onOpenThread: (relationshi
           <Card style={styles.empty}>
             <Ionicons name="people" size={24} color={colors.looks} />
             <Text style={styles.emptyTitle}>No one in your life yet</Text>
+          </Card>
+        )}
+        {character.pregnancy && (
+          <Card style={styles.hint}>
+            <Ionicons name="egg" size={20} color={colors.love} />
+            <Text style={styles.hintText}>
+              {character.pregnancy.carrier === "player"
+                ? "You're expecting. The baby arrives next year."
+                : character.pregnancy.carrier === "surrogate"
+                  ? "Your surrogate is expecting. The baby arrives next year."
+                  : `${character.relationships.find((x) => x.id === character.pregnancy!.carrierId)?.name.split(" ")[0] ?? "Your partner"} is expecting. The baby arrives next year.`}
+              {character.pregnancy.plan === "adopt" ? " You've planned an adoption." : ""}
+            </Text>
           </Card>
         )}
         {teenDatingOpen && (
@@ -214,6 +227,7 @@ function PersonCard({ c, r, region, onOpen }: { c: Character; r: Relationship; r
               {r.name}
             </Text>
             {r.married ? <Chip label="MARRIED" color={colors.love} /> : r.engaged ? <Chip label="ENGAGED" color={colors.love} /> : null}
+            {r.status === "placed" ? <Chip label="ADOPTED OUT" color={colors.textSecondary} /> : null}
             {ledger !== 0 ? <Chip label={ledger < 0 ? "YOU OWE" : "OWES YOU"} color={ledger < 0 ? colors.danger : colors.primary} /> : null}
           </View>
           <View style={styles.metaRow}>

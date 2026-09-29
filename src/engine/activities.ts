@@ -1,6 +1,15 @@
 import { Character, Gender, LifeEvent, RegionKey, Relationship } from "../types";
 import { clamp, randomInt } from "./util";
 import { addPerson, randomGender } from "./people";
+import {
+  Party,
+  assistedCarrier,
+  buildPregnancyEvent,
+  canConceive,
+  conceptionChance,
+  playerParty,
+  startPregnancy,
+} from "./intimacy";
 import { randomFirstName, randomLastName } from "../data/names";
 import { getRegion } from "../data/regions";
 import {
@@ -264,8 +273,6 @@ export function goOnBlindDate(c: Character): void {
   }
 }
 
-const PREGNANCY_CHANCE = 0.14; // per unprotected encounter, real enough to matter
-
 // A real "use protection?" screen first, chained the same way crime.ts's
 // arrest/trial sequence is - the standing pattern for any player-initiated
 // action needing a real multi-step choice. The outcome (caught/not, messy/
@@ -302,8 +309,24 @@ function buildHookupProtectionEvent(partnered: boolean): LifeEvent {
       c.stats.happiness = clamp(c.stats.happiness + (messy ? -2 : 6));
     }
 
-    if (!useProtection && !c.sterilized && !c.pregnant && Math.random() < PREGNANCY_CHANCE) {
-      return buildPregnancyRevealEvent();
+    // a one-night stranger can still lead to a pregnancy: rolled with the same
+    // fertility model as a partner (about 70% of the time the pairing is one
+    // where conception is even possible)
+    const me = playerParty(c);
+    const strangerBio = Math.random() < 0.7 ? (me.bio === "female" ? "male" : "female") : me.bio;
+    const stranger: Party = {
+      bio: strangerBio,
+      age: Math.max(18, c.age + randomInt(-6, 6)),
+      fertility: randomInt(35, 95),
+      health: 85,
+      sterilized: false,
+      onBC: false,
+    };
+    if (canConceive(c, me, stranger) && Math.random() < conceptionChance(me, stranger, useProtection ? "condom" : "none")) {
+      const gender = strangerBio === "male" ? "male" : "female";
+      const person = addPerson(c, { type: "ex", age: stranger.age, gender, level: 20, fields: { bio: strangerBio } });
+      const carrier = me.bio === "female" ? "player" : "partner";
+      return buildPregnancyEvent(c, person, carrier, person.name.split(" ")[0]);
     }
     return undefined;
   };
@@ -332,36 +355,6 @@ function buildHookupProtectionEvent(partnered: boolean): LifeEvent {
         label: "Don't use protection",
         effect: (c) => resolve(c, false),
         resultText: outcomeText,
-      },
-    ],
-  };
-}
-
-// A real pregnancy is now its own reveal moment with a genuine choice,
-// instead of a baby appearing the instant a choice is made - see
-// tryConception/have-a-kid/unplanned-pregnancy, which all funnel into the
-// same c.pregnant flag; the actual birth (and naming) happens next ageUp().
-function buildPregnancyRevealEvent(): LifeEvent {
-  return {
-    id: `pregnancy-reveal-${Date.now()}`,
-    minAge: 0,
-    maxAge: 200,
-    text: () => "You're pregnant.",
-    choices: [
-      {
-        label: "Keep it",
-        effect: (c) => {
-          c.pregnant = true;
-          c.stats.happiness = clamp(c.stats.happiness + 10);
-        },
-        resultText: () => "You're keeping it. A real change is coming.",
-      },
-      {
-        label: "It's not the right time",
-        effect: (c) => {
-          c.stats.happiness = clamp(c.stats.happiness - 10);
-        },
-        resultText: () => "It's not the right time. The pregnancy doesn't continue.",
       },
     ],
   };
@@ -397,12 +390,18 @@ export function tryConception(c: Character, method: ConceptionMethod): void {
     c.yearLog.push("You're too young for that.");
     return;
   }
-  if (c.sterilized) {
-    c.yearLog.push("That's not possible after being sterilized.");
+  if (c.pregnancy) {
+    c.yearLog.push("You're already expecting.");
     return;
   }
-  if (c.pregnant) {
-    c.yearLog.push("You're already expecting.");
+  const p = partner(c);
+  const carrier = assistedCarrier(c, p && p.alive ? p : undefined, method === "surrogacy");
+  if (!carrier) {
+    c.yearLog.push("With your situation, that would take a partner who can carry the baby - or a surrogate.");
+    return;
+  }
+  if (carrier.carrier === "player" && c.sterilized) {
+    c.yearLog.push("That's not possible after being sterilized.");
     return;
   }
   if (c.money < def.cost) {
@@ -412,9 +411,16 @@ export function tryConception(c: Character, method: ConceptionMethod): void {
   c.money -= def.cost;
   const success = Math.random() < def.successChance;
   if (success) {
-    c.pregnant = true;
+    startPregnancy(c, {
+      carrier: carrier.carrier,
+      carrierId: carrier.carrier === "partner" ? carrier.r?.id : undefined,
+      otherParentId: p?.id,
+      plan: "keep",
+    });
     c.stats.happiness = clamp(c.stats.happiness + 20);
-    c.yearLog.push(`${def.label} worked. You're expecting. -$${def.cost.toLocaleString()}`);
+    c.yearLog.push(
+      `${def.label} worked. ${carrier.carrier === "player" ? "You're expecting." : carrier.carrier === "partner" ? "Your partner is expecting." : "Your surrogate is expecting."} -$${def.cost.toLocaleString()}`,
+    );
   } else {
     c.stats.happiness = clamp(c.stats.happiness - 6);
     c.yearLog.push(`${def.label} didn't work this time. -$${def.cost.toLocaleString()}`);

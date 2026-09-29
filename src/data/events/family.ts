@@ -1,7 +1,10 @@
 import { LifeEvent } from "../../types";
 import { clamp } from "../../engine/util";
-import { mother, father, hasPartner, children, hasChild, hasMinorChild, sibling } from "./helpers";
+import { mother, father, hasPartner, partner, children, hasChild, hasMinorChild, sibling } from "./helpers";
 import { ageOf, markDeceased } from "../../engine/people";
+import { conceptionChance, couplePossible, partnerParty, playerParty, startPregnancy } from "../../engine/intimacy";
+
+let tried = false; // read back by resultText after effect() has rolled
 
 export const FAMILY_EVENTS: LifeEvent[] = [
   {
@@ -9,17 +12,37 @@ export const FAMILY_EVENTS: LifeEvent[] = [
     minAge: 23,
     maxAge: 45,
     weight: 2,
-    condition: (c) => hasPartner(c) && !c.sterilized && !c.pregnant,
+    condition: (c) => couplePossible(c, partner(c)),
     text: () => "You and your partner have been talking about starting a family.",
     choices: [
       {
         label: "Try for a baby",
         effect: (c) => {
-          c.pregnant = true;
-          c.stats.happiness = clamp(c.stats.happiness + 15);
-          c.money = Math.max(0, c.money - 3000);
+          const p = partner(c);
+          if (!couplePossible(c, p)) return;
+          const me = playerParty(c);
+          const them = partnerParty(c, p);
+          // a year of trying: several chances at the "trying" odds
+          const odds = 1 - Math.pow(1 - conceptionChance(me, them, "trying"), 4);
+          if (Math.random() < odds) {
+            startPregnancy(c, {
+              carrier: me.bio === "female" ? "player" : "partner",
+              carrierId: me.bio === "female" ? undefined : p.id,
+              otherParentId: p.id,
+              plan: "keep",
+            });
+            c.stats.happiness = clamp(c.stats.happiness + 15);
+            p.level = clamp(p.level + 8);
+            tried = true;
+          } else {
+            c.stats.happiness = clamp(c.stats.happiness + 2);
+            tried = false;
+          }
         },
-        resultText: () => "You're expecting.",
+        resultText: () =>
+          tried
+            ? "It happened - you're expecting. The baby arrives next year."
+            : "No luck this year, but you had fun trying. There's always next year.",
       },
       {
         label: "Not yet",

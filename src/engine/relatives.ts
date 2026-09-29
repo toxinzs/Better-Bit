@@ -121,7 +121,7 @@ function previousYearActivity(c: Character, r: Relationship): number {
 
 export function tickRelatives(c: Character, world: WorldState): void {
   const pandemic = hasActiveCondition(world, "pandemic");
-  const people = c.relationships.filter((r) => r.alive && r.type !== "teacher" && r.type !== "classmate");
+  const people = c.relationships.filter((r) => r.alive && !r.hidden && r.type !== "teacher" && r.type !== "classmate");
   // random order so news isn't always about whoever was added first
   for (let i = people.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));

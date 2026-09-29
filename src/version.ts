@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "1.9.0";
+export const APP_VERSION = "1.10.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,19 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "1.10.0",
+    title: "Starting a Family",
+    highlights: [
+      "Adult couples (both 18+) can be intimate - with a real choice about protection when a baby is possible",
+      "Fertility is a hidden stat for you and your partners and it changes with age and health, so timing matters",
+      "If there's a pregnancy you find out right away and decide: keep the baby, plan an adoption, or not right now. If your partner is carrying, it's their decision too",
+      "The baby arrives the following year - and you name them. A pregnancy can also end in a miscarriage",
+      "Adoption is fleshed out: open, semi-open or closed. Stay in touch with letters and visits, or one day a grown child might come looking for you",
+      "Same-gender couples and anyone who can't conceive naturally can use IVF, insemination, a donor or surrogacy",
+      "Your partners have a hidden favor score too - it shapes how they respond to you",
+    ],
+  },
   {
     version: "1.9.0",
     title: "Life Goes On",

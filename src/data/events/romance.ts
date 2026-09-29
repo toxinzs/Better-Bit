@@ -2,6 +2,7 @@ import { LifeEvent } from "../../types";
 import { clamp } from "../../engine/util";
 import { partner, hasPartner } from "./helpers";
 import { addPerson } from "../../engine/people";
+import { buildPregnancyEvent, couplePossible, partnerParty, playerParty } from "../../engine/intimacy";
 import { randomInt } from "../../engine/util";
 
 export const ROMANCE_EVENTS: LifeEvent[] = [
@@ -280,25 +281,27 @@ export const ROMANCE_EVENTS: LifeEvent[] = [
     minAge: 18,
     maxAge: 42,
     weight: 0.3,
-    condition: (c) => hasPartner(c) && !c.usingBirthControl && !c.sterilized && !c.pregnant,
-    text: () => "You weren't planning on this, but you're pregnant.",
+    // only where a baby is actually possible and neither of you is on birth control
+    condition: (c) => {
+      const p = partner(c);
+      return couplePossible(c, p) && !c.usingBirthControl && !partnerParty(c, p).onBC;
+    },
+    text: () => "Something has felt different lately. You're wondering if you should take a test.",
     choices: [
       {
-        label: "Keep it",
+        label: "Take a test",
         effect: (c) => {
-          c.pregnant = true;
           const p = partner(c);
-          if (p) p.level = clamp(p.level + 10);
-          c.stats.happiness = clamp(c.stats.happiness + 10);
+          if (!couplePossible(c, p)) return;
+          const me = playerParty(c);
+          return buildPregnancyEvent(c, p, me.bio === "female" ? "player" : "partner", p.name.split(" ")[0]);
         },
-        resultText: () => "You're keeping it. A real change is coming.",
       },
       {
-        label: "It's not the right time",
+        label: "Wait and see",
         effect: (c) => {
-          c.stats.happiness = clamp(c.stats.happiness - 10);
+          c.stats.happiness = clamp(c.stats.happiness - 1);
         },
-        resultText: () => "It's not the right time. The pregnancy doesn't continue.",
       },
     ],
   },

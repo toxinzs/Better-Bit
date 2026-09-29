@@ -9,6 +9,7 @@ import { ambientMessageTick } from "./relationships";
 import { addPerson, ensurePeople, newPerson } from "./people";
 import { deathChance } from "./mortality";
 import { tickRelatives } from "./relatives";
+import { tickAdoption, tickPregnancy } from "./intimacy";
 import "./decisions"; // registers the funeral/crisis/request decision builders
 import { nextDecisionEvent } from "./decisionQueue";
 import { tickAssets, netWorth } from "./assets";
@@ -218,25 +219,11 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
   c.yearLog = [];
   c.yearNews = [];
 
-  // a pregnancy kept from the year before comes to term now - the baby
-  // exists as a real relationship right away (so parenting-style/kid-
-  // school-play/etc. events can already see them), but with a placeholder
-  // name; c.pendingBabyId tells the UI to hold up an actual naming prompt
-  // before anything else, same "block on a real answer" precedent as
-  // pendingEvent/EventModal.
-  if (c.pregnant) {
-    c.pregnant = false;
-    const baby = addPerson(c, {
-      type: "child",
-      age: 0,
-      name: "Baby",
-      gender: Math.random() < 0.5 ? "male" : "female",
-      level: 80,
-    });
-    c.pendingBabyId = baby.id;
-    c.stats.happiness = clamp(c.stats.happiness + 15);
-    c.yearLog.push("Your baby was born!");
-  }
+  // a pregnancy from the year before comes to term now (or, rarely, ends): the
+  // baby exists as a real child right away with a placeholder name, and
+  // c.pendingBabyId makes the UI hold up a naming prompt first. A pregnancy
+  // that was planned as an adoption queues the "what kind of adoption?" decision.
+  tickPregnancy(c);
 
   // natural stat drift
   c.stats.happiness = clamp(c.stats.happiness + randomInt(-2, 2));
@@ -267,6 +254,7 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
   // hard part - some of them die (funerals and money requests queue up as
   // decisions that outrank random events below)
   tickRelatives(c, world);
+  tickAdoption(c);
   if ((c.griefYears ?? 0) > 0) {
     c.griefYears = (c.griefYears ?? 0) - 1;
     c.stats.happiness = clamp(c.stats.happiness - 4);
