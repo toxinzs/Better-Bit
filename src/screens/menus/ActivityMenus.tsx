@@ -13,6 +13,7 @@ import {
   availableVenues, availableLessons, VACATIONS, CONCEPTION_METHODS, STERILIZATION_COST, VenueKey, LessonDef,
 } from "../../data/activities";
 import { getRegion } from "../../data/regions";
+import { coverageLine, fitnessWord, insurancePremium, medicalBill, playerConditionDef, stressWord, treatmentCost } from "../../engine/health";
 import { colors, spacing } from "../../theme";
 import { tabStyles } from "../tabs/sharedStyles";
 import { ms } from "./menuStyles";
@@ -94,14 +95,73 @@ export function VenuesMenu() {
 // ---------- health ----------
 
 export function HealthMenu() {
+  const character = useGameStore((s) => s.character);
   const visitDoctor = useGameStore((s) => s.visitDoctor);
   const seeTherapist = useGameStore((s) => s.seeTherapist);
+  const treatCondition = useGameStore((s) => s.treatCondition);
+  const buyInsurance = useGameStore((s) => s.buyInsurance);
+  if (!character) return null;
+  const region = getRegion(character.originRegion);
+  const conditions = character.conditions ?? [];
+  const stress = character.stress ?? 25;
+  const fitness = character.fitness ?? 50;
+  const doctorCost = medicalBill(character, 150);
+  const canBuyCover = region.healthcare !== "public" && character.age >= 18 && !character.job;
   return (
     <MenuScreen title="Health & Wellbeing" icon="medkit" color={colors.health}>
       <Card>
-        <Text style={ms.note}>Look after your body and your head. A doctor's visit restores health; therapy quietly rebuilds your peace of mind.</Text>
-        <Button label="See a Doctor ($150)" icon="medkit" variant="secondary" onPress={visitDoctor} style={ms.inlineBtn} />
+        <Text style={ms.subheading}>How you're doing</Text>
+        <View style={ms.statRow}>
+          <Text style={ms.listingName}>Health</Text>
+          <Text style={ms.ownedValue}>{Math.round(character.stats.health)}</Text>
+        </View>
+        <View style={ms.statRow}>
+          <Text style={ms.listingName}>Stress</Text>
+          <Text style={[ms.ownedValue, { color: stress >= 70 ? colors.danger : stress >= 45 ? colors.happiness : colors.health }]}>{stressWord(stress)}</Text>
+        </View>
+        <View style={[ms.statRow, { borderBottomWidth: 0, marginBottom: 0, paddingBottom: 0 }]}>
+          <Text style={ms.listingName}>Fitness</Text>
+          <Text style={[ms.ownedValue, { color: fitness >= 60 ? colors.health : fitness < 30 ? colors.danger : colors.happiness }]}>{fitnessWord(fitness)}</Text>
+        </View>
+      </Card>
+
+      {conditions.length > 0 && (
+        <Card>
+          <Text style={ms.subheading}>Conditions</Text>
+          {conditions.map((cond) => {
+            const def = playerConditionDef(cond.key);
+            const cost = treatmentCost(character, cond.key);
+            return (
+              <View key={cond.key} style={ms.rowBlock}>
+                <View style={ms.rowHead}>
+                  <Text style={ms.ownedName}>{def ? def.label[0].toUpperCase() + def.label.slice(1) : cond.key}</Text>
+                  <Text style={[ms.listingSub, { color: cond.treated ? colors.health : colors.danger }]}>{cond.treated ? "Treated" : "Untreated"}</Text>
+                </View>
+                {!cond.treated && <Button label={`Get treatment ($${cost.toLocaleString()})`} icon="medkit" variant="secondary" onPress={() => treatCondition(cond.key)} style={ms.inlineBtn} />}
+              </View>
+            );
+          })}
+        </Card>
+      )}
+
+      <Card>
+        <Text style={ms.subheading}>Care</Text>
+        <Text style={ms.note}>{coverageLine(character)}</Text>
+        <Button label={`See a Doctor ($${doctorCost.toLocaleString()})`} icon="medkit" variant="secondary" onPress={visitDoctor} style={ms.inlineBtn} />
         <Button label="See a Therapist ($120)" icon="chatbubbles" variant="secondary" onPress={seeTherapist} style={ms.inlineBtn} />
+        {canBuyCover && (
+          <Button
+            label={character.insured ? "Drop private insurance" : `Buy private insurance ($${insurancePremium(character).toLocaleString()}/yr)`}
+            icon="shield-checkmark"
+            variant="secondary"
+            onPress={buyInsurance}
+            style={ms.inlineBtn}
+          />
+        )}
+      </Card>
+
+      <Card>
+        <Text style={ms.note}>The gym, the park and time off ease stress and build fitness. Ignore both and your health, mood and looks pay for it.</Text>
       </Card>
     </MenuScreen>
   );

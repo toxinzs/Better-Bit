@@ -43,6 +43,53 @@ Status markers per item: **done**, **in progress**, or **not started**.
 
 ## Core Updates
 
+### Update: Better Bit 2.x — "make it deep" (in progress)
+
+After playtesting, the verdict was *shallow*: stats saturated near 100, nothing
+downstream read most of what the game tracked, and every screen was a stack of
+dropdowns. The 2.x series reworks the whole game before adding more on top.
+Principle: **every number must be read by something else.** Full plan lives in
+the planning notes; each release below is shippable on its own.
+
+- **v2.0 "New Look, New Character" (done).**
+  - Navigation: BitLife-style drill-down menus (hubs of rows -> full menu screens,
+    in-app back stack mirrored to the browser's back button, tab press resets),
+    a Profile screen, and tappable stat screens with a life-long sparkline plus
+    a "this year" breakdown of what moved the stat (`engine/stats.ts changeStat`).
+  - Character depth: Big-Five personality (surfaced as trait words), two quirks,
+    eight talents (revealed at 6), a birth wealth class (sets parents' jobs and
+    wealth, starting money and pocket money), a fully layered avatar (12 hairstyles,
+    eye colours, facial hair, glasses, freckles, builds) that visibly ages (child
+    proportions, greying, balding, wrinkles, tired/ill face), and a five-step
+    creation flow (identity -> birthplace -> family reveal -> appearance with an
+    age preview -> confirm). Older saves are backfilled deterministically.
+  - Stat consequences: hidden stress and fitness; happiness has real downward
+    pressure (money worries, loneliness, poor health, stress) and very high values
+    settle; health, looks and pay respond to fitness/illness; burnout and
+    wake-up-call events.
+  - Player health: 20 conditions (acute illnesses/injuries with hospital bills,
+    chronic and mental conditions), diagnosis decisions for the serious ones,
+    treatment with region-aware cost (public / mixed / private systems, employer or
+    private insurance), conditions that raise your mortality and name your cause of
+    death.
+  - Bug sweep: baby gender reveal + name suggestions, GPA initialised, legacy
+    college events folded into the school system, duplicate events removed.
+- **v2.1 "Growing Up" (next):** childhood 0-12, school as a real system (subjects,
+  exams, bullying, extracurriculars, region education systems, admissions, aid,
+  student loans, ~30 colleges/majors), and the **Jobs revamp** - separate
+  part-time, full-time and gig work with legal working ages by region, a job
+  detail popup (company + info) and an Apply -> interview popup with genuine,
+  situational, curveball and nonsense questions.
+- **v2.2 "The World":** 12 regions / ~50 cities, renting/owning/moving, cost of living.
+- **v2.3 "Across Borders":** emigration, immigration, citizenship, visas, travel.
+- **v2.4 "Working Life & Money":** career ladders, performance, business, taxes per country.
+- **v2.5 "Body, Mind & Things To Do":** fitness/diet, addiction, hobbies, interactions pass, 450+ events.
+
+Still owed from 2.0: talents `technical`/`verbal`/`social`/`artistic` are only read
+by lessons so far (school subjects and interviews read them in 2.1); hidden
+`reputation` arrives with jobs.
+
+
 ### Update: Foundations — event pool + relationships
 
 **Event pool (in progress).** BitLife's actual gameplay loop is thin — most

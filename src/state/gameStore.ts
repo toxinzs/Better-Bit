@@ -58,6 +58,7 @@ import {
 } from "../engine/lifeEngine";
 
 import { ensurePeople } from "../engine/people";
+import { buyInsurance as engineBuyInsurance, treatCondition as engineTreatCondition } from "../engine/health";
 import { nextDecisionEvent } from "../engine/decisionQueue";
 
 const STORAGE_KEY = "@better-bit/save/v1";
@@ -127,6 +128,8 @@ type GameState = {
   attack: (relationshipId: string) => void;
   surrender: () => void;
   seeTherapist: () => void;
+  treatCondition: (key: string) => void;
+  buyInsurance: () => void;
   personAction: (relationshipId: string, key: ActionKey, amount?: number) => void;
   restart: () => void;
 };
@@ -317,6 +320,8 @@ export const useGameStore = create<GameState>((set, get) => {
     doVenue: (venue) => applyToCharacter((c) => engineApplyVenue(c, venue)),
     visitDoctor: () => applyToCharacter((c) => engineVisitDoctor(c)),
     seeTherapist: () => applyToCharacter((c) => engineSeeTherapist(c)),
+    treatCondition: (key) => applyToCharacter((c) => engineTreatCondition(c, key)),
+    buyInsurance: () => applyToCharacter((c) => engineBuyInsurance(c)),
     takeLesson: (skill) => applyToCharacter((c) => engineTakeLesson(c, skill)),
     pursueDatingCandidate: (candidate) => applyToCharacter((c) => enginePursueDatingCandidate(c, candidate)),
     goOnBlindDate: () => applyToCharacter((c) => engineGoOnBlindDate(c)),

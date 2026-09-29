@@ -1,6 +1,8 @@
 import { Appearance, Character, Gender, Job, LifeEvent, Personality, RegionKey, Talents, WealthClass, WorldState } from "../types";
 import { appearanceFromSeed } from "../data/appearance";
 import { CLASSES } from "../data/traits";
+import { resetStatNotes } from "./stats";
+import { attendanceFactor, causeFromConditions, conditionMortality, tickHealth, tickWellbeing } from "./health";
 import { classFamilyBlurb, familyAllowance, rollClass, rollPersonality, rollQuirks, rollTalents, tickCharacter } from "./character";
 import { clamp, randomInt, pickWeighted } from "./util";
 import { EVENTS } from "../data/events";
@@ -253,6 +255,7 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
   hist.push({ age: c.age, health: c.stats.health, happiness: c.stats.happiness, smarts: c.stats.smarts, looks: c.stats.looks });
   if (hist.length > 110) hist.shift();
 
+  resetStatNotes(c);
   c.age += 1;
   c.yearLog = [];
   c.yearNews = [];
@@ -270,10 +273,11 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
     c.stats.smarts = clamp(c.stats.smarts + randomInt(0, 2));
   }
   if (c.age >= 55) {
-    c.stats.health = clamp(c.stats.health - randomInt(0, 3));
+    // ageing itself is gentle until the seventies; illnesses (engine/health.ts) do the real damage
+    c.stats.health = clamp(c.stats.health - (c.age < 70 ? randomInt(0, 1) : randomInt(0, 3)));
   } else {
     // youthful recovery: minor injuries/illnesses heal on their own
-    c.stats.health = clamp(c.stats.health + randomInt(1, 4));
+    c.stats.health = clamp(c.stats.health + (c.age < 40 ? randomInt(2, 5) : randomInt(1, 4)));
   }
   if (hasActiveCondition(world, "pandemic")) {
     c.stats.health = clamp(c.stats.health - randomInt(0, 4));
@@ -289,6 +293,8 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
 
   // who you are: personality, quirks and talents at work, plus family pocket money
   tickCharacter(c);
+  tickWellbeing(c, world);
+  tickHealth(c, world);
   const allowance = familyAllowance(c);
   if (allowance > 0) {
     c.money += allowance;
@@ -323,7 +329,7 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
   // income
   if (c.job) {
     // a head for business shows up in the pay packet
-    const gross = Math.round(effectiveSalary(c.job, world, c.originRegion) * (1 + ((c.talents?.business ?? 50) - 50) / 1000));
+    const gross = Math.round(effectiveSalary(c.job, world, c.originRegion) * (1 + ((c.talents?.business ?? 50) - 50) / 1000) * attendanceFactor(c));
     const { contribution, employerMatch, taxableIncome } = applyContribution(c, gross);
     const tax = incomeTax(taxableIncome, c.originRegion);
     const net = taxableIncome - tax;
@@ -344,10 +350,10 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
 
   // death roll: very low health raises the odds sharply but never guarantees death on its own
   const dieFromHealth = c.stats.health <= 0 && Math.random() < 0.4;
-  const dieFromAge = Math.random() < deathChance(c.age, c.stats.health);
+  const dieFromAge = Math.random() < Math.min(0.95, deathChance(c.age, c.stats.health) * conditionMortality(c));
   if (dieFromHealth || dieFromAge) {
     c.alive = false;
-    c.causeOfDeath = dieFromHealth ? "declining health" : "natural causes";
+    c.causeOfDeath = dieFromHealth ? "declining health" : causeFromConditions(c) ?? "natural causes";
     c.yearLog.push(
       `At age ${c.age}, your life came to an end${dieFromHealth ? " after your health gave out" : ""}.`,
     );

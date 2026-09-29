@@ -248,6 +248,12 @@ export type Appearance = {
   balding: number;
 };
 
+// An illness or long-term condition the player has. `key` matches
+// engine/health.ts's PLAYER_CONDITIONS (which extends mortality.ts CONDITIONS).
+export type PlayerCondition = { key: string; since: number; treated?: boolean };
+
+export type StatNote = { reason: string; delta: number };
+
 export type Background = {
   wealthClass: WealthClass;
   parentValues: string; // one line of flavour about how the family sees the world
@@ -312,6 +318,12 @@ export type Character = {
   avatarSeed?: number;
   // ---- character depth (v2.0c); all optional, backfilled by engine/character.ts ensureCharacter ----
   personality?: Personality;
+  // ---- stat consequences + health (v2.0d) ----
+  stress?: number; // 0-100 hidden; drags happiness/health when high
+  fitness?: number; // 0-100 hidden; feeds health and looks
+  conditions?: PlayerCondition[];
+  insured?: boolean; // bought private cover (jobs and public systems cover you otherwise)
+  statNotes?: Partial<Record<StatKey, StatNote[]>>; // what moved each stat this year
   quirks?: string[];
   talents?: Talents;
   background?: Background;

@@ -1,6 +1,7 @@
 import { RegionKey } from "../types";
 
 export type CostOfLivingTier = "low" | "mid" | "high";
+export type HealthcareModel = "public" | "mixed" | "private";
 
 export type LegalAges = {
   drinking: number;
@@ -21,6 +22,9 @@ export type RegionDef = {
   key: RegionKey;
   label: string;
   costOfLivingTier: CostOfLivingTier;
+  // who pays for care: "public" = the state (small copays), "mixed" = state plus a share you
+  // pay, "private" = you or your insurance/employer
+  healthcare: HealthcareModel;
   startingWealthRange: [number, number];
   legalAges: LegalAges;
   drugsIllegal: boolean;
@@ -41,6 +45,7 @@ export type RegionDef = {
 export const REGIONS: Record<RegionKey, RegionDef> = {
   us: {
     key: "us",
+    healthcare: "private",
     label: "United States",
     costOfLivingTier: "mid",
     startingWealthRange: [0, 400],
@@ -60,6 +65,7 @@ export const REGIONS: Record<RegionKey, RegionDef> = {
   },
   uk: {
     key: "uk",
+    healthcare: "public",
     label: "United Kingdom",
     costOfLivingTier: "mid",
     startingWealthRange: [0, 350],
@@ -79,6 +85,7 @@ export const REGIONS: Record<RegionKey, RegionDef> = {
   },
   nigeria: {
     key: "nigeria",
+    healthcare: "private",
     label: "Nigeria",
     costOfLivingTier: "low",
     startingWealthRange: [0, 120],
@@ -101,6 +108,7 @@ export const REGIONS: Record<RegionKey, RegionDef> = {
   },
   japan: {
     key: "japan",
+    healthcare: "mixed",
     label: "Japan",
     costOfLivingTier: "high",
     startingWealthRange: [0, 600],
@@ -124,6 +132,7 @@ export const REGIONS: Record<RegionKey, RegionDef> = {
   },
   brazil: {
     key: "brazil",
+    healthcare: "mixed",
     label: "Brazil",
     costOfLivingTier: "low",
     startingWealthRange: [0, 150],

@@ -174,9 +174,9 @@ const STAT_INFO: Record<StatKey, { title: string; color: string; icon: "heart" |
     color: colors.health,
     icon: "heart",
     affects: [
-      "How likely you are to survive each year - low health gets dangerous fast.",
-      "Falling below 30 makes illness and hospital stays much more likely.",
-      "Doctor visits, the gym and a healthy lifestyle raise it. Age wears it down.",
+      "How likely you are to survive each year - and illnesses you carry multiply that risk.",
+      "Below 35 you miss work (lower pay) and feel miserable.",
+      "Stress and poor fitness wear it down. The gym, doctors, treatment and rest build it back.",
     ],
   },
   happiness: {
@@ -185,8 +185,8 @@ const STAT_INFO: Record<StatKey, { title: string; color: string; icon: "heart" |
     icon: "happy",
     affects: [
       "Your mood shows on your face.",
-      "Time with people you love, achievements and fun keep it up.",
-      "Loss, arguments and hard times pull it down.",
+      "Time with people you love, achievements and fun lift it. Very high happiness slowly settles back.",
+      "Stress, money worries, loneliness, poor health and loss pull it down - some personalities feel that more.",
     ],
   },
   smarts: {
@@ -195,8 +195,8 @@ const STAT_INFO: Record<StatKey, { title: string; color: string; icon: "heart" |
     icon: "school",
     affects: [
       "Your grades and how far you can go in school.",
-      "Which jobs you qualify for, and how much they pay.",
-      "Studying, reading and lessons raise it.",
+      "Which jobs you qualify for.",
+      "Effort in school (disciplined and academic people do more of it), reading and curiosity raise it.",
     ],
   },
   looks: {
@@ -205,7 +205,8 @@ const STAT_INFO: Record<StatKey, { title: string; color: string; icon: "heart" |
     icon: "sparkles",
     affects: [
       "First impressions: dating, some jobs and how people treat you.",
-      "The gym, care for yourself and good health help; time and neglect fade it.",
+      "Staying fit, spa days and taking care of yourself help.",
+      "Time takes some of it, and so does letting yourself go.",
     ],
   },
 };
@@ -247,6 +248,24 @@ export function StatDetailMenu({ stat }: { stat: StatKey }) {
           <Text style={styles.sub}>Check back after a few birthdays - your history builds year by year.</Text>
         )}
       </Card>
+      {(() => {
+        const notes = character.statNotes?.[stat] ?? [];
+        return (
+          <Card>
+            <Text style={styles.heading}>This year</Text>
+            {notes.length === 0 ? (
+              <Text style={styles.sub}>Nothing in particular moved it.</Text>
+            ) : (
+              notes
+                .slice()
+                .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+                .map((n, i, arr) => (
+                  <Row key={n.reason} label={n.reason} value={`${n.delta > 0 ? "+" : ""}${n.delta}`} last={i === arr.length - 1} />
+                ))
+            )}
+          </Card>
+        );
+      })()}
       <Card>
         <Text style={styles.heading}>What it does</Text>
         {info.affects.map((a, i) => (

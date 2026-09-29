@@ -1,7 +1,74 @@
 import { LifeEvent } from "../../types";
 import { clamp } from "../../engine/util";
+import { changeStat } from "../../engine/stats";
+import { easeStress } from "../../engine/health";
 
 export const HEALTH_EVENTS: LifeEvent[] = [
+  {
+    id: "burnout",
+    minAge: 14,
+    maxAge: 70,
+    weight: 6,
+    condition: (c) => (c.stress ?? 0) >= 78 && (!!c.job || (c.age >= 6 && c.age <= 22)),
+    text: (c) => (c.job ? "You've been running on empty for months. Your body and mind are sending a clear message." : "The pressure has piled up until you can barely think straight."),
+    choices: [
+      {
+        label: "Take real time off",
+        sublabel: "Costs some pay, fixes the problem",
+        effect: (c) => {
+          if (c.job) c.money = Math.max(0, c.money - Math.round(c.job.salary / 8));
+          easeStress(c, 40);
+          changeStat(c, "happiness", 6, "Time to recover");
+          changeStat(c, "health", 4, "Time to recover");
+        },
+        resultText: () => "You stepped back and let yourself recover. It cost you, but you're coming back up.",
+      },
+      {
+        label: "Talk to someone",
+        sublabel: "$120",
+        effect: (c) => {
+          c.money = Math.max(0, c.money - 120);
+          easeStress(c, 25);
+          c.sanity = clamp((c.sanity ?? 75) + 6);
+        },
+        resultText: () => "Saying it out loud helped more than you expected.",
+      },
+      {
+        label: "Push through",
+        tone: "danger",
+        effect: (c) => {
+          changeStat(c, "health", -10, "Burnout");
+          changeStat(c, "happiness", -8, "Burnout");
+          c.sanity = clamp((c.sanity ?? 75) - 6);
+        },
+        resultText: () => "You kept going. Your body eventually made the decision for you.",
+      },
+    ],
+  },
+  {
+    id: "wake-up-call",
+    minAge: 30,
+    maxAge: 75,
+    weight: 3,
+    condition: (c) => (c.fitness ?? 50) < 25 && c.stats.health < 65,
+    text: () => "Climbing a single flight of stairs leaves you winded. Your doctor doesn't sugar-coat it.",
+    choices: [
+      {
+        label: "Start moving - for real",
+        effect: (c) => {
+          c.fitness = clamp((c.fitness ?? 25) + 22);
+          changeStat(c, "happiness", -2, "Hard work");
+        },
+        resultText: () => "The first weeks are awful. Then something clicks.",
+      },
+      {
+        label: "Deal with it later",
+        effect: (c) => {
+          changeStat(c, "health", -4, "Ignoring the warning");
+        },
+      },
+    ],
+  },
   {
     id: "common-cold",
     minAge: 3,

@@ -1,6 +1,7 @@
 import { Character, Gender, LifeEvent, RegionKey, Relationship } from "../types";
 import { clamp, randomInt } from "./util";
 import { SKILL_TALENT, talentMult } from "./character";
+import { easeStress, gainFitness, medicalBill } from "./health";
 import { addPerson, randomGender } from "./people";
 import {
   Party,
@@ -73,6 +74,8 @@ export function applyVenue(c: Character, key: VenueKey): void {
       c.stats.health = clamp(c.stats.health + 5);
       c.stats.looks = clamp(c.stats.looks + 2);
       c.stats.happiness = clamp(c.stats.happiness - 1);
+      gainFitness(c, 10);
+      easeStress(c, 4);
       c.yearLog.push("You hit the gym.");
       break;
     case "library":
@@ -83,16 +86,21 @@ export function applyVenue(c: Character, key: VenueKey): void {
     case "park":
       c.stats.happiness = clamp(c.stats.happiness + 4);
       c.stats.health = clamp(c.stats.health + 2);
+      gainFitness(c, 4);
+      easeStress(c, 6);
       c.yearLog.push("You spent a relaxing day at the park.");
       break;
     case "beach":
       c.stats.happiness = clamp(c.stats.happiness + 5);
       c.stats.looks = clamp(c.stats.looks + 1);
       c.stats.health = clamp(c.stats.health + 1);
+      gainFitness(c, 3);
+      easeStress(c, 8);
       c.yearLog.push("You caught some sun at the beach.");
       break;
     case "worship":
       c.stats.happiness = clamp(c.stats.happiness + 3);
+      easeStress(c, 6);
       c.yearLog.push("You spent time at your place of worship. A moment of peace.");
       break;
     case "museum":
@@ -102,6 +110,7 @@ export function applyVenue(c: Character, key: VenueKey): void {
       break;
     case "movies":
       c.stats.happiness = clamp(c.stats.happiness + 6);
+      easeStress(c, 5);
       c.yearLog.push("You caught a movie.");
       break;
     case "mall":
@@ -112,12 +121,14 @@ export function applyVenue(c: Character, key: VenueKey): void {
     case "concert":
       c.stats.happiness = clamp(c.stats.happiness + 10);
       c.stats.health = clamp(c.stats.health - 1);
+      easeStress(c, 8);
       c.yearLog.push("You went to a concert. Ears ringing, worth every penny.");
       break;
     case "spa":
       c.stats.happiness = clamp(c.stats.happiness + 8);
       c.stats.health = clamp(c.stats.health + 3);
       c.stats.looks = clamp(c.stats.looks + 3);
+      easeStress(c, 16);
       c.yearLog.push("You spent the day at the spa.");
       break;
     case "bar": {
@@ -155,13 +166,20 @@ export function applyVenue(c: Character, key: VenueKey): void {
 }
 
 export function visitDoctor(c: Character): void {
-  if (c.money < DOCTOR_COST) {
-    c.yearLog.push("You couldn't afford a doctor's visit.");
+  const cost = medicalBill(c, DOCTOR_COST);
+  if (c.money < cost) {
+    c.yearLog.push(`You couldn't afford a doctor's visit ($${cost.toLocaleString()}).`);
     return;
   }
-  c.money -= DOCTOR_COST;
-  c.stats.health = clamp(c.stats.health + 8);
-  c.yearLog.push(`You visited the doctor for a checkup. -$${DOCTOR_COST}`);
+  c.money -= cost;
+  const gain = c.stats.health < 60 ? 10 : 6;
+  c.stats.health = clamp(c.stats.health + gain);
+  const found = (c.conditions ?? []).filter((x) => !x.treated).length;
+  c.yearLog.push(
+    found > 0
+      ? `You saw the doctor for a checkup. They flagged ${found} thing${found > 1 ? "s" : ""} worth treating - see Health. -$${cost.toLocaleString()}`
+      : `You visited the doctor for a checkup. All good. -$${cost.toLocaleString()}`,
+  );
 }
 
 // ---------- Lessons ----------
@@ -442,6 +460,7 @@ export function takeVacation(c: Character, key: VacationKey): void {
   const boost = key === "weekend" ? 6 : key === "beach" ? 12 : 18;
   c.stats.happiness = clamp(c.stats.happiness + boost);
   c.stats.health = clamp(c.stats.health + Math.round(boost / 3));
+  easeStress(c, boost * 2);
 
   const family = [partner(c), ...children(c), mother(c), father(c)].filter(
     (r): r is Relationship => r !== undefined,

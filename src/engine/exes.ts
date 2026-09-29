@@ -8,6 +8,7 @@ import { fillTokens } from "./conversations";
 import { buildArrestEvent } from "./crime";
 import { romanceAllowed } from "./romanceRules";
 import { clamp, randomInt } from "./util";
+import { easeStress, hasCondition } from "./health";
 
 // Exes, obsession and restraining orders. Two hidden numbers drive it:
 //  - YOUR sanity (Character.sanity, default 75; "craziness" = 100 - sanity):
@@ -307,6 +308,13 @@ export function seeTherapist(c: Character): void {
   c.money -= THERAPY_COST;
   adjustSanity(c, 8);
   c.stats.happiness = clamp(c.stats.happiness + 3);
+  easeStress(c, 18);
+  for (const key of ["depression", "anxiety"]) {
+    if (hasCondition(c, key) && Math.random() < 0.35) {
+      c.conditions = (c.conditions ?? []).filter((x) => x.key !== key);
+      c.yearLog.push(`Therapy is working - you've come out the other side of ${key}.`);
+    }
+  }
   c.yearLog.push(`You saw a therapist and talked through what's been weighing on you. It helped. (-$${THERAPY_COST})`);
 }
 

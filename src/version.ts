@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "1.12.0";
+export const APP_VERSION = "2.0.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,20 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "2.0.0",
+    title: "New Look, New Character",
+    highlights: [
+      "Menus work like BitLife now: tap a row and it opens its own screen, with a back button (and your browser's back button works too)",
+      "Tap your face for a Profile screen, and tap any of the four stats for its history chart and what changed it this year",
+      "Start a life in five steps: who you are, where you're born, meet your family, design your look (and preview yourself at any age), then begin",
+      "You're born with a personality, two quirks and hidden talents that show up as you grow - and a family with real money (or the lack of it) that shapes your parents' jobs and your pocket money",
+      "A brand-new avatar: 12 hairstyles, eye colours, beards, glasses, freckles, builds - and it ages with you: greying, balding, wrinkles, tired when you're unwell",
+      "Stats finally matter: stress and fitness work behind the scenes, happiness no longer sits at 100 forever, and burnout can hit if you never slow down",
+      "A real health system: illnesses, injuries and hospital bills, chronic and mental conditions, serious diagnoses you must decide how to handle, treatment, and insurance that depends on where you live",
+      "Babies now announce their gender at birth, with name suggestions",
+    ],
+  },
   {
     version: "1.12.0",
     title: "Raising a Family",
