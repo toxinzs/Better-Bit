@@ -127,18 +127,41 @@ export type LoveOutcome = { line: string; next?: LifeEvent };
 
 // Runs one encounter with a partner. Returns the fade-to-black line and, when a
 // pregnancy results, the reveal popup to chain.
-export function makeLove(c: Character, r: Relationship, protection: Protection, dampen: number): LoveOutcome {
+export function makeLove(c: Character, r: Relationship, protection: Protection, dampen: number, ex = false): LoveOutcome {
   const n = first(r);
+  // (an ex has already agreed by the time we get here - see the booty-call roll)
   const willing = clamp(0.55 + (r.favor ?? 50) / 220 + r.level / 300, 0.3, 0.97);
-  if (Math.random() > willing) {
+  if (!ex && Math.random() > willing) {
     r.level = clamp(r.level + 1);
     return { line: fillTokens(DECLINE_LINES[randomInt(0, DECLINE_LINES.length - 1)], r) };
   }
-  const bond = Math.max(1, Math.round(6 * dampen));
+  const bond = Math.max(1, Math.round((ex ? 3 : 6) * dampen));
   r.level = clamp(r.level + bond);
-  r.favor = clamp((r.favor ?? 50) + 4);
-  c.stats.happiness = clamp(c.stats.happiness + 6);
-  const line = `${fillTokens(NIGHT_LINES[randomInt(0, NIGHT_LINES.length - 1)], r)}  (+${bond} bond)`;
+  r.favor = clamp((r.favor ?? 50) + (ex ? 2 : 4));
+  c.stats.happiness = clamp(c.stats.happiness + (ex ? 4 : 6));
+  let line = `${fillTokens(NIGHT_LINES[randomInt(0, NIGHT_LINES.length - 1)], r)}  (+${bond} bond)`;
+
+  if (ex) {
+    // with an ex it's complicated: you might be cheating, or it might rekindle
+    const other = c.relationships.find((x) => x.alive && x.type === "partner" && x.id !== r.id);
+    if (other) {
+      if (Math.random() < 0.3) {
+        other.type = "ex";
+        other.married = false;
+        other.engaged = false;
+        other.level = clamp(other.level - 40);
+        c.stats.happiness = clamp(c.stats.happiness - 20);
+        line += ` ${first(other)} found out. It's over.`;
+      } else {
+        line += " Nobody found out. This time.";
+      }
+    } else if (Math.random() < 0.15) {
+      r.type = "partner";
+      r.level = clamp(Math.max(r.level, 60));
+      r.harass = 0;
+      line += ` Afterwards you and ${n} talked, really talked. You're back together.`;
+    }
+  }
 
   const me = playerParty(c);
   const them = partnerParty(c, r);

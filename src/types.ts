@@ -90,6 +90,10 @@ export type Relationship = {
   adoption?: { kind: AdoptionKind; age: number }; // this child was placed for adoption
   hidden?: boolean; // not shown (a closed adoption until they find you)
   wealth?: number; // hidden 0-100: how much money they could spare
+  harass?: number; // ex: how much unwanted contact you've made lately (decays yearly)
+  incidents?: number; // ex: how many times it's escalated (drive-bys, showing up, their own harassment)
+  // a restraining order between you: by "them" (they filed against you) or "you"
+  order?: { by: "you" | "them"; untilAge: number; ignoring?: boolean };
   treated?: boolean; // their serious illness is being treated (lowers their mortality)
   lowYears?: number; // consecutive years the bond has been very low
   ledger?: number; // money owed: positive = they owe you, negative = you owe them

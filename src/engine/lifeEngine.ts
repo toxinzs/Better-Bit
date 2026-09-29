@@ -6,10 +6,11 @@ import { getRegion } from "../data/regions";
 import { MIN_AGE_CONVERSATION, getLifeStage } from "./lifeStage";
 import { tickWorldState, hasActiveCondition, effectiveSalary } from "./worldState";
 import { ambientMessageTick } from "./relationships";
-import { addPerson, ensurePeople, newPerson } from "./people";
+import { addPerson, ensurePeople, newPerson, refreshCoworkers } from "./people";
 import { deathChance } from "./mortality";
 import { tickRelatives } from "./relatives";
 import { tickAdoption, tickPregnancy } from "./intimacy";
+import { tickExes, tickSanity } from "./exes";
 import "./decisions"; // registers the funeral/crisis/request decision builders
 import { nextDecisionEvent } from "./decisionQueue";
 import { tickAssets, netWorth } from "./assets";
@@ -37,6 +38,7 @@ export { getLifeStage } from "./lifeStage";
 export type { LifeStage } from "./lifeStage";
 export { createInitialWorldState, effectiveSalary, hasActiveCondition, regionJobMultiplier } from "./worldState";
 export { textRelationship, callRelationship, bootyCall, sendGift } from "./relationships";
+export { seeTherapist, THERAPY_COST } from "./exes";
 export { buyCar, sellCar, buyHome, sellHome, netWorth } from "./assets";
 export { takeOutLoan, openCreditCard, payDownLoan, chargeCard } from "./debt";
 export { creditScoreLabel } from "./finance";
@@ -255,6 +257,8 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
   // decisions that outrank random events below)
   tickRelatives(c, world);
   tickAdoption(c);
+  tickExes(c);
+  tickSanity(c);
   if ((c.griefYears ?? 0) > 0) {
     c.griefYears = (c.griefYears ?? 0) - 1;
     c.stats.happiness = clamp(c.stats.happiness - 4);
@@ -403,10 +407,12 @@ export function applyForJob(c: Character, job: Job) {
     return;
   }
   c.job = job;
+  refreshCoworkers(c);
   c.yearLog.push(`You got a job as a ${job.title}!`);
 }
 
 export function quitJob(c: Character) {
   c.job = null;
+  refreshCoworkers(c);
   c.yearLog.push("You quit your job.");
 }

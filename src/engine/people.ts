@@ -268,3 +268,21 @@ export function jobLine(c: Character, r: Relationship): string {
   const age = ageOf(c, r);
   return [`${age}`, r.job].filter(Boolean).join(" · ");
 }
+
+// Your workplace roster: whenever the job changes, close coworkers become
+// friends and the rest drift off the list, then the new job brings three new
+// faces (adults only).
+export function refreshCoworkers(c: Character): void {
+  c.relationships = c.relationships.filter((r) => {
+    if (r.type !== "coworker") return true;
+    if (r.level >= 55) {
+      r.type = "friend";
+      return true;
+    }
+    return !r.alive; // keep memorials
+  });
+  if (!c.job || c.age < 18) return;
+  for (let i = 0; i < 3; i++) {
+    addPerson(c, { type: "coworker", age: clamp(c.age + randomInt(-8, 10), 18, 66), level: randomInt(35, 60) });
+  }
+}

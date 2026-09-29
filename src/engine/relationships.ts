@@ -31,7 +31,7 @@ function inContact(r: Relationship): boolean {
   return !r.blocked && r.status !== "estranged" && r.status !== "placed";
 }
 
-function pushMessage(r: Relationship, msg: TextMessage) {
+export function pushMessage(r: Relationship, msg: TextMessage) {
   const messages = r.messages ?? [];
   messages.push(msg);
   if (messages.length > MAX_MESSAGES) messages.shift();

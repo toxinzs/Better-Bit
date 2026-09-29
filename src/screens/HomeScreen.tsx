@@ -59,10 +59,6 @@ export default function HomeScreen() {
   const nameBaby = useGameStore((s) => s.nameBaby);
   const ageUp = useGameStore((s) => s.ageUp);
   const chooseEventOption = useGameStore((s) => s.chooseEventOption);
-  const textRelationship = useGameStore((s) => s.textRelationship);
-  const callRelationship = useGameStore((s) => s.callRelationship);
-  const bootyCall = useGameStore((s) => s.bootyCall);
-  const sendGift = useGameStore((s) => s.sendGift);
   const [tab, setTab] = useState<Tab>("life");
   const [viewingThreadId, setViewingThreadId] = useState<string | null>(null);
   const [showThemes, setShowThemes] = useState(false);
@@ -222,15 +218,7 @@ export default function HomeScreen() {
       ) : null}
 
       {viewingThread && (
-        <TextThreadModal
-          relationship={viewingThread}
-          money={character.money}
-          onText={() => { playSound("sent"); textRelationship(viewingThread.id); }}
-          onCall={() => { playSound("sent"); callRelationship(viewingThread.id); }}
-          onBootyCall={() => { playSound("sent"); bootyCall(viewingThread.id); }}
-          onSendGift={(amount) => { playSound("sent"); sendGift(viewingThread.id, amount); }}
-          onClose={() => setViewingThreadId(null)}
-        />
+        <TextThreadModal relationship={viewingThread} onClose={() => setViewingThreadId(null)} />
       )}
     </SafeAreaView>
   );

@@ -1,6 +1,11 @@
 import { Character, EventChoice, LifeEvent, Relationship, WorldState } from "../types";
 import { Venue, MINOR_VENUES, ADULT_VENUES, MINOR_DATE_VENUES, PARTY_VENUES, SLEEPOVER_MINOR, SLEEPOVER_ADULT } from "../data/outings";
 import { MIN_AGE_CONVERSATION } from "./lifeStage";
+import { romanceAllowed } from "./romanceRules";
+import {
+  adjustSanity, buildArgueEvent, buildStalkEvent, bumpHarass, canAskBack, askBack as doAskBack, exCall as doExCall,
+  exText as doExText, isViolation, orderLock, violationArrest,
+} from "./exes";
 import { ageOf, uid } from "./people";
 import { buildTalkEvent, categoryOf, dim, fillTokens, hasScene } from "./conversations";
 import { buildGiftEvent } from "./gifts";
@@ -15,9 +20,10 @@ import { clamp, randomInt } from "./util";
 export type ActionKey =
   | "talk" | "spendTime" | "goOut" | "party" | "sleepover" | "gift" | "giveMoney" | "askMoney"
   | "holdHands" | "firstKiss" | "askOut" | "breakUp" | "leaveFlowers" | "remember"
-  | "makeLove" | "writeLetter" | "visitChild";
+  | "makeLove" | "writeLetter" | "visitChild"
+  | "exText" | "exCall" | "argue" | "stalk" | "askBack" | "bootyCall" | "block" | "unblock";
 
-export type ActionCategory = "Connect" | "Outings" | "Money" | "Romance" | "Remember";
+export type ActionCategory = "Connect" | "Outings" | "Money" | "Romance" | "Conflict" | "Remember";
 
 export type ActionDef = {
   key: ActionKey;
@@ -34,20 +40,21 @@ const CAPS: Record<ActionKey, number> = {
   talk: 3, spendTime: 3, goOut: 2, party: 1, sleepover: 2, gift: 3, giveMoney: 3, askMoney: 2,
   holdHands: 1, firstKiss: 1, askOut: 1, breakUp: 1, leaveFlowers: 1, remember: 1,
   makeLove: 3, writeLetter: 2, visitChild: 1,
+  exText: 3, exCall: 2, argue: 2, stalk: 2, askBack: 1, bootyCall: 2, block: 1, unblock: 1,
 };
+
+const EX_ONLY: ActionKey[] = ["exText", "exCall", "argue", "stalk", "askBack", "bootyCall", "block", "unblock"];
+// anything that reaches out to the person (so an order against you forbids it)
+const CONTACT_KEYS: ActionKey[] = [
+  "talk", "spendTime", "goOut", "party", "sleepover", "gift", "giveMoney", "askMoney", "makeLove", "holdHands", "firstKiss",
+  "askOut", "exText", "exCall", "argue", "stalk", "askBack", "bootyCall",
+];
 
 // ---------- age & romance gates (hardcoded) ----------
 
 export { bothAdults };
 
-// Who may start a romance: adults with adults, or teens (13-17) with
-// classmate-age peers (within a year, also 13-17). Never across the 18 line.
-export function romanceAllowed(c: Character, r: Relationship): boolean {
-  const a = c.age;
-  const b = ageOf(c, r);
-  if (a >= 18 && b >= 18) return true;
-  return a >= 13 && a < 18 && b >= 13 && b < 18 && Math.abs(a - b) <= 1;
-}
+export { romanceAllowed };
 
 function hasPartner(c: Character): boolean {
   return c.relationships.some((r) => r.type === "partner" && r.alive);
@@ -117,6 +124,12 @@ function lockFor(c: Character, r: Relationship, key: ActionKey): string | null {
     return "n/a";
   }
   if (key === "writeLetter" || key === "visitChild") return "n/a";
+  if (EX_ONLY.includes(key) && r.type !== "ex") return "n/a";
+  // unblocking is the one thing you can do to somebody you've blocked
+  if (key === "unblock") return r.blocked ? null : "n/a";
+  if (key === "block") return r.blocked ? "n/a" : null;
+  const orderReason = CONTACT_KEYS.includes(key) ? orderLock(c, r) : null;
+  if (orderReason) return orderReason;
   const blocked = contactBlocked(r);
   const theirAge = ageOf(c, r);
   const adultPair = bothAdults(c, r);
@@ -126,6 +139,20 @@ function lockFor(c: Character, r: Relationship, key: ActionKey): string | null {
       if (c.age < MIN_AGE_CONVERSATION || theirAge < 3) return "Too young to chat";
       return hasScene(c, r) ? null : "Nothing to say right now";
     case "spendTime":
+      return r.type === "ex" ? "n/a" : blocked;
+    case "exText":
+    case "exCall":
+    case "argue":
+      return blocked;
+    case "stalk":
+      return null;
+    case "askBack": {
+      const why = canAskBack(c, r);
+      return why ?? blocked;
+    }
+    case "bootyCall":
+      // adults only, both of you - hardcoded, never a regional setting
+      if (!adultPair) return "n/a";
       return blocked;
     case "goOut":
       if (blocked) return blocked;
@@ -174,7 +201,7 @@ function lockFor(c: Character, r: Relationship, key: ActionKey): string | null {
       if (r.level < 60) return "Get closer first";
       return null;
     case "askOut":
-      if (!["classmate", "friend"].includes(r.type)) return "n/a";
+      if (!["classmate", "friend", "coworker"].includes(r.type)) return "n/a";
       if (hasPartner(c)) return "You're already seeing someone";
       if (!romanceAllowed(c, r)) return "n/a";
       return blocked;
@@ -206,13 +233,22 @@ const META: Record<ActionKey, { label: string; icon: string; cat: ActionCategory
   makeLove: { label: "Make Love", icon: "heart", cat: "Romance" },
   writeLetter: { label: "Write to Them", icon: "mail", cat: "Connect" },
   visitChild: { label: "Visit Them", icon: "car", cat: "Connect" },
+  exText: { label: "Text", icon: "chatbubble", cat: "Connect" },
+  exCall: { label: "Call", icon: "call", cat: "Connect" },
+  argue: { label: "Argue", icon: "flash", cat: "Conflict" },
+  stalk: { label: "Look Them Up", icon: "eye", cat: "Conflict" },
+  askBack: { label: "Ask to Get Back Together", icon: "heart-circle", cat: "Romance" },
+  bootyCall: { label: "Booty Call", icon: "flame", cat: "Romance" },
+  block: { label: "Block", icon: "ban", cat: "Conflict" },
+  unblock: { label: "Unblock", icon: "checkmark-circle", cat: "Conflict" },
   leaveFlowers: { label: "Leave Flowers", icon: "rose", cat: "Remember" },
   remember: { label: "Remember Them", icon: "images", cat: "Remember" },
 };
 
 const ORDER: ActionKey[] = [
   "talk", "spendTime", "goOut", "party", "sleepover", "gift", "giveMoney", "askMoney",
-  "askOut", "holdHands", "firstKiss", "makeLove", "writeLetter", "visitChild", "breakUp",
+  "exText", "exCall", "askOut", "holdHands", "firstKiss", "makeLove", "askBack", "bootyCall",
+  "writeLetter", "visitChild", "argue", "stalk", "block", "unblock", "breakUp",
 ];
 
 const MEMORY_LINES = [
@@ -315,14 +351,14 @@ function venueEvent(c: Character, r: Relationship, key: ActionKey, prompt: strin
 
 // "Make love": a protection choice when a baby is even possible, then fade to
 // black. Anything that ends in a pregnancy chains its own reveal popup.
-function buildLoveEvent(c: Character, r: Relationship, usedBefore: number): LifeEvent | null {
+function buildLoveEvent(c: Character, r: Relationship, usedBefore: number, ex = false): LifeEvent | null {
   const me = playerParty(c);
   const them = partnerParty(c, r);
   const dampen = dim(usedBefore);
 
   if (!canConceive(c, me, them)) {
-    bump(c, r, "makeLove");
-    c.yearLog.push(makeLove(c, r, "none", dampen).line);
+    if (!ex) bump(c, r, "makeLove");
+    c.yearLog.push(makeLove(c, r, "none", dampen, ex).line);
     return null;
   }
 
@@ -330,8 +366,8 @@ function buildLoveEvent(c: Character, r: Relationship, usedBefore: number): Life
   const anyBC = me.onBC || them.onBC;
   const go = (p: Protection): EventChoice["effect"] => (cc) => {
     const rr = cc.relationships.find((x) => x.id === r.id) ?? r;
-    bump(cc, rr, "makeLove");
-    const out = makeLove(cc, rr, p, dampen);
+    if (!ex) bump(cc, rr, "makeLove");
+    const out = makeLove(cc, rr, p, dampen, ex);
     result = out.line;
     return out.next;
   };
@@ -427,7 +463,51 @@ export function runPersonAction(
   const n = first(r);
   const used = usedThisYear(c, r, key);
 
+  // you chose to ignore the order and reached out anyway
+  if (isViolation(c, r) && CONTACT_KEYS.includes(key)) return violationArrest(c, r);
+
   switch (key) {
+    case "exText":
+      bump(c, r, key);
+      c.yearLog.push(doExText(c, r, dim(used)));
+      return null;
+    case "exCall":
+      bump(c, r, key);
+      c.yearLog.push(doExCall(c, r, dim(used)));
+      return null;
+    case "argue":
+      bump(c, r, key);
+      return buildArgueEvent(c, r);
+    case "stalk":
+      bump(c, r, key);
+      return buildStalkEvent(c, r);
+    case "askBack":
+      bump(c, r, key);
+      c.yearLog.push(doAskBack(c, r));
+      return null;
+    case "bootyCall": {
+      bump(c, r, key);
+      const p = clamp(0.25 + r.level / 150 + (r.favor ?? 50) / 250 - (r.harass ?? 0) * 0.05, 0.05, 0.85);
+      if (Math.random() >= p) {
+        if (r.level < 30) bumpHarass(r, 1);
+        r.level = clamp(r.level - 2);
+        c.yearLog.push(`${n} turned you down. "Not happening. Don't text me like that."`);
+        return null;
+      }
+      return buildLoveEvent(c, r, used, true);
+    }
+    case "block":
+      bump(c, r, key);
+      r.blocked = true;
+      r.harass = 0;
+      c.stats.happiness = clamp(c.stats.happiness - 1);
+      adjustSanity(c, 1);
+      c.yearLog.push(`You blocked ${n} on everything. It's quiet now.`);
+      return null;
+    case "unblock":
+      r.blocked = false;
+      c.yearLog.push(`You unblocked ${n}.`);
+      return null;
     case "writeLetter":
       bump(c, r, key);
       c.yearLog.push(writeToPlacedChild(c, r));
@@ -437,7 +517,7 @@ export function runPersonAction(
       c.yearLog.push(visitPlacedChild(c, r));
       return null;
     case "makeLove":
-      return buildLoveEvent(c, r, used);
+      return buildLoveEvent(c, r, used, false);
     case "leaveFlowers":
       if (c.money < 25) return null;
       bump(c, r, key);

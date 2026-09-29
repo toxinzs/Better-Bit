@@ -4,26 +4,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { Relationship } from "../types";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
 
-const GIFT_AMOUNT = 50;
-
-export default function TextThreadModal({
-  relationship,
-  money,
-  onText,
-  onCall,
-  onBootyCall,
-  onSendGift,
-  onClose,
-}: {
-  relationship: Relationship;
-  money: number;
-  onText: () => void;
-  onCall: () => void;
-  onBootyCall: () => void;
-  onSendGift: (amount: number) => void;
-  onClose: () => void;
-}) {
-  const isEx = relationship.type === "ex";
+// The message history with someone. Everything you can *do* with a person -
+// texting, calling, gifts, the ex options - lives on their PersonSheet so the
+// same rules (yearly limits, restraining orders, age gates) apply everywhere.
+export default function TextThreadModal({ relationship, onClose }: { relationship: Relationship; onClose: () => void }) {
   const messages = relationship.messages ?? [];
 
   return (
@@ -57,49 +41,9 @@ export default function TextThreadModal({
             )}
           </ScrollView>
 
-          <View style={styles.actions}>
-            <ActionButton icon="chatbubble" label="Text" onPress={onText} />
-            {isEx && (
-              <>
-                <ActionButton icon="call" label="Call" onPress={onCall} />
-                <ActionButton icon="flame" label="Booty Call" onPress={onBootyCall} />
-                <ActionButton
-                  icon="gift"
-                  label={`Gift ($${GIFT_AMOUNT})`}
-                  onPress={() => onSendGift(GIFT_AMOUNT)}
-                  disabled={money < GIFT_AMOUNT}
-                />
-              </>
-            )}
-          </View>
         </View>
       </View>
     </Modal>
-  );
-}
-
-function ActionButton({
-  icon,
-  label,
-  onPress,
-  disabled,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  onPress: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <TouchableOpacity
-      accessibilityRole="button"
-      activeOpacity={0.7}
-      disabled={disabled}
-      style={[styles.actionBtn, disabled && styles.actionBtnDisabled]}
-      onPress={onPress}
-    >
-      <Ionicons name={icon} size={16} color={colors.textPrimary} />
-      <Text style={styles.actionText}>{label}</Text>
-    </TouchableOpacity>
   );
 }
 

@@ -971,6 +971,43 @@ at 17+17, 20+17, 17+25; hookup/IVF refused at 17; 18+18 allowed. Verified
 (`Playwright`, forced RNG): every branch above incl. reload mid-pregnancy,
 adoption kinds, reunion, miscarriage, legacy migration, same-gender + surrogacy.
 
+**Relationships expansion — Phase 5, Exes + restraining orders (done,
+v1.11.0)** — `engine/exes.ts`. The ex toolkit unlocks the moment you have an ex,
+**at any age**: Text / Call (3 and 2 a year), Chit-chat (the ex conversation
+scenes), Gift, Argue (a 3-way popup), Look Them Up (a stalking chain: social
+media / drive by / show up at their door for adults; social media / ask a mutual
+friend / leave it for minors), Ask to Get Back Together (only where a romance is
+allowed at your two ages, and never while you're with someone), Block / Unblock.
+**Adult-only, hardcoded**: Booty Call requires both of you 18+ (and reuses the
+Phase 4 protection popup + pregnancy model; with a current partner there's a 30%
+chance you're caught and it ends; with none there's a 15% chance it rekindles).
+**Hidden numbers**: `Character.sanity` (default 75; craziness = 100 - sanity;
+stalking −1/−2/−3, arguing/spiralling −1/−2, jail −3/yr, grief/misery −1, drifts
+back toward ~72; **therapy** $120 = +8, in Activities) and a per-person
+`craziness(r)` derived from their id + traits (never stored). **Harassment**:
+`Relationship.harass` rises with unwanted contact (texting/calling/gifting/asking
+someone whose bond is under 30, plus stalking), halves each year, and `incidents`
+counts escalations. **Orders**: each year `threat = harass × (1 + max(0, 60 −
+sanity)/60)` and `p = clamp((threat − 4) × 0.12, 0, 0.9)` (measured: harass 6 at
+healthy sanity = 24%, at sanity 20 = 72%) queues an `orderServed` decision with
+five answers - comply (2 years, 4 with 4+ incidents), contest with a public
+defender (30%), hire a lawyer $2,500 (60%), write an apology (40%, only if the
+bond is still ≥ 15), or ignore it. While an order is in force every contact action
+is locked with "Restraining order until <age>" (Block stays); if you chose to
+*ignore* it the actions stay open but any contact triggers a real arrest via
+`buildArrestEvent` (a synthetic "violating a restraining order" crime, same
+machinery as fights). A volatile ex (craziness > 65, bond < 40) can start
+harassing you (`exHarassment`: ignore / block / confront / **file your own order**
+$150 / change numbers $400); an order you hold is sometimes violated. Also: the
+old text-thread modal is now a read-only history (every action lives on the
+person sheet so the same limits, orders and age gates always apply), `coworker`
+people are generated on every job change (close ones become friends when you
+switch jobs) and adults can ask one out. Playwright (forced RNG, 37 checks): ex
+options at 14 / 18+18 / 18+17 / 17+18, minor vs adult stalking choices, harassment
+counting, the order odds at both sanity levels, comply / contest win+lose / letter /
+ignore, lock behaviour, violation arrest, expiry, volatile-ex harassment + your own
+order, ask back (teen ex, partnered), cheating caught, coworkers, therapy.
+
 **Still open for later in this update**: a mute/volume toggle (there's no
 settings surface at all yet to put one on), a custom app icon/splash
 screen (still Expo's generic defaults), and a deeper visual pass beyond

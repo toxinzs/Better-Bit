@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "1.10.0";
+export const APP_VERSION = "1.11.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,19 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "1.11.0",
+    title: "Exes and Consequences",
+    highlights: [
+      "Once you have an ex (at any age) you get a full set of options: text, call, chat, argue, send a gift, ask to get back together, or block them",
+      "You can look them up online - and it can spiral: drive by, show up at their door, and it wears on your mind",
+      "There's a hidden sanity stat. Stalking and spiralling wear it down, therapy rebuilds it, and the lower it is the more your unwanted contact looks like a threat",
+      "Keep reaching out to someone who's moved on and they can file a restraining order. Comply, fight it with a public defender or a real lawyer, write an apology - or ignore it and risk arrest",
+      "It goes the other way too: a volatile ex can start harassing you. Ignore it, block them, confront them, file your own order, or change your numbers",
+      "Adults can also call an ex for a night - it can rekindle things, or blow up your current relationship",
+      "New workplaces bring coworkers you can get to know, and adults can ask one out",
+    ],
+  },
   {
     version: "1.10.0",
     title: "Starting a Family",

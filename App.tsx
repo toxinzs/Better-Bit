@@ -16,10 +16,11 @@ import { colors } from "./src/theme";
 import { actionsFor, romanceCandidates, runPersonAction } from "./src/engine/lifeEngine";
 import { killRelative } from "./src/engine/relatives";
 import { nextDecisionEvent } from "./src/engine/decisionQueue";
+import { tickExes, craziness } from "./src/engine/exes";
 
 if (typeof window !== "undefined") {
   (window as any).__store = useGameStore;
-  (window as any).__engine = { actionsFor, romanceCandidates, runPersonAction, killRelative, nextDecisionEvent };
+  (window as any).__engine = { actionsFor, romanceCandidates, runPersonAction, killRelative, nextDecisionEvent, tickExes, craziness };
 }
 
 export default function App() {

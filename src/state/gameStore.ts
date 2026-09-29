@@ -50,6 +50,7 @@ import {
   seduceFaculty as engineSeduceFaculty,
   attack as engineAttack,
   surrender as engineSurrender,
+  seeTherapist as engineSeeTherapist,
   runPersonAction as engineRunPersonAction,
   ActionKey,
   DatingCandidate,
@@ -121,6 +122,7 @@ type GameState = {
   seduceFaculty: (relationshipId: string) => void;
   attack: (relationshipId: string) => void;
   surrender: () => void;
+  seeTherapist: () => void;
   personAction: (relationshipId: string, key: ActionKey, amount?: number) => void;
   restart: () => void;
 };
@@ -304,6 +306,7 @@ export const useGameStore = create<GameState>((set, get) => {
     petitionExpungement: () => applyToCharacter((c) => enginePetitionExpungement(c)),
     doVenue: (venue) => applyToCharacter((c) => engineApplyVenue(c, venue)),
     visitDoctor: () => applyToCharacter((c) => engineVisitDoctor(c)),
+    seeTherapist: () => applyToCharacter((c) => engineSeeTherapist(c)),
     takeLesson: (skill) => applyToCharacter((c) => engineTakeLesson(c, skill)),
     pursueDatingCandidate: (candidate) => applyToCharacter((c) => enginePursueDatingCandidate(c, candidate)),
     goOnBlindDate: () => applyToCharacter((c) => engineGoOnBlindDate(c)),

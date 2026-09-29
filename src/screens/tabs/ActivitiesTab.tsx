@@ -54,6 +54,7 @@ export default function ActivitiesTab() {
   const character = useGameStore((s) => s.character);
   const doVenue = useGameStore((s) => s.doVenue);
   const visitDoctor = useGameStore((s) => s.visitDoctor);
+  const seeTherapist = useGameStore((s) => s.seeTherapist);
   const takeLesson = useGameStore((s) => s.takeLesson);
   const pursueDatingCandidate = useGameStore((s) => s.pursueDatingCandidate);
   const goOnBlindDate = useGameStore((s) => s.goOnBlindDate);
@@ -98,6 +99,7 @@ export default function ActivitiesTab() {
         </View>
 
         <Button label="See a Doctor ($150)" icon="medkit" variant="secondary" onPress={visitDoctor} style={styles.inlineBtn} />
+        <Button label="See a Therapist ($120)" icon="chatbubbles" variant="secondary" onPress={seeTherapist} style={styles.inlineBtn} />
       </Section>
 
       <Section title="Lessons" icon="ribbon" color={colors.smarts} summary={lessonSummary} defaultOpen={false}>
