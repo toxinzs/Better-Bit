@@ -35,23 +35,37 @@ export const useNav = create<Nav>((set, get) => ({
   setThread: (thread) => set({ thread }),
   push: (id, params) => {
     set({ stack: [...get().stack, { id, params }] });
-    if (hasHistory) window.history.pushState({ menu: get().stack.length }, "");
+    if (hasHistory) {
+      try {
+        window.history.pushState({ menu: get().stack.length }, "");
+      } catch {
+        // sandboxed frames can refuse history changes - the in-app back button still works
+      }
+    }
   },
   pop: () => {
     if (get().stack.length === 0) return;
     set({ stack: get().stack.slice(0, -1) });
-    if (hasHistory && window.history.state && typeof window.history.state.menu === "number") {
-      ignorePops += 1;
-      window.history.back();
+    try {
+      if (hasHistory && window.history.state && typeof window.history.state.menu === "number") {
+        ignorePops += 1;
+        window.history.back();
+      }
+    } catch {
+      ignorePops = 0;
     }
   },
   reset: () => {
     const n = get().stack.length;
     if (n === 0) return;
     set({ stack: [] });
-    if (hasHistory && window.history.state && typeof window.history.state.menu === "number") {
-      ignorePops += 1;
-      window.history.go(-n);
+    try {
+      if (hasHistory && window.history.state && typeof window.history.state.menu === "number") {
+        ignorePops += 1;
+        window.history.go(-n);
+      }
+    } catch {
+      ignorePops = 0;
     }
   },
 }));
