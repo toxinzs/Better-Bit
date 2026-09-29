@@ -1,4 +1,7 @@
-import { Character, Gender, Job, LifeEvent, RegionKey, WorldState } from "../types";
+import { Appearance, Character, Gender, Job, LifeEvent, Personality, RegionKey, Talents, WealthClass, WorldState } from "../types";
+import { appearanceFromSeed } from "../data/appearance";
+import { CLASSES } from "../data/traits";
+import { classFamilyBlurb, familyAllowance, rollClass, rollPersonality, rollQuirks, rollTalents, tickCharacter } from "./character";
 import { clamp, randomInt, pickWeighted } from "./util";
 import { EVENTS } from "../data/events";
 import { randomFirstName, randomLastName } from "../data/names";
@@ -88,16 +91,31 @@ export function totalNetWorth(c: Character, world: WorldState): number {
   return netWorth(c) + portfolioValue(c, world) + retirementBalance(c);
 }
 
+export type CreationOptions = {
+  appearance?: Appearance;
+  personality?: Personality;
+  talents?: Talents;
+  quirks?: string[];
+  wealthClass?: WealthClass;
+};
+
 export function createCharacter(
   firstName: string,
   lastName: string,
   gender: Gender,
   region: RegionKey,
   avatarSeed?: number,
+  options: CreationOptions = {},
 ): Character {
   const motherName = `${randomFirstName("female", region)} ${lastName}`;
   const fatherName = `${randomFirstName("male", region)} ${lastName}`;
   const regionDef = getRegion(region);
+  const seed = avatarSeed ?? randomInt(0, 999999);
+  const personality = options.personality ?? rollPersonality();
+  const talents = options.talents ?? rollTalents();
+  const quirks = options.quirks ?? rollQuirks();
+  const wealthClass = options.wealthClass ?? rollClass(region);
+  const cls = CLASSES[wealthClass];
 
   const character: Character = {
     firstName,
@@ -106,12 +124,12 @@ export function createCharacter(
     age: 0,
     alive: true,
     stats: {
-      health: randomInt(75, 100),
-      happiness: randomInt(60, 90),
-      smarts: randomInt(30, 65),
+      health: clamp(randomInt(75, 100) + Math.round((talents.athletic - 50) / 12)),
+      happiness: clamp(randomInt(60, 90) - Math.round((personality.n - 50) / 10)),
+      smarts: clamp(randomInt(30, 65) + Math.round((talents.academic - 50) / 6)),
       looks: randomInt(30, 75),
     },
-    money: randomInt(regionDef.startingWealthRange[0], regionDef.startingWealthRange[1]),
+    money: Math.round(randomInt(regionDef.startingWealthRange[0], regionDef.startingWealthRange[1]) * cls.moneyFactor),
     job: null,
     educationStage: "none",
     inCollege: false,
@@ -122,16 +140,23 @@ export function createCharacter(
     flags: [],
     originRegion: region,
     appearanceFlavor: regionDef.appearanceFlavor[randomInt(0, regionDef.appearanceFlavor.length - 1)],
-    avatarSeed: avatarSeed ?? randomInt(0, 999999),
+    avatarSeed: seed,
+    personality,
+    talents,
+    quirks,
+    background: { wealthClass, parentValues: classFamilyBlurb(wealthClass) },
+    appearance: options.appearance ?? appearanceFromSeed(seed, gender, region),
     relationships: [],
     yearLog: [`You were born! ${motherName} and ${fatherName} welcomed you into the world.`],
     fullLog: [{ age: 0, text: "You were born." }],
     triggeredEvents: [],
   };
 
+  // the family you're born into shapes what your parents do and have
+  const parentFields = () => ({ job: cls.jobs[randomInt(0, cls.jobs.length - 1)], wealth: randomInt(cls.wealth[0], cls.wealth[1]) });
   character.relationships.push(
-    newPerson(character, { id: "mother", type: "mother", name: motherName, gender: "female", age: randomInt(22, 36), level: randomInt(60, 90) }),
-    newPerson(character, { id: "father", type: "father", name: fatherName, gender: "male", age: randomInt(22, 40), level: randomInt(55, 90) }),
+    newPerson(character, { id: "mother", type: "mother", name: motherName, gender: "female", age: randomInt(22, 36), level: randomInt(60, 90), fields: parentFields() }),
+    newPerson(character, { id: "father", type: "father", name: fatherName, gender: "male", age: randomInt(22, 40), level: randomInt(55, 90), fields: parentFields() }),
   );
   ensurePeople(character);
 
@@ -262,6 +287,14 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
     }
   }
 
+  // who you are: personality, quirks and talents at work, plus family pocket money
+  tickCharacter(c);
+  const allowance = familyAllowance(c);
+  if (allowance > 0) {
+    c.money += allowance;
+    if (c.age === 6 || c.age === 10 || c.age === 14) c.yearLog.push(`Your family gives you $${allowance.toLocaleString()} a year in pocket money.`);
+  }
+
   ambientMessageTick(c);
   // the people around you live their year: ageing, illness, news, and - the
   // hard part - some of them die (funerals and money requests queue up as
@@ -289,7 +322,8 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
 
   // income
   if (c.job) {
-    const gross = effectiveSalary(c.job, world, c.originRegion);
+    // a head for business shows up in the pay packet
+    const gross = Math.round(effectiveSalary(c.job, world, c.originRegion) * (1 + ((c.talents?.business ?? 50) - 50) / 1000));
     const { contribution, employerMatch, taxableIncome } = applyContribution(c, gross);
     const tax = incomeTax(taxableIncome, c.originRegion);
     const net = taxableIncome - tax;

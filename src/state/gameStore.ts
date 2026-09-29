@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Character, Gender, Job, LifeEvent, RegionKey, SkillKey, WorldState } from "../types";
+import type { CreationOptions } from "../engine/lifeEngine";
 import { CarListing, HomeListing } from "../data/assets";
 import { LoanListing, CreditCardListing } from "../data/loans";
 import { VenueKey, VacationKey, ConceptionMethod } from "../data/activities";
@@ -77,7 +78,10 @@ type GameState = {
   actionResultLines: string[] | null;
   hydrated: boolean;
   hydrate: () => Promise<void>;
-  startNewLife: (firstName: string, lastName: string, gender: Gender, region: RegionKey, avatarSeed?: number) => void;
+  startNewLife: (firstName: string, lastName: string, gender: Gender, region: RegionKey, avatarSeed?: number, options?: CreationOptions) => void;
+  // begin with a character the creation flow already built (so the family
+  // revealed on screen is the one you actually get)
+  beginLife: (character: Character) => void;
   ageUp: () => void;
   chooseEventOption: (choiceIndex: number) => void;
   clearActionResult: () => void;
@@ -221,8 +225,13 @@ export const useGameStore = create<GameState>((set, get) => {
       set({ hydrated: true });
     },
 
-    startNewLife: (firstName, lastName, gender, region, avatarSeed) => {
-      const character = createCharacter(firstName, lastName, gender, region, avatarSeed);
+    startNewLife: (firstName, lastName, gender, region, avatarSeed, options) => {
+      const character = createCharacter(firstName, lastName, gender, region, avatarSeed, options);
+      set({ character, screen: "home", pendingEvent: null, actionResultLines: null });
+      persist(character, "home", get().worldState);
+    },
+
+    beginLife: (character) => {
       set({ character, screen: "home", pendingEvent: null, actionResultLines: null });
       persist(character, "home", get().worldState);
     },

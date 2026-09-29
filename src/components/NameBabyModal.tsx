@@ -40,7 +40,7 @@ export default function NameBabyModal({
       <View style={styles.hero}>
         {baby ? (
           <View style={styles.avatar}>
-            <PersonAvatar name={baby.name} id={baby.id} type="child" gender={baby.gender} region={character.originRegion} size={54} />
+            <PersonAvatar name={baby.name} id={baby.id} type="child" gender={baby.gender} region={character.originRegion} age={0} size={54} />
           </View>
         ) : null}
         <Text style={styles.headline}>It's a {word}!</Text>

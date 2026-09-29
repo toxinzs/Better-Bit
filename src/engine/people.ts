@@ -1,6 +1,7 @@
 import { Bio, Character, Gender, Relationship, RelationType } from "../types";
 import { NAME_POOLS, randomFirstName, randomLastName } from "../data/names";
 import { clamp, randomInt } from "./util";
+import { ensureCharacter } from "./character";
 
 // The one place a person in the player's life gets made. Every place that
 // used to `relationships.push({...})` by hand goes through newPerson() /
@@ -248,6 +249,7 @@ export function ensurePeople(c: Character): void {
   // school has always tracked a GPA from the first day; older saves that never
   // had one get the neutral default
   if (c.age >= 5 && c.gpa === undefined) c.gpa = 3;
+  ensureCharacter(c);
 }
 
 // ---------- death (single entry point; funerals build on this later) ----------

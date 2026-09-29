@@ -1,5 +1,6 @@
 import { Character, Gender, LifeEvent, RegionKey, Relationship } from "../types";
 import { clamp, randomInt } from "./util";
+import { SKILL_TALENT, talentMult } from "./character";
 import { addPerson, randomGender } from "./people";
 import {
   Party,
@@ -179,7 +180,7 @@ export function takeLesson(c: Character, key: LessonDef["key"]): void {
   c.money -= def.cost;
   const skills = c.skills ?? {};
   const breakthrough = Math.random() < 0.1;
-  const gain = randomInt(8, 15) + (breakthrough ? 5 : 0);
+  const gain = Math.round((randomInt(8, 15) + (breakthrough ? 5 : 0)) * talentMult(c, SKILL_TALENT[key] ?? "academic"));
   skills[key] = clamp((skills[key] ?? 0) + gain);
   c.skills = skills;
   c.stats.happiness = clamp(c.stats.happiness + 2);

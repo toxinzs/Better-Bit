@@ -11,7 +11,7 @@ import PersonSheet from "../../components/PersonSheet";
 import AmountPicker from "../../components/AmountPicker";
 import { askCeiling, askChance, giveCeiling } from "../../engine/lifeEngine";
 import type { ActionKey } from "../../engine/lifeEngine";
-import { jobLine } from "../../engine/people";
+import { ageOf, jobLine } from "../../engine/people";
 import { playSound } from "../../sound";
 import { useNav } from "../../nav/navStore";
 import MenuScreen from "../../nav/MenuScreen";
@@ -102,7 +102,7 @@ export default function PeopleTab({ group }: { group: string }) {
               <Card style={styles.person}>
                 <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.personRow} onPress={() => setSheetId(r.id)}>
                   <View style={[styles.avatarWrap, { borderColor: colors.border, opacity: 0.55 }]}>
-                    <PersonAvatar name={r.name} id={r.id} type={r.type} gender={r.gender} region={character.originRegion} size={46} />
+                    <PersonAvatar name={r.name} id={r.id} type={r.type} gender={r.gender} region={character.originRegion} age={r.diedAge} size={46} />
                   </View>
                   <View style={styles.personBody}>
                     <Text style={styles.personName} numberOfLines={1}>{r.name}</Text>
@@ -183,7 +183,7 @@ function PersonCard({ c, r, region, onOpen }: { c: Character; r: Relationship; r
     <Card style={styles.person}>
       <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.personRow} onPress={onOpen}>
         <View style={[styles.avatarWrap, { borderColor: meta.color + "88" }]}>
-          <PersonAvatar name={r.name} id={r.id} type={r.type} gender={r.gender} region={region} size={46} />
+          <PersonAvatar name={r.name} id={r.id} type={r.type} gender={r.gender} region={region} age={ageOf(c, r)} size={46} />
         </View>
         <View style={styles.personBody}>
           <View style={styles.nameRow}>

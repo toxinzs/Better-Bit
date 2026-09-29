@@ -9,6 +9,7 @@ import { FadeInUp } from "../../motion";
 import { getRegion } from "../../data/regions";
 import { getLifeStage } from "../../engine/lifeEngine";
 import { PersonAvatar } from "../../components/Avatar";
+import { ageOf } from "../../engine/people";
 import { Character, NewsItem, NewsKind, YearRecord } from "../../types";
 import { colors, fonts, fontSize, radii, spacing } from "../../theme";
 
@@ -182,7 +183,7 @@ function NewsRow({ item, character, small }: { item: NewsItem; character: Charac
     <View style={styles.line}>
       {who ? (
         <View style={styles.newsAvatar}>
-          <PersonAvatar name={who.name} id={who.id} type={who.type} gender={who.gender} region={character.originRegion} size={small ? 22 : 26} />
+          <PersonAvatar name={who.name} id={who.id} type={who.type} gender={who.gender} region={character.originRegion} age={ageOf(character, who)} size={small ? 22 : 26} />
         </View>
       ) : (
         <View style={[styles.lineIcon, { backgroundColor: k.color + "22" }]}>

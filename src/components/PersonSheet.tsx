@@ -69,7 +69,7 @@ export default function PersonSheet({
       <ScrollView style={{ maxHeight: height * 0.78 }} showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
           <View style={[styles.avatarRing, { borderColor: lc }]}>
-            <PersonAvatar name={rel.name} id={rel.id} type={rel.type} gender={rel.gender} region={character.originRegion} size={68} />
+            <PersonAvatar name={rel.name} id={rel.id} type={rel.type} gender={rel.gender} region={character.originRegion} age={ageOf(character, rel)} size={68} />
           </View>
           <Text style={styles.name} numberOfLines={2}>{rel.name}</Text>
           <Text style={styles.sub}>

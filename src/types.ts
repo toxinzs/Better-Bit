@@ -225,6 +225,34 @@ export type WorldState = {
   stocks?: StockState[];
 };
 
+// Big-Five style personality, each 0-100 (50 = typical). Never shown as a
+// number: surfaced as trait words (engine/character.ts traitWords).
+export type Personality = { o: number; c: number; e: number; a: number; n: number };
+
+export type TalentKey = "academic" | "artistic" | "athletic" | "musical" | "social" | "technical" | "business" | "verbal";
+export type Talents = Record<TalentKey, number>; // innate aptitude 0-100
+
+export type WealthClass = "struggling" | "working" | "middle" | "comfortable" | "wealthy";
+
+export type Appearance = {
+  skin: string; // hex
+  hairStyle: string; // see data/appearance.ts HAIR_STYLES
+  hairColor: string; // hex
+  eyes: string; // key in data/appearance.ts EYE_COLORS
+  facialHair: string; // "none" | "stubble" | "mustache" | "goatee" | "beard"
+  glasses: boolean;
+  freckles: boolean;
+  build: "slim" | "average" | "stocky" | "athletic";
+  height: "short" | "average" | "tall";
+  // a man/woman who loses their hair with age: age at which it starts thinning (0 = never)
+  balding: number;
+};
+
+export type Background = {
+  wealthClass: WealthClass;
+  parentValues: string; // one line of flavour about how the family sees the world
+};
+
 export type Character = {
   firstName: string;
   lastName: string;
@@ -282,6 +310,12 @@ export type Character = {
   originRegion?: RegionKey;
   appearanceFlavor?: string;
   avatarSeed?: number;
+  // ---- character depth (v2.0c); all optional, backfilled by engine/character.ts ensureCharacter ----
+  personality?: Personality;
+  quirks?: string[];
+  talents?: Talents;
+  background?: Background;
+  appearance?: Appearance;
   relationships: Relationship[];
   yearLog: string[];
   lifeLog?: YearRecord[];

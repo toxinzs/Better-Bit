@@ -36,7 +36,7 @@ export default function EventModal({
       {who && (
         <View style={styles.whoRow}>
           <View style={styles.whoAvatar}>
-            <PersonAvatar name={who.name} id={who.id} type={who.type} gender={who.gender} region={character.originRegion} size={44} />
+            <PersonAvatar name={who.name} id={who.id} type={who.type} gender={who.gender} region={character.originRegion} age={ageOf(character, who)} size={44} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.whoName} numberOfLines={1}>

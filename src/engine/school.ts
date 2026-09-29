@@ -1,5 +1,6 @@
 import { Character, EducationStage, RegionKey, Relationship } from "../types";
 import { clamp, randomInt } from "./util";
+import { SKILL_TALENT, talentMult } from "./character";
 import { randomLastName } from "../data/names";
 import { addPerson, randomGender, uid } from "./people";
 import { CLUBS, ClubKey, COLLEGES, COLLEGE_HOUSING, HousingListing } from "../data/school";
@@ -133,7 +134,7 @@ export function joinClub(c: Character, clubKey: ClubKey): void {
   c.schoolActivities = activities;
   if (def.skill) {
     const skills = c.skills ?? {};
-    skills[def.skill] = clamp((skills[def.skill] ?? 0) + randomInt(5, 10));
+    skills[def.skill] = clamp((skills[def.skill] ?? 0) + Math.round(randomInt(5, 10) * talentMult(c, SKILL_TALENT[def.skill] ?? "academic")));
     c.skills = skills;
   }
   c.stats.happiness = clamp(c.stats.happiness + 4);

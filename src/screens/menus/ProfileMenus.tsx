@@ -8,6 +8,9 @@ import Avatar, { moodFor } from "../../components/Avatar";
 import Sparkline from "../../components/Sparkline";
 import { getRegion } from "../../data/regions";
 import { totalNetWorth } from "../../engine/lifeEngine";
+import { talentsKnown, traitWords } from "../../engine/character";
+import { CLASSES, TALENTS, quirkDef, talentWord } from "../../data/traits";
+import { EYE_COLORS, HAIR_COLOR_NAMES } from "../../data/appearance";
 import { colors, fonts, fontSize, spacing } from "../../theme";
 import { StatKey } from "../../types";
 
@@ -61,6 +64,66 @@ export function ProfileMenu() {
         <Row label="Net worth" value={money(totalNetWorth(character, world))} />
         <Row label="Living in" value={region.label} last />
       </Card>
+
+      <Card>
+        <Text style={styles.heading}>Personality</Text>
+        {traitWords(character).length > 0 ? (
+          <View style={styles.chips}>
+            {traitWords(character).map((t) => (
+              <Chip key={t.label} label={t.label} color={t.tone === "good" ? colors.health : t.tone === "bad" ? colors.danger : colors.textSecondary} />
+            ))}
+          </View>
+        ) : (
+          <Text style={styles.sub}>Pretty middle-of-the-road - no strong extremes yet.</Text>
+        )}
+        {(character.quirks ?? []).map((q) => (
+          <View key={q} style={styles.quirk}>
+            <Text style={styles.quirkName}>{quirkDef(q)?.label ?? q}</Text>
+            <Text style={styles.quirkBlurb}>{quirkDef(q)?.blurb}</Text>
+          </View>
+        ))}
+      </Card>
+
+      <Card>
+        <Text style={styles.heading}>Talents</Text>
+        {talentsKnown(character) && character.talents ? (
+          TALENTS.map((t) => {
+            const v = character.talents![t.key];
+            return (
+              <View key={t.key} style={styles.talent}>
+                <View style={styles.talentHead}>
+                  <Text style={styles.rowLabel}>{t.label}</Text>
+                  <Text style={[styles.rowValue, { color: v >= 62 ? colors.health : v < 40 ? colors.textMuted : colors.textPrimary }]}>{talentWord(v)}</Text>
+                </View>
+                <View style={styles.track}>
+                  <View style={[styles.fill, { width: `${v}%`, backgroundColor: v >= 62 ? colors.health : colors.smarts }]} />
+                </View>
+              </View>
+            );
+          })
+        ) : (
+          <Text style={styles.sub}>You're still too young to know what you're good at. It shows up as you grow.</Text>
+        )}
+      </Card>
+
+      {character.background && (
+        <Card>
+          <Text style={styles.heading}>Where you come from</Text>
+          <Row label="Family" value={CLASSES[character.background.wealthClass].label} />
+          <Text style={styles.quirkBlurb}>{CLASSES[character.background.wealthClass].blurb}</Text>
+          <Text style={[styles.quirkBlurb, { marginTop: spacing.sm, fontFamily: fonts.semiBold }]}>"{character.background.parentValues}"</Text>
+        </Card>
+      )}
+
+      {character.appearance && (
+        <Card>
+          <Text style={styles.heading}>Appearance</Text>
+          <Row label="Height" value={character.appearance.height[0].toUpperCase() + character.appearance.height.slice(1)} />
+          <Row label="Build" value={character.appearance.build[0].toUpperCase() + character.appearance.build.slice(1)} />
+          <Row label="Eyes" value={EYE_COLORS[character.appearance.eyes]?.label ?? character.appearance.eyes} />
+          <Row label="Hair" value={character.age >= 62 ? "Silver" : HAIR_COLOR_NAMES[character.appearance.hairColor] ?? "Dark"} last />
+        </Card>
+      )}
 
       {(character.degrees?.length ?? 0) > 0 && (
         <Card>
@@ -213,7 +276,14 @@ const styles = StyleSheet.create({
   },
   rowLabel: { color: colors.textSecondary, fontFamily: fonts.semiBold, fontSize: fontSize.md },
   rowValue: { color: colors.textPrimary, fontFamily: fonts.bold, fontSize: fontSize.md, flexShrink: 1, textAlign: "right" },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginBottom: spacing.sm },
+  quirk: { marginTop: spacing.sm },
+  quirkName: { color: colors.textPrimary, fontFamily: fonts.bold, fontSize: fontSize.md },
+  quirkBlurb: { color: colors.textSecondary, fontFamily: fonts.regular, fontSize: fontSize.md, lineHeight: 19 },
+  talent: { marginBottom: spacing.sm },
+  talentHead: { flexDirection: "row", justifyContent: "space-between", marginBottom: 4 },
+  track: { height: 6, borderRadius: 3, backgroundColor: colors.surfaceRaised, overflow: "hidden" },
+  fill: { height: "100%", borderRadius: 3 },
   axis: { flexDirection: "row", justifyContent: "space-between", marginBottom: spacing.md },
   axisText: { color: colors.textMuted, fontFamily: fonts.semiBold, fontSize: fontSize.xs },
   bullet: { color: colors.textSecondary, fontFamily: fonts.regular, fontSize: fontSize.md, lineHeight: 20, marginBottom: 4 },
