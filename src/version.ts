@@ -20,7 +20,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Raises, bonuses and promotions you earn, plus the option to ask for a raise or a promotion once a year (and pay for a refusal with your boss's goodwill)",
       "Trouble at work is real: performance improvement plans, dismissals, redundancies in recessions, and severance pay. Unions protect you from layoffs at the cost of dues",
       "Unemployment benefits, severance and state pensions now differ by country: 12 tax systems with their own brackets, social contributions and child credits. A new Taxes screen shows what you pay and what you get back",
-      "Build a network, take training courses, get headhunted, mentored, burned out or called out for whistleblowing: 18 new workplace events",
+      "Build a network, take training courses, get headhunted, mentored, burned out or called out for whistleblowing: 31 new workplace, business and money events",
       "Start your own business: ten types from a food truck to a tech start-up, with staff, marketing, expansion, reputation, bad years, bankruptcy and buy-out offers. Run it alongside a job or go all in",
       "Retire when you like from 55; the state pension starts at your country's retirement age",
       "More ways to grow money: idle cash earns interest, plus a global index fund, a treasury bond and a wildly volatile coin. Buy rental property and collect rent (or chase a late tenant)",

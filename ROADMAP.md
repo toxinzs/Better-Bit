@@ -151,8 +151,8 @@ the planning notes; each release below is shippable on its own.
   rewrite (`taxBreakdown`, `marginalRate`, `taxCredit`). `data/businesses.ts` +
   `engine/business.ts` (10 business types, level / staff / reputation, yearly P&L,
   bankruptcy, sale). `engine/wealth.ts` (savings interest, rental property,
-  bankruptcy). Three new assets (index fund, bond, crypto). 48 more events
-  (`data/events/work.ts`) and 25 field-specific interview questions. Menus: Career &
+  bankruptcy). Three new assets (index fund, bond, crypto). 31 more events
+  (`data/events/work.ts`) and 26 field-specific interview questions. Menus: Career &
   Promotion, Business (+ start), Taxes, Property investments, Bankruptcy. Two
   economy fixes: job offers stored a salary that had already been scaled by
   country and city, then scaled again each payday; and prices now inflate ~2%/yr.
