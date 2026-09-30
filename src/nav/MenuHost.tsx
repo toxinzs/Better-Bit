@@ -10,6 +10,7 @@ import { BudgetMenu, MoveCityMenu, MoveMenu, PlaceHub, RentMenu } from "../scree
 import { AbroadHub, AbroadListMenu, CitizenMenu, CountryMenu, GoHomeMenu, PassportMenu, TravelMenu } from "../screens/menus/AbroadMenus";
 import { BankruptMenu, BusinessMenu, CareerMenu, RentalsMenu, StartBusinessMenu, TaxMenu } from "../screens/menus/CareerMenus";
 import { AchievementsMenu, BodyMenu, HabitsMenu, HobbiesMenu, MindMenu, TreeMenu } from "../screens/menus/LifestyleMenus";
+import { AnalyticsMenu, ChannelMenu, CreatePostMenu, DealsMenu, FeedMenu, InboxMenu, NewChannelMenu, SocialHub, TeamMenu, TrendingMenu } from "../screens/menus/SocialMenus";
 import PeopleTab from "../screens/tabs/PeopleTab";
 import { RegionKey, StatKey } from "../types";
 
@@ -71,6 +72,16 @@ export default function MenuHost({ route }: { route: Route }) {
     case "movecity": return <MoveCityMenu cityKey={String(route.params?.city ?? "")} />;
     case "rent": return <RentMenu />;
     case "budget": return <BudgetMenu />;
+    case "social": return <SocialHub />;
+    case "newchannel": return <NewChannelMenu platform={route.params?.platform as string | undefined} />;
+    case "channel": return <ChannelMenu platform={String(route.params?.platform ?? "")} />;
+    case "socialfeed": return <FeedMenu />;
+    case "inbox": return <InboxMenu />;
+    case "deals": return <DealsMenu />;
+    case "analytics": return <AnalyticsMenu />;
+    case "trending": return <TrendingMenu />;
+    case "team": return <TeamMenu />;
+    case "createpost": return <CreatePostMenu platform={String(route.params?.platform ?? "")} />;
     case "peopleGroup": return <PeopleTab group={String(route.params?.group ?? "family")} />;
     case "profile": return <ProfileMenu />;
     case "statDetail": return <StatDetailMenu stat={(route.params?.stat as StatKey) ?? "health"} />;

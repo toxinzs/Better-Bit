@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { creatorLabel } from "../engine/creatorCore";
 import { Animated, Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../state/gameStore";
@@ -154,7 +155,7 @@ export default function HomeScreen() {
               </Animated.Text>
               <Text style={styles.metaDivider}>·</Text>
               <Text style={styles.metaText} numberOfLines={1}>
-                {character.inJail ? "Incarcerated" : character.job ? character.job.title : character.inCollege ? "Student" : "Unemployed"}
+                {character.inJail ? "Incarcerated" : character.job ? character.job.title : creatorLabel(character) ?? (character.inCollege ? "Student" : "Unemployed")}
               </Text>
             </View>
             <Text style={styles.regionText}>{cityOf(character).name}, {region.label}</Text>

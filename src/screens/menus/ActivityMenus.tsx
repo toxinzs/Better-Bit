@@ -19,6 +19,8 @@ import { colors, spacing } from "../../theme";
 import { tabStyles } from "../tabs/sharedStyles";
 import { ms } from "./menuStyles";
 import { cityOf } from "../../engine/where";
+import { fmt as fmtCount } from "../../data/social";
+import { fameWord, totalFollowers } from "../../engine/creatorCore";
 import { lifeScore } from "../../engine/achievements";
 import { COUNTRIES } from "../../data/countries";
 
@@ -47,6 +49,8 @@ export function ActivitiesHub() {
   const canDate = character.age >= 18;
   const hobbiesActive = Object.values(character.hobbies ?? {}).filter((h) => h.active).length;
   const venues = availableVenues(character.age, getRegion(character.originRegion).legalAges).length;
+  const followers = totalFollowers(character);
+  const socialSummary = (character.social?.channels.length ?? 0) > 0 ? `${fmtCount(followers)} followers · ${fameWord(character.social?.fame ?? 0)}` : character.age >= 13 ? "Post, stream, get famous" : "Opens at 13";
 
   return (
     <ScrollView contentContainerStyle={tabStyles.scroll} showsVerticalScrollIndicator={false}>
@@ -63,6 +67,8 @@ export function ActivitiesHub() {
       <MenuRow icon="home" color={colors.gold} title="Home & Moving" summary={`${cityOf(character).name}, ${getRegion(character.originRegion).label}`} delay={140} onPress={() => push("place")} />
       <MenuRow icon="earth" color={colors.teal} title="Across Borders" summary={(character.citizenships ?? [character.birthRegion ?? character.originRegion ?? "us"]).map((r) => COUNTRIES[r].flag).join(" ") + (character.visaApp ? " · application pending" : " · move, travel, citizenship")} delay={160} onPress={() => push("abroad")} />
       <MenuRow icon="airplane" color={colors.teal} title="Vacations" summary="Get away for a while" delay={180} onPress={() => push("vacations")} />
+      <SectionLabel>Fame</SectionLabel>
+      <MenuRow icon="phone-portrait" color={colors.looks} title="Social media" summary={socialSummary} badge={(character.social?.inbox.length ?? 0) > 0 ? String(character.social?.inbox.length) : undefined} delay={190} onPress={() => push("social")} />
       <SectionLabel>Growth</SectionLabel>
       <MenuRow icon="ribbon" color={colors.smarts} title="Lessons & Skills" summary={skills > 0 ? `${skills} skill${skills === 1 ? "" : "s"}` : "Learn something new"} delay={200} onPress={() => push("lessons")} />
       <MenuRow icon="trophy" color={colors.gold} title="Achievements" summary={`${Object.keys(character.achievements ?? {}).length} earned · life score ${lifeScore(character)}`} delay={220} onPress={() => push("achievements")} />

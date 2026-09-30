@@ -21,6 +21,7 @@ import { PLACE_EVENTS } from "./places";
 import { ABROAD_EVENTS } from "./abroad";
 import { WORK_EVENTS } from "./work";
 import { BODY_EVENTS, ADDICTION_EVENTS, HOBBY_EVENTS, MIND_EVENTS } from "./lifestyle";
+import { CREATOR_EVENTS } from "./creator";
 import { EVERYDAY_EVENTS } from "./life-more";
 import { FAMILY_EXTRA_EVENTS, COMMUNITY_EVENTS, SENIOR_EXTRA_EVENTS, TEEN_EXTRA_EVENTS } from "./life-extra";
 
@@ -55,4 +56,5 @@ export const EVENTS: LifeEvent[] = [
   ...SENIOR_EXTRA_EVENTS,
   ...TEEN_EXTRA_EVENTS,
   ...EVERYDAY_EVENTS,
+  ...CREATOR_EVENTS,
 ];

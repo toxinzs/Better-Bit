@@ -11,6 +11,8 @@ import { cityByKey } from "../../data/cities";
 import { cityOf } from "../../engine/where";
 import { COUNTRIES } from "../../data/countries";
 import { statusLabel } from "../../engine/immigration";
+import { fmt as fmtC } from "../../data/social";
+import { creatorLabel, fameWord, imageWord, totalFollowers } from "../../engine/creatorCore";
 import { lifeScore } from "../../engine/achievements";
 import { totalNetWorth } from "../../engine/lifeEngine";
 import { talentsKnown, traitWords } from "../../engine/character";
@@ -43,7 +45,7 @@ export function ProfileMenu() {
   const region = getRegion(character.originRegion);
   const alive = character.relationships.filter((r) => r.alive && r.type !== "classmate" && r.type !== "teacher");
   const skills = Object.entries(character.skills ?? {}).filter(([, v]) => (v ?? 0) > 0);
-  const job = character.inJail ? "Incarcerated" : character.job ? `${character.job.title} · $${effectiveSalary(character.job, world, character.originRegion, cityWage(character)).toLocaleString()}/yr` : character.inCollege ? "Student" : "Unemployed";
+  const job = character.inJail ? "Incarcerated" : character.job ? `${character.job.title} · $${effectiveSalary(character.job, world, character.originRegion, cityWage(character)).toLocaleString()}/yr` : creatorLabel(character) ?? (character.inCollege ? "Student" : "Unemployed");
 
   return (
     <MenuScreen title="Profile" icon="person" color={colors.primary}>
@@ -64,6 +66,7 @@ export function ProfileMenu() {
         <Row label="School" value={STAGE[character.educationStage] ?? character.educationStage} />
         {character.gpa != null && character.age >= 5 && <Row label="GPA" value={character.gpa.toFixed(2)} />}
         {character.currentSchool && <Row label="Attending" value={character.currentSchool} />}
+        {character.social && character.social.channels.length > 0 && <Row label="Online" value={`${fameWord(character.social.fame)} · ${fmtC(totalFollowers(character))} followers · ${imageWord(character.social.image)}`} />}
         <Row label="Life score" value={`${lifeScore(character)} · ${Object.keys(character.achievements ?? {}).length} achievements`} />
         <Row label="Net worth" value={money(totalNetWorth(character, world))} />
         <Row label="Living in" value={`${cityOf(character).name}, ${region.label}`} />

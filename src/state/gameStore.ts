@@ -96,6 +96,11 @@ import type { QuitMethod } from "../engine/addiction";
 import { setFaith as engineSetFaith, toggleMeditation, togglePractising, toggleVolunteering } from "../engine/mind";
 import { dropHobby as engineDropHobby, showcase as engineShowcase, takeUp as engineTakeUp } from "../engine/hobbies";
 import { toggleBucket as engineToggleBucket } from "../engine/achievements";
+import { buyFollowers as engineBuyFollowers, closeChannel as engineCloseChannel, doAction as engineCreatorAction, fire as engineFireTeam, hire as engineHireTeam, launchMembers as engineLaunchMembers, launchMerch as engineLaunchMerch, openChannel as engineOpenChannel, setPlan as engineSetPlan } from "../engine/creator";
+import type { Role } from "../engine/creator";
+import { ensureSocial } from "../engine/creatorCore";
+import { answerInbox as engineAnswerInbox } from "../engine/inbox";
+import type { Cadence, PlatformKey, PostStyle, QualityTier } from "../types";
 
 const STORAGE_KEY = "@better-bit/save/v1";
 
@@ -154,6 +159,16 @@ type GameState = {
   dropHobby: (k: string) => void;
   hobbyShowcase: (k: string) => void;
   toggleBucket: (k: string) => void;
+  openChannel: (platform: PlatformKey, niche: string, handle?: string) => void;
+  closeChannel: (platform: PlatformKey) => void;
+  setChannelPlan: (platform: PlatformKey, patch: { niche?: string; cadence?: Cadence; gear?: QualityTier; style?: PostStyle }) => void;
+  creatorAction: (platform: PlatformKey, key: string, arg?: string) => void;
+  buyFollowers: (platform: PlatformKey, thousands: number) => void;
+  answerInbox: (id: string, key: string) => void;
+  hireTeam: (role: Role) => void;
+  fireTeam: (role: Role) => void;
+  launchMembers: (platform: PlatformKey) => void;
+  launchMerch: (platform: PlatformKey) => void;
   setWorkMode: (mode: "coast" | "steady" | "grind") => void;
   askRaise: () => void;
   askPromotion: () => void;
@@ -260,7 +275,8 @@ export const useGameStore = create<GameState>((set, get) => {
     if (!character) return;
     const before = character.yearLog.length;
     mutate(character, worldState);
-    const newLines = character.yearLog.slice(before);
+    const taken = harvestNotices(character, before);
+    const newLines = character.yearLog.slice(before).filter((l) => !taken.includes(l));
     set({
       character: { ...character },
       actionResultLines: newLines.length > 0 ? newLines : get().actionResultLines,
@@ -314,6 +330,7 @@ export const useGameStore = create<GameState>((set, get) => {
             ensureLocation(parsed.character);
             ensureAbroad(parsed.character);
             ensureBody(parsed.character);
+            ensureSocial(parsed.character);
             const pendingEvent = parsed.screen === "home" ? nextDecisionEvent(parsed.character, worldState) : null;
             set({ character: parsed.character, screen: parsed.screen, worldState, pendingEvent, hydrated: true });
             return;
@@ -437,6 +454,16 @@ export const useGameStore = create<GameState>((set, get) => {
     dropHobby: (k) => applyToCharacter((c) => { engineDropHobby(c, k); }),
     hobbyShowcase: (k) => applyToCharacter((c) => { engineShowcase(c, k); }),
     toggleBucket: (k) => applyToCharacter((c) => { engineToggleBucket(c, k); }),
+    openChannel: (platform, niche, handle) => applyToCharacterWithWorld((c, w) => { engineOpenChannel(c, w, platform, niche, handle); }),
+    closeChannel: (platform) => applyToCharacter((c) => { engineCloseChannel(c, platform); }),
+    setChannelPlan: (platform, patch) => applyToCharacter((c) => { engineSetPlan(c, platform, patch); }),
+    creatorAction: (platform, key, arg) => applyToCharacterWithWorld((c, w) => { engineCreatorAction(c, w, platform, key, arg); }),
+    buyFollowers: (platform, thousands) => applyToCharacterWithWorld((c, w) => { engineBuyFollowers(c, w, platform, thousands); }),
+    answerInbox: (id, key) => applyToCharacterWithWorld((c, w) => { engineAnswerInbox(c, w, id, key); }),
+    hireTeam: (role) => applyToCharacter((c) => { engineHireTeam(c, role); }),
+    fireTeam: (role) => applyToCharacter((c) => { engineFireTeam(c, role); }),
+    launchMembers: (platform) => applyToCharacter((c) => { engineLaunchMembers(c, platform); }),
+    launchMerch: (platform) => applyToCharacter((c) => { engineLaunchMerch(c, platform); }),
     setWorkMode: (mode) => applyToCharacter((c) => { setWorkMode(c, mode); }),
     askRaise: () => applyToCharacterWithWorld((c, w) => { askForRaise(c, w); }),
     askPromotion: () => applyToCharacterWithWorld((c, w) => { askForPromotion(c, w); }),

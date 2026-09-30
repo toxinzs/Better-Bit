@@ -14,6 +14,7 @@ export type MenuId =
   | "career" | "business" | "bizstart" | "taxes" | "rentals" | "bankrupt"
   | "abroad" | "abroadlist" | "abroadcountry" | "passport" | "travel" | "citizen" | "gohome"
   | "place" | "move" | "movecity" | "rent" | "budget"
+  | "social" | "newchannel" | "channel" | "socialfeed" | "inbox" | "deals" | "analytics" | "trending" | "team" | "createpost"
   | "peopleGroup"
   | "profile" | "statDetail";
 

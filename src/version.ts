@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "2.8.0";
+export const APP_VERSION = "2.9.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,22 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "2.9.0",
+    title: "Fame & Social Media",
+    highlights: [
+      "Become a creator at any age from 13 and stay one for life. Six platforms with their own personalities: YouTube (slow, sticky, searchable), TikTok (explosive and forgettable), Instagram (looks and brands), X (hot takes and pile-ons), Twitch (small, loyal, live) and Podcasts (slowest and most devoted)",
+      "41 niches to make things in, from comedy, gaming and beauty to knitting, birdwatching and your own town's history. Each has its own ceiling: a huge crowd that's crowded and competitive, or a small crowd that loves you and will buy anything you make. Some people blow up in a year. Some grow for twenty. Some never get big, and that can be a good life too",
+      "What decides it: your aptitude, hobbies that match the niche, practice, gear, an editor, your personality and looks, how often you post, how well the niche suits the platform, the year's trends and a hidden spark that says how much your particular content resonates. See the whole quality breakdown, your rank in your niche, your audience mix and how much room you have left to grow",
+      "Plan every channel: how often (a break to non-stop), your kit (a phone to a pro production crew), your tone (wholesome to outrage bait) and your niche. Or do something now: create a post (eight formats, some suit your niche and some are risky), jump on a trend, hot takes, go live, collab, a huge stunt, giveaways, promotion, and reply to your comments",
+      "Fame, public image, privacy and burnout are real numbers with real consequences: strangers recognise you, stalkers find you, your relationships strain, you burn out, and being famous helps in interviews and dating",
+      "Money follows attention: ads, paid memberships and subscriptions, merch, and brand deals from 45 brands (some of which are dodgy, and the dodgy ones pay best). Negotiate, sign long ambassador deals and keep up your end, or get caught out. Hire an editor, a community manager and a manager. Everything is taxed by country",
+      "Your inbox fills up as you grow: brand offers, collab requests, fans, haters, journalists, scam artists, agents, old friends who want a favour, and family who suddenly need money",
+      "The internet moves on without you: platforms boom and fade, niches have their moments, and there's a list of the biggest names. Buy fake followers if you dare",
+      "Controversies you have to answer, comment sections that reflect how you're seen, bans and strikes, doxxing, deepfakes, hacked accounts, stolen content: 62 new events, and 25 new achievements from your first thousand followers to a hundred million",
+      "Header, profile, game-over summary and life feed all know you're a creator. Saves from before 2.9 load as normal",
+    ],
+  },
   {
     version: "2.8.0",
     title: "Headlines & Polish",

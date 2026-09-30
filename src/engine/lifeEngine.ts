@@ -14,6 +14,8 @@ import { randomFirstName, randomLastName } from "../data/names";
 import { getRegion } from "../data/regions";
 import { MIN_AGE_CONVERSATION, getLifeStage } from "./lifeStage";
 import { tickWorldState, hasActiveCondition, effectiveSalary } from "./worldState";
+import { tickCreator } from "./creator";
+import { tickSocialWorld } from "./socialWorld";
 import { ambientMessageTick } from "./relationships";
 import { addPerson, ensurePeople, newPerson, refreshCoworkers } from "./people";
 import { deathChance } from "./mortality";
@@ -261,6 +263,7 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
   ensureSchool(c);
   ensureHigher(c);
   tickWorldState(world);
+  tickSocialWorld(world);
   tickMarket(world);
   tickRetirementGrowth(c, world);
 
@@ -376,6 +379,7 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
 
   tickCareer(c, world);
   tickBusiness(c, world);
+  tickCreator(c, world);
   tickAbroad(c, world);
   tickWork(c, world);
   tickAssets(c);
@@ -429,7 +433,7 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
     }
 
     const decision = nextDecisionEvent(c, world);
-    const quiet = !decision && Math.random() < (c.quietLastYear ? QUIET_AFTER_QUIET_CHANCE : QUIET_YEAR_CHANCE);
+    const quiet = !decision && !c.social?.crisis && Math.random() < (c.quietLastYear ? QUIET_AFTER_QUIET_CHANCE : QUIET_YEAR_CHANCE);
     c.quietLastYear = quiet;
     if (decision) {
       pendingEvent = decision;
@@ -437,7 +441,8 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
       const lines = QUIET_LINES[getLifeStage(c.age)] ?? QUIET_LINES.adult;
       c.yearLog.push(lines[randomInt(0, lines.length - 1)]);
     } else {
-      pendingEvent = pickWeighted(choicePool);
+      // a live controversy always gets its moment; otherwise it's a weighted draw
+      pendingEvent = choicePool.find((e) => e.id === "creator-backlash") ?? pickWeighted(choicePool);
     }
   }
 

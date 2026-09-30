@@ -1,9 +1,10 @@
 import { Character, WorldState } from "../types";
+import { nicheDef } from "./social";
 
 // Things a life can add up to. Each is checked once a year. `progress`, when
 // given, returns [have, goal] so the list can show how close you are.
 
-export type AchCat = "Life" | "Learning" | "Career" | "Money" | "Love & family" | "World" | "Body & mind" | "Wild cards";
+export type AchCat = "Life" | "Learning" | "Career" | "Money" | "Love & family" | "World" | "Body & mind" | "Fame & social" | "Wild cards";
 
 export type Achievement = {
   key: string;
@@ -23,6 +24,8 @@ const skilledHobbies = (c: Character) => Object.values(c.hobbies ?? {}).filter((
 const wealth = (c: Character) => c.money + (c.home ? c.home.value - c.home.mortgageBalance : 0) + (c.car?.value ?? 0) + (c.rentals ?? []).reduce((s, r) => s + r.value, 0) + (c.retirement?.balance ?? 0) - (c.loans ?? []).reduce((s, l) => s + l.balance, 0);
 const logged = (c: Character, re: RegExp) => c.fullLog.some((l) => re.test(l.text));
 const languages = (c: Character) => Object.values(c.languages ?? {}).filter((v) => (v ?? 0) >= 50).length;
+const chans = (c: Character) => c.social?.channels ?? [];
+const peakF = (c: Character) => Math.max(0, ...chans(c).map((ch) => ch.peak), 0);
 const A = (key: string, label: string, hint: string, cat: AchCat, icon: string, points: number, test: Achievement["test"], progress?: Achievement["progress"]): Achievement => ({ key, label, hint, cat, icon, points, test, progress });
 
 export const ACHIEVEMENTS: Achievement[] = [
@@ -89,7 +92,33 @@ export const ACHIEVEMENTS: Achievement[] = [
   A("looker", "Head-turner", "Reach 85 looks", "Body & mind", "eye", 5, (c) => c.stats.looks >= 85),
   A("healthy-old", "Healthy and old", "Reach 75 with health above 70", "Body & mind", "pulse", 15, (c) => c.age >= 75 && c.stats.health >= 70),
   A("happy", "Genuinely happy", "Reach happiness 95", "Body & mind", "happy", 8, (c) => c.stats.happiness >= 95),
+  // ---------------------------------------------------------------- Fame & social
+  A("first-channel", "Hello, world", "Start a channel", "Fame & social", "videocam", 3, (c) => chans(c).length > 0 || (c.social?.earned ?? 0) > 0),
+  A("f-1k", "A thousand strangers", "Reach 1,000 followers on one channel", "Fame & social", "people", 5, (c) => peakF(c) >= 1000, (c) => [peakF(c), 1000]),
+  A("f-10k", "Ten thousand", "Reach 10,000 followers on one channel", "Fame & social", "people", 8, (c) => peakF(c) >= 10000, (c) => [peakF(c), 10000]),
+  A("f-100k", "Six figures", "Reach 100,000 followers on one channel", "Fame & social", "people-circle", 15, (c) => peakF(c) >= 100000, (c) => [peakF(c), 100000]),
+  A("f-1m", "A million people", "Reach 1,000,000 followers on one channel", "Fame & social", "star", 30, (c) => peakF(c) >= 1000000, (c) => [peakF(c), 1000000]),
+  A("f-10m", "Ten million", "Reach 10,000,000 followers on one channel", "Fame & social", "planet", 45, (c) => peakF(c) >= 10000000, (c) => [peakF(c), 10000000]),
+  A("f-100m", "Bigger than a country", "Reach 100,000,000 followers on one channel", "Fame & social", "globe", 60, (c) => peakF(c) >= 100000000),
+  A("monetised", "Paid to post", "Get monetised on a platform", "Fame & social", "cash", 6, (c) => chans(c).some((ch) => ch.monetised)),
+  A("verified", "The blue tick", "Get verified", "Fame & social", "checkmark-circle", 8, (c) => chans(c).some((ch) => ch.verified)),
+  A("viral-1", "It took off", "Have something go viral", "Fame & social", "flame", 8, (c) => chans(c).reduce((t, ch) => t + ch.hits, 0) >= 1),
+  A("viral-5", "Serial hitmaker", "Go viral five times", "Fame & social", "rocket", 15, (c) => chans(c).reduce((t, ch) => t + ch.hits, 0) >= 5, (c) => [chans(c).reduce((t, ch) => t + ch.hits, 0), 5]),
+  A("brand-deal", "Sponsored", "Take your first brand deal", "Fame & social", "pricetag", 6, (c) => logged(c, /You signed with|You posted for .* and were paid/)),
+  A("play-button", "On the wall", "Earn a Play Button", "Fame & social", "trophy", 12, (c) => logged(c, /Play Button/)),
+  A("all-platforms", "Everywhere at once", "Run channels on all six platforms", "Fame & social", "apps", 12, (c) => chans(c).length >= 6),
+  A("full-time-creator", "Full-time creator", "Earn a living from content with no other job", "Fame & social", "phone-portrait", 15, (c) => !c.job && c.age >= 18 && (c.social?.lastEarned ?? 0) >= 25000),
+  A("year-100k", "A very good year", "Earn $100,000 from content in one year", "Fame & social", "cash", 15, (c) => (c.social?.bestYear ?? 0) >= 100000),
+  A("year-1m", "Millionaire from posting", "Earn $1,000,000 from content in one year", "Fame & social", "diamond", 35, (c) => (c.social?.bestYear ?? 0) >= 1000000),
+  A("decade-creator", "A decade online", "Make content for ten years", "Fame & social", "hourglass", 12, (c) => !!c.social && chans(c).length > 0 && c.age - c.social.startAge >= 10, (c) => [c.social ? c.age - c.social.startAge : 0, 10]),
+  A("fame-50", "Household name", "Reach 50 fame", "Fame & social", "eye", 15, (c) => (c.social?.fame ?? 0) >= 50, (c) => [c.social?.fame ?? 0, 50]),
+  A("fame-80", "Superstar", "Reach 80 fame", "Fame & social", "sparkles", 35, (c) => (c.social?.fame ?? 0) >= 80, (c) => [c.social?.fame ?? 0, 80]),
+  A("small-mighty", "Small but mighty", "Reach 5,000 followers in a tiny niche", "Fame & social", "heart-circle", 10, (c) => chans(c).some((ch) => ch.followers >= 5000 && nicheDef(ch.niche).ceiling <= 3_000_000)),
+  A("overnight", "Overnight success", "Reach 100,000 followers within a year of starting", "Fame & social", "flash", 20, (c) => chans(c).some((ch) => ch.years <= 1 && ch.peak >= 100000)),
+  A("full-team", "A proper team", "Have an editor, a community manager and a manager", "Fame & social", "people", 10, (c) => !!(c.social?.team.editor && c.social?.team.assistant && c.social?.team.manager)),
   // ---------------------------------------------------------------- Wild cards
+  A("fake-caught", "Fake it till you make it", "Get caught buying followers", "Wild cards", "cart", 1, (c) => logged(c, /caught buying followers/)),
+  A("crashed", "Crashed out", "Burn out from posting too much", "Wild cards", "battery-dead", 1, (c) => logged(c, /You burned out/)),
   A("lottery", "Jackpot", "Win the lottery", "Wild cards", "ticket", 30, (c) => logged(c, /won the lottery/i)),
   A("overdose", "Second chance", "Survive an overdose", "Wild cards", "medkit", 2, (c) => logged(c, /survived an overdose/i)),
   A("record", "On the wrong side", "Get a criminal record", "Wild cards", "hand-right", 1, (c) => !!c.criminalRecord || (c.jailYearsTotal ?? 0) > 0),
@@ -98,4 +127,4 @@ export const ACHIEVEMENTS: Achievement[] = [
 ];
 
 export const achievementDef = (k: string) => ACHIEVEMENTS.find((a) => a.key === k);
-export const ACH_CATS: AchCat[] = ["Life", "Learning", "Career", "Money", "Love & family", "World", "Body & mind", "Wild cards"];
+export const ACH_CATS: AchCat[] = ["Life", "Learning", "Career", "Money", "Love & family", "World", "Body & mind", "Fame & social", "Wild cards"];

@@ -1,4 +1,5 @@
 import React from "react";
+import { creatorLabel } from "../../engine/creatorCore";
 import { ScrollView } from "react-native";
 import { useGameStore } from "../../state/gameStore";
 import { useNav } from "../../nav/navStore";
@@ -14,7 +15,7 @@ export function WorkHub() {
   if (!character) return null;
   const job = character.inJail
     ? "Incarcerated"
-    : [character.job?.title, character.partTime ? `${character.partTime.title} (part-time)` : undefined].filter(Boolean).join(" + ") || "Unemployed";
+    : [character.job?.title, character.partTime ? `${character.partTime.title} (part-time)` : undefined].filter(Boolean).join(" + ") || creatorLabel(character) || "Unemployed";
   const school = stageLabel(character.originRegion, character.educationStage);
   return (
     <ScrollView contentContainerStyle={tabStyles.scroll} showsVerticalScrollIndicator={false}>

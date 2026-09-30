@@ -317,6 +317,7 @@ export type WorldState = {
   history: MacroCondition[];
   log: string[];
   stocks?: StockState[];
+  social?: WorldSocial;
 };
 
 // Big-Five style personality, each 0-100 (50 = typical). Never shown as a
@@ -399,6 +400,87 @@ export type VisaApplication = { dest: RegionKey; route: VisaRoute; filed: number
 // what last year's money did, for the Budget screen
 export type Budget = { age: number; income: number; tax: number; rent: number; living: number; upkeep: number; other?: number };
 
+
+// ---- fame & social media (v2.9) ----
+export type PlatformKey = "youtube" | "tiktok" | "instagram" | "x" | "twitch" | "podcast";
+export type Cadence = "off" | "casual" | "steady" | "daily" | "grind";
+export type QualityTier = "phone" | "home" | "studio" | "pro";
+export type PostStyle = "wholesome" | "standard" | "edgy" | "bait";
+export type Channel = {
+  platform: PlatformKey;
+  handle: string;
+  niche: string; // key into data/social.ts NICHES
+  since: number; // age you opened it
+  followers: number;
+  peak: number;
+  momentum: number; // -1..3: how hot the channel is right now (viral afterglow, algorithm favour)
+  years: number; // years actively posting
+  cadence: Cadence;
+  gear: QualityTier;
+  style: PostStyle;
+  monetised: boolean;
+  verified: boolean;
+  members: boolean; // memberships / subscriptions switched on
+  merch: boolean;
+  bannedUntil?: number; // age the account is restored (suspension)
+  strikes: number;
+  history: number[]; // followers at the end of each year (newest last, capped)
+  revenue: number; // last year's earnings from this channel
+  views: number; // last year's views
+  gain: number; // last year's follower change
+  fake: number; // share of followers that are bought (0-100)
+  hits: number; // viral hits
+  milestones: number[]; // follower marks already celebrated
+  pivotAge?: number;
+  appeal?: number; // hidden: how much your particular content resonates (0.45-2.2)
+};
+export type Post = { id: string; age: number; platform: PlatformKey; kind: string; title: string; views: number; likes: number; comments: number; shares: number; viral?: boolean; flop?: boolean; tone?: "good" | "bad" | "neutral" };
+export type DealKind = "post" | "series" | "ambassador";
+export type Deal = { id: string; brand: string; kind: DealKind; platform: PlatformKey; pay: number; yearsLeft: number; started: number; clause?: string; sketchy?: boolean; upfront?: boolean };
+export type InboxKind = "brand" | "collab" | "fan" | "hate" | "platform" | "press" | "agency" | "scam" | "friend" | "family";
+export type InboxItem = {
+  id: string;
+  kind: InboxKind;
+  from: string;
+  subject: string;
+  body: string;
+  age: number;
+  platform?: PlatformKey;
+  options: { key: string; label: string }[];
+  data?: Record<string, string | number | boolean>;
+  deal?: Deal;
+};
+export type Team = { editor?: boolean; manager?: boolean; assistant?: boolean };
+export type SocialState = {
+  channels: Channel[];
+  fame: number; // 0-100
+  image: number; // -100..100
+  privacy: number; // 0-100
+  burnout: number; // 0-100
+  team: Team;
+  deals: Deal[];
+  inbox: InboxItem[];
+  feed: Post[];
+  earned: number; // lifetime earnings from content
+  bestYear: number;
+  lastEarned: number;
+  lastTax: number;
+  startAge: number;
+  actions: { age: number; n: Record<string, number> };
+  crisis?: string | null; // a live controversy the player can respond to
+  topFollowers: number;
+  leak?: number; // privacy lost to leaks and stalkers, fades slowly
+  fameSeen?: number; // the highest fame milestone already celebrated
+  replied?: number; // age you last answered your comments
+  oneOff?: number; // one-off earnings this year (taxed with the year's income)
+};
+export type WorldSocial = {
+  pop: Record<string, number>; // platform popularity multiplier
+  hot: { niche: string; mult: number; years: number }[];
+  stars: { name: string; platform: PlatformKey; niche: string; followers: number }[];
+  mood: string; // a line about what the internet's obsessed with this year
+};
+
 export type Background = {
   wealthClass: WealthClass;
   parentValues: string; // one line of flavour about how the family sees the world
@@ -468,6 +550,7 @@ export type Character = {
   originRegion?: RegionKey; // the country you live in now (the name is historic)
   birthRegion?: RegionKey;
   notices?: Notice[]; // queued headline popups (v2.8)
+  social?: SocialState; // channels, fame, deals (v2.9)
   // ---- working life (v2.6) ----
   workMode?: "coast" | "steady" | "grind";
   // ---- body, mind and things to do (v2.7) ----

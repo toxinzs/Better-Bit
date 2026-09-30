@@ -20,6 +20,7 @@ type LineKind = { icon: keyof typeof Ionicons.glyphMap; color: string };
 const KINDS: { test: RegExp; kind: LineKind }[] = [
   { test: /^Achievement/i, kind: { icon: "trophy", color: colors.gold } },
   { test: /\b(bankrupt\w*|evicted|homeless|overdos\w*|hooked|relapse\w*|deported|scammed|scammers)\b/i, kind: { icon: "warning", color: colors.danger } },
+  { test: /\b(followers|subscribers|listeners|viral|monetised|verified|sponsor\w*|channel|creator|livestream|stream|brand deal|influencer|comments? section|unfollowed)\b/i, kind: { icon: "phone-portrait", color: colors.looks } },
   { test: /\b(visa|emigrat\w*|citizen\w*|passport|abroad|immigra\w*|flight)\b/i, kind: { icon: "airplane", color: colors.teal } },
   { test: /\b(business|start-up|customers|revenue|profit|staff|opened)\b/i, kind: { icon: "storefront", color: colors.gold } },
   { test: /\b(landlord|apartment|flat|moved|moving|housemate|neighbou?r\w*|mortgage|deposit)\b/i, kind: { icon: "home", color: colors.gold } },

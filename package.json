@@ -26,7 +26,10 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "sim:creator": "node --import ./scripts/register-ts.mjs scripts/sim-creator-growth.mjs",
+    "sim:lives": "node --import ./scripts/register-ts.mjs scripts/sim-creator-lives.mjs",
+    "test:creator-events": "node --import ./scripts/register-ts.mjs scripts/test-creator-events.mjs"
   },
   "private": true
 }

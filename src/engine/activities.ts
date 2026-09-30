@@ -252,7 +252,7 @@ export function pursueDatingCandidate(c: Character, candidate: DatingCandidate):
     c.yearLog.push("You're already seeing someone.");
     return;
   }
-  const chance = clamp(0.3 + candidate.appeal / 150, 0.2, 0.85);
+  const chance = clamp(0.3 + candidate.appeal / 150 + (c.social ? c.social.fame / 500 : 0), 0.2, 0.9);
   const matched = Math.random() < chance;
   if (matched) {
     addPerson(c, {

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { creatorLabel } from "../../engine/creatorCore";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../../state/gameStore";
@@ -212,7 +213,8 @@ export function OccupationMenu() {
       {character.partTime && <JobCard title="Part-time job" kind="parttime" job={character.partTime} gross={pgross} net={takeHomePay(pgross, region)} onQuit={() => quitWork("parttime")} />}
       {nothing && !character.inJail && (
         <Card>
-          <Text style={styles.heroTitle}>Unemployed</Text>
+          <Text style={styles.heroTitle}>{creatorLabel(character) ?? "Unemployed"}</Text>
+          {creatorLabel(character) ? <Text style={ms.note}>You make your living online. Activities → Social media has your channels, deals and income.</Text> : null}
           <Text style={ms.note}>Head to Find Work for part-time jobs, full-time careers and quick gigs.</Text>
         </Card>
       )}

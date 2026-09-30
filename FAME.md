@@ -20,15 +20,16 @@ celebrities who rise and fall in the same world.
 - **Income streams**: ad revenue, sponsorships, subscriptions, merch, salaries, royalties,
   appearances. All taxed like business income (v2.6), scaled by country.
 
-## Platforms (all fictional; five, each with its own rules)
+## Platforms (real names, six, each with its own rules; built in v2.9)
 
 | Platform | Shape | Grows with | Risks |
 |---|---|---|---|
-| **Pixl** | photos, lifestyle | looks, aesthetics, consistency | comparison, fake-life backlash |
-| **Loop** | short video | hooks, trends, luck | algorithm swings, one-hit fade |
-| **Chirp** | text, hot takes | wit, opinions, timing | pile-ons, cancellation |
-| **Streamly** | live and long video | charisma, hours, community | burnout, chat toxicity, ban |
-| **Vox** | audio, podcasts | expertise, voice | slow growth, niche ceiling |
+| **Instagram** | photos, lifestyle | looks, aesthetics, consistency | comparison, fake-life backlash |
+| **TikTok** | short video | hooks, trends, luck | algorithm swings, one-hit fade |
+| **X (Twitter)** | text, hot takes | wit, opinions, timing | pile-ons, cancellation |
+| **Twitch** | live streaming | charisma, hours, community | burnout, chat toxicity, ban |
+| **Podcasts** | audio | expertise, voice | slow growth, niche ceiling |
+| **YouTube** | long video | searchability, quality, consistency | slow start, copyright strikes |
 
 Yearly *algorithm shifts* reroll each platform's favoured content; platforms can lose or
 gain popularity over a life (a platform can die; a new one appears in old age).
@@ -91,6 +92,13 @@ A **Social** hub styled like a phone: *Feed* (your posts, likes, comments), *Cre
 *Inbox* (DMs: brand offers, fans, haters, journalists as decisions), *Trending*,
 *Deals*, *Team*, *Career* (creator/entertainment ladders). Fame stat and image show in
 Profile; a red-carpet style summary on Game Over.
+
+## Status
+
+v2.9 (Creator) is built: see ROADMAP.md and `src/engine/CLAUDE.md`. The user's steer for
+it: real platform names, a lifelong side-path, and growth that can be fast, slow or capped
+by the niche. Actors, musicians, models and athletes are deliberately later ("special
+careers we'll get deeper into in a later update").
 
 ## Build order (each ships and is playable)
 

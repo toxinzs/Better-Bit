@@ -219,6 +219,8 @@ export function preparedness(c: Character, job: Job): number {
   if (c.flags?.includes("return-offer")) p += 1.5;
   p += (c.network ?? 0) / 60;
   if (c.firedAge !== undefined && c.age - c.firedAge <= 2) p -= 1;
+  // being known online cuts both ways in a job interview
+  if (c.social) p += Math.min(1, c.social.fame / 80) - (c.social.image < -25 ? 0.6 : 0);
   if (job.kind === "parttime" && (c.gigRep ?? 0) >= 50) p += 0.5;
   return p;
 }

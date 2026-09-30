@@ -182,3 +182,30 @@ choice, turns matching lines into `c.notices`, and the store drops those lines f
 plain result popup so nothing shows twice. For something with no log line, call
 `notify(c, title, text, icon, tone)` directly. A new important log line must match its
 rule's regex exactly, so change the wording and the rule together.
+
+## Fame and social media (v2.9)
+
+A creator is a character with `c.social` (`SocialState`: `channels[]`, `fame`, `image`,
+`privacy`, `burnout`, `team`, `deals[]`, `inbox[]`, `feed[]`). It is absent for everyone
+else, so always read it through `c.social?.` or `ensureSocial(c)` (never create it
+outside `openChannel`/`ensureSocial(c, true)`). Files: `creatorCore.ts` (pure numbers:
+`qualityParts`, `potential`/`carrying`, `computeFame`, ranks, comments), `creatorPlay.ts`
+(`addFollowers`, `viralGain`, `runCollab`, `makePost`), `creator.ts` (open/plan/actions/
+team/buy followers, `tickCreator`), `inbox.ts` (`tickInbox` generates mail, `answerInbox`
+resolves it; items are plain data, never closures), `socialWorld.ts` (`tickSocialWorld`
+on `world.social`: platform popularity, hot niches, "biggest names").
+
+Growth per channel per year: `organic = followers * rate * room + seed`, plus a heavy
+tailed viral roll whose size scales with the niche's carrying capacity, minus churn.
+`rate` has a size decay, so doubling gets harder as you grow; `appeal` (hidden, 0.45-2.2,
+rolled when the channel opens) and `luck` spread outcomes. One-off moves (`doAction`)
+use the same size damping, so spamming them can't outrun the yearly tick. If you retune
+any of it, rerun `node --import ./scripts/register-ts.mjs scripts/sim-creator-growth.mjs`
+(20-year archetypes) and `sim-creator-lives.mjs` (full lives, checks for NaN and
+exceptions), and `test-creator-events.mjs` (runs every creator event choice). Tick order:
+`tickBusiness` -> `tickCreator` -> `tickAbroad`. Money from content is taxed as the
+marginal income on top of any salary; one-offs (`s.oneOff`) are paid at once and taxed in
+the year's tick. Use `record(c, text)` (not a bare `yearLog.push`) for lines that should
+also enter the life story, since achievements read `fullLog`. New notable log lines need a
+rule in `notify.ts`. Ages: platforms 13+ (Podcast 14), hiring 18+, buying followers 16+;
+minors keep 60% of earnings (a trust) and pay no tax.

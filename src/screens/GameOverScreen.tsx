@@ -8,6 +8,8 @@ import { colors, fonts, fontSize, spacing } from "../theme";
 import { totalNetWorth } from "../engine/lifeEngine";
 import Avatar from "../components/Avatar";
 import { ACHIEVEMENTS, achievementDef } from "../data/achievements";
+import { fmt as fmtC } from "../data/social";
+import { creatorSummary } from "../engine/creator";
 import { lifeScore } from "../engine/achievements";
 
 export default function GameOverScreen() {
@@ -43,6 +45,8 @@ export default function GameOverScreen() {
             value={character.hasCollegeDegree ? "College graduate" : character.educationStage}
           />
           <SummaryRow icon="trophy" label="Life score" value={String(lifeScore(character))} />
+          {creatorSummary(character) ? <SummaryRow icon="phone-portrait" label="Online" value={`${fmtC(creatorSummary(character)!.peak)} followers at peak · fame ${creatorSummary(character)!.fame}`} /> : null}
+          {creatorSummary(character) && creatorSummary(character)!.earned > 0 ? <SummaryRow icon="cash" label="Earned from content" value={`$${Math.round(creatorSummary(character)!.earned).toLocaleString()}`} /> : null}
           <SummaryRow icon="ribbon" label="Achievements" value={`${Object.keys(character.achievements ?? {}).length} of ${ACHIEVEMENTS.length}`} />
           {character.business && <SummaryRow icon="storefront" label="Business" value={character.business.name} />}
           {(character.citizenships ?? []).length > 1 && <SummaryRow icon="id-card" label="Citizenships" value={String((character.citizenships ?? []).length)} />}
