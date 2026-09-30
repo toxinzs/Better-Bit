@@ -37,6 +37,7 @@ import { tickAddictions } from "./addiction";
 import { tickMind } from "./mind";
 import { tickHobbies } from "./hobbies";
 import { tickAchievements } from "./achievements";
+import { harvestNotices } from "./notify";
 import { tickRentals, tickSavings } from "./wealth";
 import { applyContribution, tickRetirementGrowth, retirementBalance } from "./retirement";
 import { tickSentence, tickRecordClock, tickAnkleMonitor, tickJuvenileRecordClear } from "./crime";
@@ -446,6 +447,7 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
     );
   }
 
+  harvestNotices(c, 0);
   return { died: false, pendingEvent };
 }
 

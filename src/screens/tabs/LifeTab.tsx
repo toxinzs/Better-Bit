@@ -18,6 +18,15 @@ type LineKind = { icon: keyof typeof Ionicons.glyphMap; color: string };
 // Cheap keyword tagging so a wall of text reads as a story with visual
 // rhythm (money, love, school, health...) instead of identical bullets.
 const KINDS: { test: RegExp; kind: LineKind }[] = [
+  { test: /^Achievement/i, kind: { icon: "trophy", color: colors.gold } },
+  { test: /\b(bankrupt\w*|evicted|homeless|overdos\w*|hooked|relapse\w*|deported|scammed|scammers)\b/i, kind: { icon: "warning", color: colors.danger } },
+  { test: /\b(visa|emigrat\w*|citizen\w*|passport|abroad|immigra\w*|flight)\b/i, kind: { icon: "airplane", color: colors.teal } },
+  { test: /\b(business|start-up|customers|revenue|profit|staff|opened)\b/i, kind: { icon: "storefront", color: colors.gold } },
+  { test: /\b(landlord|apartment|flat|moved|moving|housemate|neighbou?r\w*|mortgage|deposit)\b/i, kind: { icon: "home", color: colors.gold } },
+  { test: /\b(gym|diet|exercise|marathon|training|fitness|weight|eating|workout)\b/i, kind: { icon: "barbell", color: colors.health } },
+  { test: /\b(hobby|painting|guitar|piano|chess|coding|photograph\w*|knitting|gardening|fishing|hiking|climbing|tournament|gig|exhibit\w*)\b/i, kind: { icon: "color-palette", color: colors.looks } },
+  { test: /\b(meditat\w*|faith|volunteer\w*|therapy|therapist|mindful\w*|charity)\b/i, kind: { icon: "leaf", color: colors.teal } },
+  { test: /\b(drink\w*|cigarette\w*|smok\w*|bet|gambl\w*|drugs?)\b/i, kind: { icon: "beer", color: colors.danger } },
   { test: /\b(arrest\w*|police|jail\w*|prison|court|crime|sentence\w*|monitor|convicted|lawyer|trial)\b/i, kind: { icon: "shield", color: colors.danger } },
   { test: /\$|\b(paid|pay|salary|tax|taxes|loan|bought|sold|rent|stock\w*|money|credit|debt|cash|bill|wallet|lottery|invest\w*)\b/i, kind: { icon: "cash", color: colors.primary } },
   { test: /\b(hired|job|interview|promotion|promoted|boss|career|coworker\w*|quit|fired|office|shift|raise)\b/i, kind: { icon: "briefcase", color: colors.smarts } },

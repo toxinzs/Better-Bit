@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "2.7.0";
+export const APP_VERSION = "2.8.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,17 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "2.8.0",
+    title: "Headlines & Polish",
+    highlights: [
+      "Big things now get their own popup instead of hiding in the life log: being laid off or fired, promotions, performance warnings, new jobs, visa decisions and citizenship, deportation, eviction and homelessness, bankruptcy, scams, overdoses, relapses, health scares, weddings and divorces. Achievements are gathered into a single popup",
+      "Several in one year queue up and come one after another, so nothing is missed",
+      "The Activities and Money menus are grouped into clear sections instead of one long list",
+      "The life feed has more specific icons: work, money, travel and visas, homes, fitness, hobbies, habits, business, achievements",
+      "Small fixes: the missing space in 'Age 31' in the header, 'Hobbies: 0 active' now reads 'Pick one up', and achievements show your life score",
+    ],
+  },
   {
     version: "2.7.0",
     title: "Body, Mind & Things To Do",

@@ -89,6 +89,7 @@ import { askForPromotion, askForRaise, doNetwork as engineNetwork, retire, setWo
 import { expand, fireStaff, hire, marketing, sellBusiness, closeBusiness, startBusiness } from "../engine/business";
 import { buyRental, declareBankruptcy, sellRental } from "../engine/wealth";
 import type { RentalListing } from "../engine/wealth";
+import { dismissNotice as dismissNoticeEngine, harvestNotices } from "../engine/notify";
 import { checkup as engineCheckup, ensureBody, setDiet as engineSetDiet, setRoutine as engineSetRoutine } from "../engine/body";
 import { quit as engineQuit, use as engineUse } from "../engine/addiction";
 import type { QuitMethod } from "../engine/addiction";
@@ -121,6 +122,7 @@ type GameState = {
   ageUp: () => void;
   chooseEventOption: (choiceIndex: number) => void;
   clearActionResult: () => void;
+  dismissNotice: (id: string) => void;
   nameBaby: (name: string) => void;
   startApplication: (listing: Listing) => void;
   quitWork: (kind: JobKind) => void;
@@ -243,7 +245,8 @@ export const useGameStore = create<GameState>((set, get) => {
     if (!character) return;
     const before = character.yearLog.length;
     mutate(character);
-    const newLines = character.yearLog.slice(before);
+    const taken = harvestNotices(character, before);
+    const newLines = character.yearLog.slice(before).filter((l) => !taken.includes(l));
     set({
       character: { ...character },
       actionResultLines: newLines.length > 0 ? newLines : get().actionResultLines,
@@ -369,7 +372,8 @@ export const useGameStore = create<GameState>((set, get) => {
         persist(character, "gameover", worldState);
         return;
       }
-      const newLines = character.yearLog.slice(before);
+      const taken = harvestNotices(character, before);
+      const newLines = character.yearLog.slice(before).filter((l) => !taken.includes(l));
       set({
         character: { ...character },
         pendingEvent: next ?? null,
@@ -379,6 +383,14 @@ export const useGameStore = create<GameState>((set, get) => {
     },
 
     clearActionResult: () => set({ actionResultLines: null }),
+
+    dismissNotice: (id) => {
+      const character = get().character;
+      if (!character) return;
+      dismissNoticeEngine(character, id);
+      set({ character: { ...character } });
+      persist(character, get().screen, get().worldState);
+    },
 
     nameBaby: (name) => {
       const character = get().character;

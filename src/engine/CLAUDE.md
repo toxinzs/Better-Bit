@@ -171,3 +171,14 @@ and money gates); never construct a copy of the character to bypass them. Tick o
 `tickHealth`; `tickAchievements` runs near the end of the year, after the money ticks.
 Achievements are pure predicates on the character in `data/achievements.ts`; keep them
 cheap and never throw (the engine catches, but a throwing test never unlocks).
+
+## Headline notices (v2.8)
+
+Anything important should reach the player as a popup, not only as a line in the year
+log. Don't build a popup per feature: write a normal `c.yearLog.push(...)` line and, if
+it's a big moment, add a rule to `RULES` in `engine/notify.ts` (regex, title, icon, tone).
+`harvestNotices` runs at the end of `ageUp` and after every store action and event
+choice, turns matching lines into `c.notices`, and the store drops those lines from the
+plain result popup so nothing shows twice. For something with no log line, call
+`notify(c, title, text, icon, tone)` directly. A new important log line must match its
+rule's regex exactly, so change the wording and the rule together.

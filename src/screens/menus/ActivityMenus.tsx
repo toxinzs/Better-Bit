@@ -3,7 +3,7 @@ import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../../state/gameStore";
 import { useNav } from "../../nav/navStore";
-import MenuScreen, { MenuRow } from "../../nav/MenuScreen";
+import MenuScreen, { MenuRow, SectionLabel } from "../../nav/MenuScreen";
 import Card from "../../components/Card";
 import Button from "../../components/Button";
 import StatBar from "../../components/StatBar";
@@ -19,6 +19,7 @@ import { colors, spacing } from "../../theme";
 import { tabStyles } from "../tabs/sharedStyles";
 import { ms } from "./menuStyles";
 import { cityOf } from "../../engine/where";
+import { lifeScore } from "../../engine/achievements";
 import { COUNTRIES } from "../../data/countries";
 
 const VENUE_ICONS: Record<VenueKey, keyof typeof Ionicons.glyphMap> = {
@@ -44,28 +45,30 @@ export function ActivitiesHub() {
   const skills = Object.keys(character.skills ?? {}).length;
   const partnered = character.relationships.some((r) => r.type === "partner" && r.alive);
   const canDate = character.age >= 18;
+  const hobbiesActive = Object.values(character.hobbies ?? {}).filter((h) => h.active).length;
   const venues = availableVenues(character.age, getRegion(character.originRegion).legalAges).length;
 
   return (
     <ScrollView contentContainerStyle={tabStyles.scroll} showsVerticalScrollIndicator={false}>
-      <MenuRow icon="home" color={colors.gold} title="Home & Moving" summary={`${cityOf(character).name}, ${getRegion(character.originRegion).label}`} delay={0} onPress={() => push("place")} />
-      <MenuRow icon="location" color={colors.happiness} title="Outings & Venues" summary={`${venues} places to go`} delay={0} onPress={() => push("venues")} />
-      <MenuRow icon="barbell" color={colors.health} title="Body & Fitness" summary="Diet, exercise, check-ups" delay={30} onPress={() => push("body")} />
-      <MenuRow icon="leaf" color={colors.teal} title="Mind & Habits" summary={(character.addictions ?? []).some((a) => a.level >= 20 && !a.quitting) ? "Something has a hold on you" : "Calm, faith, habits"} delay={35} onPress={() => push("mind")} />
-      <MenuRow icon="color-palette" color={colors.looks} title="Hobbies" summary={`${Object.values(character.hobbies ?? {}).filter((h) => h.active).length} active`} delay={38} onPress={() => push("hobbies")} />
-      <MenuRow icon="trophy" color={colors.gold} title="Achievements" summary={`${Object.keys(character.achievements ?? {}).length} earned`} delay={39} onPress={() => push("achievements")} />
-      <MenuRow icon="medkit" color={colors.health} title="Health & Wellbeing" summary="Doctor, therapy" delay={40} onPress={() => push("health")} />
-      <MenuRow icon="ribbon" color={colors.smarts} title="Lessons & Skills" summary={skills > 0 ? `${skills} skill${skills === 1 ? "" : "s"}` : "Learn something new"} delay={80} onPress={() => push("lessons")} />
-      <MenuRow
-        icon="heart" color={colors.love} title="Love & Dating"
-        summary={partnered ? "In a relationship" : canDate ? "Single" : "Opens through school"}
-        disabled={false} delay={120} onPress={() => push("dating")}
-      />
-      <MenuRow icon="egg" color={colors.looks} title="Family Planning" summary={canDate ? "Birth control, fertility" : "Adults only"} delay={160} onPress={() => push("fertility")} />
-      <MenuRow icon="earth" color={colors.teal} title="Across Borders" summary={(character.citizenships ?? [character.birthRegion ?? character.originRegion ?? "us"]).map((r) => COUNTRIES[r].flag).join(" ") + (character.visaApp ? " · application pending" : " · move, travel, citizenship")} delay={190} onPress={() => push("abroad")} />
-      <MenuRow icon="airplane" color={colors.teal} title="Vacations" summary="Get away for a while" delay={200} onPress={() => push("vacations")} />
+      <SectionLabel>Body & mind</SectionLabel>
+      <MenuRow icon="barbell" color={colors.health} title="Body & Fitness" summary="Diet, exercise, check-ups" delay={0} onPress={() => push("body")} />
+      <MenuRow icon="leaf" color={colors.teal} title="Mind & Habits" summary={(character.addictions ?? []).some((a) => a.level >= 20 && !a.quitting) ? "Something has a hold on you" : "Calm, faith, habits"} delay={20} onPress={() => push("mind")} />
+      <MenuRow icon="medkit" color={colors.health} title="Health & Wellbeing" summary="Doctor, therapy, insurance" delay={40} onPress={() => push("health")} />
+      <MenuRow icon="color-palette" color={colors.looks} title="Hobbies" summary={hobbiesActive > 0 ? `${hobbiesActive} active` : "Pick one up"} delay={60} onPress={() => push("hobbies")} />
+      <SectionLabel>People & love</SectionLabel>
+      <MenuRow icon="heart" color={colors.love} title="Love & Dating" summary={partnered ? "In a relationship" : canDate ? "Single" : "Opens through school"} delay={80} onPress={() => push("dating")} />
+      <MenuRow icon="egg" color={colors.looks} title="Family Planning" summary={canDate ? "Birth control, fertility" : "Adults only"} delay={100} onPress={() => push("fertility")} />
+      <MenuRow icon="location" color={colors.happiness} title="Outings & Venues" summary={`${venues} places to go`} delay={120} onPress={() => push("venues")} />
+      <SectionLabel>Places & travel</SectionLabel>
+      <MenuRow icon="home" color={colors.gold} title="Home & Moving" summary={`${cityOf(character).name}, ${getRegion(character.originRegion).label}`} delay={140} onPress={() => push("place")} />
+      <MenuRow icon="earth" color={colors.teal} title="Across Borders" summary={(character.citizenships ?? [character.birthRegion ?? character.originRegion ?? "us"]).map((r) => COUNTRIES[r].flag).join(" ") + (character.visaApp ? " · application pending" : " · move, travel, citizenship")} delay={160} onPress={() => push("abroad")} />
+      <MenuRow icon="airplane" color={colors.teal} title="Vacations" summary="Get away for a while" delay={180} onPress={() => push("vacations")} />
+      <SectionLabel>Growth</SectionLabel>
+      <MenuRow icon="ribbon" color={colors.smarts} title="Lessons & Skills" summary={skills > 0 ? `${skills} skill${skills === 1 ? "" : "s"}` : "Learn something new"} delay={200} onPress={() => push("lessons")} />
+      <MenuRow icon="trophy" color={colors.gold} title="Achievements" summary={`${Object.keys(character.achievements ?? {}).length} earned · life score ${lifeScore(character)}`} delay={220} onPress={() => push("achievements")} />
+      <SectionLabel>The dark side</SectionLabel>
       <MenuRow icon="shield" color={colors.danger} title="Crime & Justice" summary={character.criminalRecord ? "You have a record" : character.inJail ? "Incarcerated" : "Stay out of trouble"} delay={240} onPress={() => push("crime")} />
-      <MenuRow icon="alert-circle" color={colors.textSecondary} title="End of the Road" summary="If it's all too much" delay={280} onPress={() => push("endroad")} />
+      <MenuRow icon="alert-circle" color={colors.textSecondary} title="End of the Road" summary="If it's all too much" delay={260} onPress={() => push("endroad")} />
     </ScrollView>
   );
 }

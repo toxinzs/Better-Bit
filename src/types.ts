@@ -158,6 +158,9 @@ export type Job = {
   review?: { age: number; perf: number; verdict: string; note: string };
 };
 
+// a big thing that happened, shown as its own popup instead of only in the life log
+export type Notice = { id: string; title: string; text: string; icon: string; tone: "good" | "bad" | "warn" | "info" };
+
 export type Unemployment = { since: number; lastSalary: number; yearsLeft: number; cause: "laidoff" | "fired" };
 
 export type BusinessKey = string;
@@ -464,6 +467,7 @@ export type Character = {
   griefYears?: number; // years of lingering sadness after losing someone close
   originRegion?: RegionKey; // the country you live in now (the name is historic)
   birthRegion?: RegionKey;
+  notices?: Notice[]; // queued headline popups (v2.8)
   // ---- working life (v2.6) ----
   workMode?: "coast" | "steady" | "grind";
   // ---- body, mind and things to do (v2.7) ----

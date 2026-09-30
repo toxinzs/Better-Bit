@@ -31,6 +31,7 @@ import * as BODY from "./src/engine/body";
 import * as ADDICTION from "./src/engine/addiction";
 import * as HOBBIES_E from "./src/engine/hobbies";
 import * as ACH from "./src/engine/achievements";
+import * as NOTIFY from "./src/engine/notify";
 import { CITIES } from "./src/data/cities";
 import { cityOf } from "./src/engine/where";
 import { useNav } from "./src/nav/navStore";
@@ -39,7 +40,7 @@ import { EVENTS } from "./src/data/events";
 if (typeof window !== "undefined") {
   (window as any).__store = useGameStore;
   (window as any).__nav = useNav;
-  (window as any).__engine = { actionsFor, romanceCandidates, runPersonAction, killRelative, nextDecisionEvent, tickExes, craziness, listingsFor, requirements, preparedness, QUESTIONS, institutions: (r: string) => INSTITUTIONS.filter((i) => i.region === r), majors: MAJORS, location: LOCATION, immigration: IMMIGRATION, career: CAREER, business: BUSINESS, wealth: WEALTH, taxes: TAXES, body: BODY, addiction: ADDICTION, hobbies: HOBBIES_E, achievements: ACH, EVENTS, cities: CITIES, cityOf };
+  (window as any).__engine = { actionsFor, romanceCandidates, runPersonAction, killRelative, nextDecisionEvent, tickExes, craziness, listingsFor, requirements, preparedness, QUESTIONS, institutions: (r: string) => INSTITUTIONS.filter((i) => i.region === r), majors: MAJORS, location: LOCATION, immigration: IMMIGRATION, career: CAREER, business: BUSINESS, wealth: WEALTH, taxes: TAXES, body: BODY, addiction: ADDICTION, hobbies: HOBBIES_E, achievements: ACH, notify: NOTIFY, EVENTS, cities: CITIES, cityOf };
 }
 
 export default function App() {

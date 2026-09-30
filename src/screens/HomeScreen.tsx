@@ -6,6 +6,7 @@ import EventModal from "../components/EventModal";
 import TextThreadModal from "../components/TextThreadModal";
 import ActionResultModal from "../components/ActionResultModal";
 import NameBabyModal from "../components/NameBabyModal";
+import NoticeModal from "../components/NoticeModal";
 import Avatar, { moodFor } from "../components/Avatar";
 import { Confetti, CountUp, FadeInUp, FloatingDelta, Pop } from "../motion";
 import GradientBg from "../components/GradientBg";
@@ -59,6 +60,7 @@ export default function HomeScreen() {
   const pendingEvent = useGameStore((s) => s.pendingEvent);
   const actionResultLines = useGameStore((s) => s.actionResultLines);
   const clearActionResult = useGameStore((s) => s.clearActionResult);
+  const dismissNotice = useGameStore((s) => s.dismissNotice);
   const nameBaby = useGameStore((s) => s.nameBaby);
   const ageUp = useGameStore((s) => s.ageUp);
   const chooseEventOption = useGameStore((s) => s.chooseEventOption);
@@ -146,7 +148,7 @@ export default function HomeScreen() {
               {character.firstName} {character.lastName}
             </Text>
             <View style={styles.metaRow}>
-              <Text style={styles.metaText}>Age </Text>
+              <Text style={[styles.metaText, { marginRight: 3 }]}>Age</Text>
               <Animated.Text style={[styles.metaText, styles.ageValue, { transform: [{ scale: ageScale }] }]}>
                 {character.age}
               </Animated.Text>
@@ -229,7 +231,9 @@ export default function HomeScreen() {
 
       {showThemes && <ThemePicker onClose={() => setShowThemes(false)} />}
 
-      {character.pendingBabyId ? (
+      {(character.notices ?? []).length > 0 && !character.pendingBabyId ? (
+        <NoticeModal key={character.notices![0].id} notice={character.notices![0]} remaining={character.notices!.length - 1} onClose={() => dismissNotice(character.notices![0].id)} />
+      ) : character.pendingBabyId ? (
         <NameBabyModal baby={character.relationships.find((r) => r.id === character.pendingBabyId)} character={character} onSubmit={nameBaby} />
       ) : pendingEvent ? (
         <EventModal key={pendingEvent.id} event={pendingEvent} character={character} world={worldState} onChoose={handleChoose} />

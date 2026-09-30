@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-nati
 import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../../state/gameStore";
 import { useNav } from "../../nav/navStore";
-import MenuScreen, { MenuRow } from "../../nav/MenuScreen";
+import MenuScreen, { MenuRow, SectionLabel } from "../../nav/MenuScreen";
 import Card from "../../components/Card";
 import Button from "../../components/Button";
 import GradientBg from "../../components/GradientBg";
@@ -53,15 +53,18 @@ export function AssetsHub() {
         </View>
       </GradientBg>
 
-      <MenuRow icon="home" color={colors.gold} title="Home & Moving" summary={`${cityOf(character).name} · ${character.home ? character.home.name : character.residence?.housing === "rent" ? "Renting" : character.residence?.housing === "own" ? "Homeowner" : "With family"}`} delay={0} onPress={() => push("place")} />
-      <MenuRow icon="wallet" color={colors.primary} title="Budget" summary="Where the money goes" delay={20} onPress={() => push("budget")} />
-      <MenuRow icon="car-sport" color={colors.smarts} title="Vehicle" summary={character.car ? `${character.car.name} · $${character.car.value.toLocaleString()}` : "No car"} delay={40} onPress={() => push("car")} />
-      <MenuRow icon="card" color={colors.danger} title="Credit & Loans" summary={debtTotal > 0 ? `Debt $${debtTotal.toLocaleString()}` : `Credit score ${score}`} delay={80} onPress={() => push("loans")} />
+      <SectionLabel>Everyday money</SectionLabel>
+      <MenuRow icon="wallet" color={colors.primary} title="Budget" summary="Where the money goes" delay={0} onPress={() => push("budget")} />
+      <MenuRow icon="receipt" color={colors.danger} title="Taxes" summary="What you pay and what you get back" delay={20} onPress={() => push("taxes")} />
+      <MenuRow icon="card" color={colors.danger} title="Credit & Loans" summary={debtTotal > 0 ? `Debt $${debtTotal.toLocaleString()}` : `Credit score ${score}`} delay={40} onPress={() => push("loans")} />
+      {(debtTotal > 0 || character.money < 0) && <MenuRow icon="warning" color={colors.danger} title="Bankruptcy" summary="A last resort" delay={50} onPress={() => push("bankrupt")} />}
+      <SectionLabel>What you own</SectionLabel>
+      <MenuRow icon="home" color={colors.gold} title="Home & Moving" summary={`${cityOf(character).name} · ${character.home ? character.home.name : character.residence?.housing === "rent" ? "Renting" : character.residence?.housing === "own" ? "Homeowner" : "With family"}`} delay={60} onPress={() => push("place")} />
+      <MenuRow icon="car-sport" color={colors.smarts} title="Vehicle" summary={character.car ? `${character.car.name} · $${character.car.value.toLocaleString()}` : "No car"} delay={80} onPress={() => push("car")} />
+      <MenuRow icon="business" color={colors.gold} title="Property investments" summary={(character.rentals ?? []).length > 0 ? `${character.rentals!.length} rental${character.rentals!.length === 1 ? "" : "s"}` : "Buy to let"} delay={100} onPress={() => push("rentals")} />
+      <SectionLabel>Growing it</SectionLabel>
       <MenuRow icon="trending-up" color={colors.primary} title="Investments" summary={investTotal > 0 ? `$${investTotal.toLocaleString()}` : "Nothing invested"} delay={120} onPress={() => push("invest")} />
-      <MenuRow icon="business" color={colors.gold} title="Property investments" summary={(character.rentals ?? []).length > 0 ? `${character.rentals!.length} rental${character.rentals!.length === 1 ? "" : "s"}` : "Buy to let"} delay={140} onPress={() => push("rentals")} />
-      <MenuRow icon="receipt" color={colors.danger} title="Taxes" summary="What you pay and what you get back" delay={150} onPress={() => push("taxes")} />
-      {(debtTotal > 0 || character.money < 0) && <MenuRow icon="warning" color={colors.danger} title="Bankruptcy" summary="A last resort" delay={155} onPress={() => push("bankrupt")} />}
-      <MenuRow icon="umbrella" color={colors.looks} title="Retirement" summary={`$${retirement.balance.toLocaleString()} saved`} delay={160} onPress={() => push("retire")} />
+      <MenuRow icon="umbrella" color={colors.looks} title="Retirement" summary={`$${retirement.balance.toLocaleString()} saved`} delay={140} onPress={() => push("retire")} />
     </ScrollView>
   );
 }

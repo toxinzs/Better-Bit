@@ -53,6 +53,14 @@ export default function MenuScreen({
   );
 }
 
+// A small caption that groups the rows of a long hub.
+export function SectionLabel({ children }: { children: string }) {
+  return <Text style={sectionStyles.label}>{children}</Text>;
+}
+const sectionStyles = StyleSheet.create({
+  label: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: fontSize.xs, letterSpacing: 1.2, textTransform: "uppercase", marginTop: spacing.md, marginBottom: spacing.sm, paddingHorizontal: 4 },
+});
+
 // One tappable row of a hub: icon tile, title, a live summary line, an
 // optional badge and a chevron.
 export function MenuRow({

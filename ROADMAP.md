@@ -167,6 +167,7 @@ the planning notes; each release below is shippable on its own.
   Body & Fitness, Mind & Habits, Habits & dependence, Hobbies, Achievements, Family
   tree; Game Over now shows the life score and achievements. ~175 new events
   (`lifestyle.ts`, `life-extra.ts`, `life-more.ts`, `wedding.ts`), pool 442. Not built
+- **v2.8 "Headlines & Polish" (done).** `engine/notify.ts`: the year's log is scanned for important lines (layoff, promotion, visa, eviction, bankruptcy, overdose, wedding...) and queued as `character.notices`; `components/NoticeModal.tsx` shows them one at a time before any event popup. Menus grouped into sections (`SectionLabel`), richer life-feed icons.
   yet: pets as relationships, social media / fame, and a real sports-league system.
 
 Still owed from 2.0: talents `technical`/`verbal`/`social`/`artistic` are only read
