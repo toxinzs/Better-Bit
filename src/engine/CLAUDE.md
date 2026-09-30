@@ -128,3 +128,17 @@ keep: minors are always `family`; an owned home is `own` and is sold when you mo
 first, then evicts (`family` if a parent is alive, else `homeless`); homeless
 people can be taken in by a friend or relative, or rent again once they can afford
 a deposit - nobody stays on the street forever by accident.
+
+## Across borders (v2.5)
+
+`Character.citizenships` is the passports you hold; `isAbroad(c)` means you live
+somewhere you're not a citizen, and then `c.immigration` (status, since, expires,
+years) says why you may stay. Never write `originRegion` directly to move someone
+country: use `emigrate` / `returnTo` / `familyEmigrate` (`engine/immigration.ts`),
+which also sell the home, drop jobs, fix credit and relationships, and set the
+rental. `tickAbroad(c, world)` runs after income and before `tickWork`: it decides
+a pending `visaApp`, then handles language immersion, integration, expiry, renewal,
+overstay and deportation. Routes return a `RouteCheck` (requirement list, fee,
+funds, odds, wait) so UI and engine share one source of truth; `apply()` refuses
+unless every requirement is met. Languages live in `c.languages[key]` (0-100);
+`ensureAbroad` backfills them deterministically for old saves.

@@ -7,8 +7,9 @@ import { ClubsMenu, MySchoolMenu, ReportCardMenu, SchoolMenu, SchoolSocialMenu, 
 import { FindWorkMenu, OccupationMenu } from "../screens/menus/JobMenus";
 import { ProfileMenu, StatDetailMenu } from "../screens/menus/ProfileMenus";
 import { BudgetMenu, MoveCityMenu, MoveMenu, PlaceHub, RentMenu } from "../screens/menus/PlaceMenus";
+import { AbroadHub, AbroadListMenu, CitizenMenu, CountryMenu, GoHomeMenu, PassportMenu, TravelMenu } from "../screens/menus/AbroadMenus";
 import PeopleTab from "../screens/tabs/PeopleTab";
-import { StatKey } from "../types";
+import { RegionKey, StatKey } from "../types";
 
 // Maps a route id on the nav stack to the menu screen it opens.
 export default function MenuHost({ route }: { route: Route }) {
@@ -44,6 +45,13 @@ export default function MenuHost({ route }: { route: Route }) {
     case "collegemoney": return <CollegeMoneyMenu />;
     case "degree": return <DegreeMenu />;
     case "transcript": return <TranscriptMenu />;
+    case "abroad": return <AbroadHub />;
+    case "abroadlist": return <AbroadListMenu />;
+    case "abroadcountry": return <CountryMenu dest={route.params?.to as RegionKey} />;
+    case "passport": return <PassportMenu />;
+    case "travel": return <TravelMenu />;
+    case "citizen": return <CitizenMenu />;
+    case "gohome": return <GoHomeMenu dest={route.params?.to as RegionKey} />;
     case "place": return <PlaceHub />;
     case "move": return <MoveMenu />;
     case "movecity": return <MoveCityMenu cityKey={String(route.params?.city ?? "")} />;

@@ -9,6 +9,8 @@ import Sparkline from "../../components/Sparkline";
 import { getRegion } from "../../data/regions";
 import { cityByKey } from "../../data/cities";
 import { cityOf } from "../../engine/where";
+import { COUNTRIES } from "../../data/countries";
+import { statusLabel } from "../../engine/immigration";
 import { totalNetWorth } from "../../engine/lifeEngine";
 import { talentsKnown, traitWords } from "../../engine/character";
 import { CLASSES, TALENTS, quirkDef, talentWord } from "../../data/traits";
@@ -61,6 +63,8 @@ export function ProfileMenu() {
         {character.currentSchool && <Row label="Attending" value={character.currentSchool} />}
         <Row label="Net worth" value={money(totalNetWorth(character, world))} />
         <Row label="Living in" value={`${cityOf(character).name}, ${region.label}`} />
+        <Row label="Citizen of" value={(character.citizenships ?? [character.birthRegion ?? character.originRegion ?? "us"]).map((r) => COUNTRIES[r].demonym).join(", ")} />
+        {character.immigration && <Row label="Status" value={statusLabel(character.immigration.status)} />}
         <Row label="Home" value={character.residence?.housing === "rent" ? "Renting" : character.residence?.housing === "own" ? "Owner" : character.residence?.housing === "homeless" ? "No fixed home" : "With family"} last />
       </Card>
 

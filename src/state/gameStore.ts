@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Character, Gender, JobKind, LifeEvent, Lifestyle, RentKey, SchoolKind, StudyMode, RegionKey, SkillKey, WorldState } from "../types";
+import { Character, Gender, JobKind, LifeEvent, Lifestyle, RentKey, VisaRoute, SchoolKind, StudyMode, RegionKey, SkillKey, WorldState } from "../types";
 import type { CreationOptions } from "../engine/lifeEngine";
 import { CarListing, HomeListing } from "../data/assets";
 import { LoanListing, CreditCardListing } from "../data/loans";
@@ -83,6 +83,8 @@ import { buyInsurance as engineBuyInsurance, treatCondition as engineTreatCondit
 import { nextDecisionEvent } from "../engine/decisionQueue";
 import { afterBuyHome, afterSellHome, ensureLocation, moveBackHome, moveTo, rentPlace, setLifestyle } from "../engine/location";
 import { cityByKey } from "../data/cities";
+import { apply as engineApplyVisa, ensureAbroad, leaveVoluntarily as engineLeaveAbroad, naturalize as engineNaturalize, returnTo as engineReturnTo, sendMoneyHome as engineSendMoneyHome, studyLanguage as engineStudyLanguage, takeTrip as engineTakeTrip, withdraw as engineWithdrawVisa } from "../engine/immigration";
+import type { LanguageKey } from "../data/countries";
 
 const STORAGE_KEY = "@better-bit/save/v1";
 
@@ -127,6 +129,13 @@ type GameState = {
   rentPlace: (rentKey: RentKey) => void;
   moveBackHome: () => void;
   setLifestyle: (key: Lifestyle) => void;
+  applyVisa: (dest: RegionKey, route: VisaRoute, cityKey?: string) => void;
+  withdrawVisa: () => void;
+  naturalise: () => void;
+  returnHomeAbroad: (dest?: RegionKey) => void;
+  takeTrip: (dest: RegionKey) => void;
+  studyLanguage: (lang: LanguageKey) => void;
+  sendMoneyHome: (amount: number) => void;
   takeOutLoan: (listing: LoanListing) => void;
   openCreditCard: (listing: CreditCardListing) => void;
   payDownLoan: (loanId: string, amount: number) => void;
@@ -260,6 +269,7 @@ export const useGameStore = create<GameState>((set, get) => {
             ensurePeople(parsed.character);
             ensureSchool(parsed.character);
             ensureLocation(parsed.character);
+            ensureAbroad(parsed.character);
             const pendingEvent = parsed.screen === "home" ? nextDecisionEvent(parsed.character, worldState) : null;
             set({ character: parsed.character, screen: parsed.screen, worldState, pendingEvent, hydrated: true });
             return;
@@ -361,6 +371,13 @@ export const useGameStore = create<GameState>((set, get) => {
     moveToCity: (cityKey, rentKey) => applyToCharacter((c) => { const city = cityByKey(cityKey); if (city) moveTo(c, city, rentKey); }),
     rentPlace: (rentKey) => applyToCharacter((c) => { rentPlace(c, rentKey); }),
     moveBackHome: () => applyToCharacter((c) => { moveBackHome(c); }),
+    applyVisa: (dest, route, cityKey) => applyToCharacter((c) => { engineApplyVisa(c, dest, route, cityKey); }),
+    withdrawVisa: () => applyToCharacter((c) => { engineWithdrawVisa(c); }),
+    naturalise: () => applyToCharacter((c) => { engineNaturalize(c); }),
+    returnHomeAbroad: (dest) => applyToCharacter((c) => { if (dest) engineReturnTo(c, dest); else engineLeaveAbroad(c); }),
+    takeTrip: (dest) => applyToCharacter((c) => { engineTakeTrip(c, dest); }),
+    studyLanguage: (lang) => applyToCharacter((c) => { engineStudyLanguage(c, lang); }),
+    sendMoneyHome: (amount) => applyToCharacter((c) => { engineSendMoneyHome(c, amount); }),
     setLifestyle: (key) => applyToCharacter((c) => { setLifestyle(c, key); }),
     takeOutLoan: (listing) => applyToCharacter((c) => engineTakeOutLoan(c, listing)),
     openCreditCard: (listing) => applyToCharacter((c) => engineOpenCreditCard(c, listing)),

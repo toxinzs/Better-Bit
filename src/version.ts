@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "2.4.0";
+export const APP_VERSION = "2.5.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,22 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "2.5.0",
+    title: "Across Borders",
+    highlights: [
+      "You can leave the country. Across Borders (under Activities) is a new hub: move abroad, your passport and languages, travel, and citizenship",
+      "Six visa routes - study, skilled worker, investor, working holiday, marriage, and permanent residence - each with real requirements shown as a checklist, a fee, a waiting time and your odds. Applications are decided at the next birthday and can be refused",
+      "Every country has its own attitude: how welcoming it is, its language, how long until citizenship, whether it allows dual citizenship, and how strong its passport is",
+      "Actually moving abroad is a big deal: you leave your job and sell your home, friends and family drift, you're homesick, your credit history stays behind, and you start in a rented room in a new city. Sponsored workers arrive with a job",
+      "Languages are real (English, Spanish, Portuguese, French, German, Japanese, Korean, Hindi). You pick up the local one by living there, can take lessons, and it gates visas and citizenship",
+      "Feeling settled is tracked as you integrate: culture shock, discrimination, kind locals, expat communities, homesick holidays",
+      "Visas expire: renew with a job or studies, get sponsored by an employer, hire a lawyer - or overstay and be deported",
+      "Become a citizen: years of residence, the language, a clean record and a citizenship test. Some countries make you give up your old passport",
+      "Travel: take one trip a year to any country. Strong passports get in visa-free; weaker ones need a tourist visa that can be refused. Collect passport stamps",
+      "New events: a recruiter overseas offers a sponsored job, your parents ask for money from home, the family emigrates when you're a kid, and older emigrants ask whether it's time to go home",
+    ],
+  },
   {
     version: "2.4.0",
     title: "The World",

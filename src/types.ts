@@ -350,6 +350,13 @@ export type Residence = {
   since: number; // age you moved in
   arrears?: number; // consecutive years you could not cover the bills
 };
+// ---- across borders (v2.5) ----
+export type VisaRoute = "student" | "work" | "investor" | "holiday" | "family" | "residence";
+export type ResidencyStatus = "student" | "work" | "investor" | "holiday" | "family" | "permanent" | "overstay";
+// your legal footing in a country that isn't one you hold a passport for
+export type Immigration = { status: ResidencyStatus; since: number; expires?: number; years: number };
+export type VisaApplication = { dest: RegionKey; route: VisaRoute; filed: number; decides: number; city: string; fee: number };
+
 // what last year's money did, for the Budget screen
 export type Budget = { age: number; income: number; tax: number; rent: number; living: number; upkeep: number; other?: number };
 
@@ -421,6 +428,15 @@ export type Character = {
   griefYears?: number; // years of lingering sadness after losing someone close
   originRegion?: RegionKey; // the country you live in now (the name is historic)
   birthRegion?: RegionKey;
+  citizenships?: RegionKey[]; // passports you hold
+  immigration?: Immigration | null; // set while you live in a country you're not a citizen of
+  visaApp?: VisaApplication | null; // one application at a time
+  languages?: Partial<Record<string, number>>; // language -> 0-100
+  integration?: number; // 0-100: how settled you feel abroad
+  langStudyAge?: number; // last year you took language lessons
+  tripAge?: number; // last year you travelled abroad
+  visited?: RegionKey[]; // passport stamps
+  abroadYears?: number; // years lived away from your birth country in total
   birthCity?: string;
   residence?: Residence;
   lifestyle?: Lifestyle;

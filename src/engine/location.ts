@@ -342,7 +342,7 @@ export function previewMove(c: Character, dest: City): MovePreview {
 }
 
 // the parts of a move every kind of move shares
-function relocate(c: Character, dest: City, voluntary: boolean): string[] {
+export function relocate(c: Character, dest: City, voluntary: boolean): string[] {
   const notes: string[] = [];
   const res = c.residence!;
   const from = cityOf(c);

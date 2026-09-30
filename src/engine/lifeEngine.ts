@@ -25,6 +25,7 @@ import "./decisions"; // registers the funeral/crisis/request decision builders
 import { nextDecisionEvent } from "./decisionQueue";
 import { tickAssets, netWorth } from "./assets";
 import { ensureLocation, tickLocation } from "./location";
+import { ensureAbroad, tickAbroad } from "./immigration";
 import { cityWage, noteIncome } from "./where";
 import { tickDebt } from "./debt";
 import { tickMarket, portfolioValue } from "./stocks";
@@ -167,6 +168,7 @@ export function createCharacter(
   ensurePeople(character);
   if (options.birthCity) character.birthCity = options.birthCity;
   ensureLocation(character);
+  ensureAbroad(character);
 
   return character;
 }
@@ -358,6 +360,7 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
     );
   }
 
+  tickAbroad(c, world);
   tickWork(c, world);
   tickAssets(c);
   tickLocation(c);

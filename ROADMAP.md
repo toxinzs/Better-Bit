@@ -129,7 +129,18 @@ the planning notes; each release below is shippable on its own.
   & lifestyle; birth-city picker in the creation flow; city shown in the header and
   profile. 18 place events (`data/events/places.ts`). Living costs follow each
   country's wage level so a typical wage stretches about as far everywhere.
-- **v2.5 "Across Borders":** emigration, immigration, citizenship, visas, travel.
+- **v2.5 "Across Borders" (done).** `data/countries.ts` (per-country openness, language,
+  passport strength, PR / citizenship years, dual-citizenship rule, working holiday),
+  `engine/immigration.ts`: citizenships, `immigration` status (student / work /
+  investor / holiday / family / permanent / overstay), one pending `visaApp`, six
+  routes with requirement checklists + odds (`routeCheck`), `emigrate` / `returnTo` /
+  `familyEmigrate`, languages with immersion + lessons, integration meter, visa expiry
+  / renewal / sponsor conversion / overstay / deportation (`tickAbroad`),
+  `naturalizeCheck` + `naturalize` (dual-citizenship rules), travel with visa-free
+  vs tourist visa, remittances. UI: Across Borders hub, country + route screens,
+  Passport & languages, Travel, Citizenship, Go home. 10 abroad events. Not built yet:
+  refugee/asylum, per-language jobs gating, foreign degree recognition, and partner
+  nationality (the marriage route assumes a local spouse).
 - **v2.6 "Working Life & Money":** career ladders, performance, promotions, firing,
   business, taxes per country, field-specific interview questions.
 - **v2.7 "Body, Mind & Things To Do":** fitness/diet, addiction, hobbies, interactions pass, 450+ events.

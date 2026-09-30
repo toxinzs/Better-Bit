@@ -22,6 +22,7 @@ import { QUESTIONS } from "./src/data/interviews";
 import { INSTITUTIONS } from "./src/data/institutions";
 import { MAJORS } from "./src/data/majors";
 import * as LOCATION from "./src/engine/location";
+import * as IMMIGRATION from "./src/engine/immigration";
 import { CITIES } from "./src/data/cities";
 import { cityOf } from "./src/engine/where";
 import { useNav } from "./src/nav/navStore";
@@ -29,7 +30,7 @@ import { useNav } from "./src/nav/navStore";
 if (typeof window !== "undefined") {
   (window as any).__store = useGameStore;
   (window as any).__nav = useNav;
-  (window as any).__engine = { actionsFor, romanceCandidates, runPersonAction, killRelative, nextDecisionEvent, tickExes, craziness, listingsFor, requirements, preparedness, QUESTIONS, institutions: (r: string) => INSTITUTIONS.filter((i) => i.region === r), majors: MAJORS, location: LOCATION, cities: CITIES, cityOf };
+  (window as any).__engine = { actionsFor, romanceCandidates, runPersonAction, killRelative, nextDecisionEvent, tickExes, craziness, listingsFor, requirements, preparedness, QUESTIONS, institutions: (r: string) => INSTITUTIONS.filter((i) => i.region === r), majors: MAJORS, location: LOCATION, immigration: IMMIGRATION, cities: CITIES, cityOf };
 }
 
 export default function App() {

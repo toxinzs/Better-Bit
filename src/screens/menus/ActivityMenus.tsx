@@ -19,6 +19,7 @@ import { colors, spacing } from "../../theme";
 import { tabStyles } from "../tabs/sharedStyles";
 import { ms } from "./menuStyles";
 import { cityOf } from "../../engine/where";
+import { COUNTRIES } from "../../data/countries";
 
 const VENUE_ICONS: Record<VenueKey, keyof typeof Ionicons.glyphMap> = {
   park: "leaf", beach: "sunny", worship: "moon", library: "book", museum: "color-palette", gym: "barbell",
@@ -57,6 +58,7 @@ export function ActivitiesHub() {
         disabled={false} delay={120} onPress={() => push("dating")}
       />
       <MenuRow icon="egg" color={colors.looks} title="Family Planning" summary={canDate ? "Birth control, fertility" : "Adults only"} delay={160} onPress={() => push("fertility")} />
+      <MenuRow icon="earth" color={colors.teal} title="Across Borders" summary={(character.citizenships ?? [character.birthRegion ?? character.originRegion ?? "us"]).map((r) => COUNTRIES[r].flag).join(" ") + (character.visaApp ? " · application pending" : " · move, travel, citizenship")} delay={190} onPress={() => push("abroad")} />
       <MenuRow icon="airplane" color={colors.teal} title="Vacations" summary="Get away for a while" delay={200} onPress={() => push("vacations")} />
       <MenuRow icon="shield" color={colors.danger} title="Crime & Justice" summary={character.criminalRecord ? "You have a record" : character.inJail ? "Incarcerated" : "Stay out of trouble"} delay={240} onPress={() => push("crime")} />
       <MenuRow icon="alert-circle" color={colors.textSecondary} title="End of the Road" summary="If it's all too much" delay={280} onPress={() => push("endroad")} />
