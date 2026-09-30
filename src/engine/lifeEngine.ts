@@ -32,6 +32,11 @@ import { tickMarket, portfolioValue } from "./stocks";
 import { incomeTax, taxCredit } from "./taxes";
 import { tickCareer } from "./career";
 import { tickBusiness, valueOf as businessValue } from "./business";
+import { ensureBody, tickBody } from "./body";
+import { tickAddictions } from "./addiction";
+import { tickMind } from "./mind";
+import { tickHobbies } from "./hobbies";
+import { tickAchievements } from "./achievements";
 import { tickRentals, tickSavings } from "./wealth";
 import { applyContribution, tickRetirementGrowth, retirementBalance } from "./retirement";
 import { tickSentence, tickRecordClock, tickAnkleMonitor, tickJuvenileRecordClear } from "./crime";
@@ -172,6 +177,7 @@ export function createCharacter(
   if (options.birthCity) character.birthCity = options.birthCity;
   ensureLocation(character);
   ensureAbroad(character);
+  ensureBody(character);
 
   return character;
 }
@@ -308,6 +314,10 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
   // who you are: personality, quirks and talents at work, plus family pocket money
   tickCharacter(c);
   tickWellbeing(c, world);
+  tickBody(c);
+  tickAddictions(c);
+  tickMind(c);
+  tickHobbies(c, world);
   tickHealth(c, world);
   const allowance = familyAllowance(c);
   if (allowance > 0) {
@@ -372,6 +382,7 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
   tickLocation(c);
   tickSavings(c, world);
   tickDebt(c);
+  tickAchievements(c, world);
 
   // death roll: very low health raises the odds sharply but never guarantees death on its own
   const dieFromHealth = c.stats.health <= 0 && Math.random() < 0.4;

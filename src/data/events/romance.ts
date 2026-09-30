@@ -2,6 +2,7 @@ import { LifeEvent } from "../../types";
 import { clamp } from "../../engine/util";
 import { partner, hasPartner } from "./helpers";
 import { addPerson } from "../../engine/people";
+import { weddingPlanning } from "./wedding";
 import { buildPregnancyEvent, couplePossible, partnerParty, playerParty } from "../../engine/intimacy";
 import { randomInt } from "../../engine/util";
 
@@ -217,34 +218,10 @@ export const ROMANCE_EVENTS: LifeEvent[] = [
       const p = partner(c);
       return p !== undefined && p.engaged === true && !p.married;
     },
-    text: () => "Your wedding day. Everyone you love is in one room.",
+    text: (c) => `Your wedding to ${partner(c)?.name.split(" ")[0] ?? "your partner"} is coming up. It's time to plan it.`,
     choices: [
-      {
-        label: "Throw a big wedding",
-        effect: (c) => {
-          const p = partner(c);
-          if (p) {
-            p.married = true;
-            p.engaged = false;
-            p.level = clamp(p.level + 15);
-          }
-          c.money = Math.max(0, c.money - 8000);
-          c.stats.happiness = clamp(c.stats.happiness + 25);
-        },
-      },
-      {
-        label: "Keep it small and simple",
-        effect: (c) => {
-          const p = partner(c);
-          if (p) {
-            p.married = true;
-            p.engaged = false;
-            p.level = clamp(p.level + 10);
-          }
-          c.money = Math.max(0, c.money - 1500);
-          c.stats.happiness = clamp(c.stats.happiness + 15);
-        },
-      },
+      { label: "Start planning", effect: (c) => weddingPlanning(c) },
+      { label: "Elope tomorrow", effect: (c) => { const p = partner(c); if (p) { p.married = true; p.engaged = false; p.level = clamp(p.level + 12); } c.stats.happiness = clamp(c.stats.happiness + 14); }, resultText: () => "A town hall, a borrowed ring and a story you'll tell for years." },
     ],
   },
   {

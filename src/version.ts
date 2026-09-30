@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "2.6.0";
+export const APP_VERSION = "2.7.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,22 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "2.7.0",
+    title: "Body, Mind & Things To Do",
+    highlights: [
+      "Body & Fitness: choose what you eat (junk to strict plan) and how you move (nothing to intense training). Your hidden weight, fitness, energy and looks follow, and so does your risk of illness. Overdo it and you'll get injured. Book yearly check-ups that catch problems early",
+      "Habits & dependence: alcohol, nicotine, gambling, drugs and screens can take hold. Once you're hooked it plays out every year: cost, health, mood, work performance, and the people who love you. Get out with cold turkey, a support group or rehab, and watch out for relapses",
+      "Your habits now show up in your health: smoking, drinking, drugs and weight raise the odds of heart disease, cancer, diabetes and a new liver disease",
+      "Hobbies: 25 hobbies from running and football to painting, guitar, chess and coding. They level up with practice, hit milestones, and turn into races, gigs, exhibitions, book deals and sales. Up to three at once",
+      "Mind & Habits: meditation, volunteering, and a faith or spirituality of your choice with a community to go with it",
+      "Achievements and a bucket list: 61 things a life can add up to, pinned goals with progress bars, a life score, and a proper summary when it ends",
+      "Family tree: parents, partner, siblings, children and grandchildren in one place",
+      "Plan your wedding: pick the kind of day (registry to lavish), who's invited, deal with what goes wrong, and choose a honeymoon. What it costs depends on where you live",
+      "Six new things to do with people: ask their advice, do or ask a favour, share a hobby, check in on someone who's unwell, and couples counselling",
+      "About 175 new events (the pool now tops 440): in-laws, reunions, caring for parents, block parties, jury duty, drug offers, family interventions, midlife crises, first concerts, driving lessons, retirement memoirs and a great many small joys and disasters",
+    ],
+  },
   {
     version: "2.6.0",
     title: "Working Life & Money",

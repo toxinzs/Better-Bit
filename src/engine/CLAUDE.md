@@ -157,3 +157,17 @@ world)` so severance and benefits happen. Tick order: income -> `tickCareer` ->
 numbers are all in `data/economy.ts`; `incomeTax(gross, region, credit)` divides by
 the country's jobMultiplier before applying brackets. `inflation(c)` (2%/yr since
 20) scales rent, living costs and house prices; keep raises near it.
+
+## Body, habits and hobbies (v2.7)
+
+Hidden state: `bmi`, `fitness`, `stress` (v2.0), `addictions[]` (dependence 0-100 per
+key; `>= hook` means it runs itself yearly), `hobbies{}` (level, active, milestones
+done). Use `ensureBody(c)` before reading `routine`/`diet`/`bmi`. New illness risk
+goes through `bodyRisk(c, key)` (weight, fitness) and `addictionRisk(c, key)`
+(smoking, drinking, drugs), both multiplied into `tickHealth`'s onset chance. An event
+that pushes the player into a substance calls `use(c, key, true)` (`force` skips the age
+and money gates); never construct a copy of the character to bypass them. Tick order:
+`tickWellbeing` -> `tickBody` -> `tickAddictions` -> `tickMind` -> `tickHobbies` ->
+`tickHealth`; `tickAchievements` runs near the end of the year, after the money ticks.
+Achievements are pure predicates on the character in `data/achievements.ts`; keep them
+cheap and never throw (the engine catches, but a throwing test never unlocks).

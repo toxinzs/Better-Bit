@@ -59,6 +59,7 @@ export default function PeopleHub() {
           />
         );
       })}
+      <MenuRow icon="git-network" color={colors.looks} title="Family tree" summary="Parents, partner, children and beyond" delay={280} onPress={() => push("tree")} />
       {memorial.length > 0 && (
         <MenuRow icon="rose" color={colors.textSecondary} title="In memory" summary={summarize(memorial.map((m) => m.name))} badge={String(memorial.length)} delay={300} onPress={() => push("peopleGroup", { group: "memory" })} />
       )}

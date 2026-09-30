@@ -177,6 +177,13 @@ export type Business = {
   marketAge?: number; // last year you ran marketing
 };
 
+// ---- body, mind and hobbies (v2.7) ----
+export type Diet = "junk" | "normal" | "healthy" | "strict";
+export type Routine = "none" | "light" | "regular" | "intense";
+export type AddictionKey = "alcohol" | "nicotine" | "gambling" | "drugs" | "screen";
+export type Addiction = { key: AddictionKey; level: number; since: number; clean?: number; quitting?: boolean; tried?: number; uses?: number };
+export type HobbyState = { level: number; since: number; active: boolean; lastShow?: number; done?: string[] };
+
 export type Rental = { name: string; value: number; rent: number; since: number; vacantYears?: number };
 
 export type OwnedCar = {
@@ -459,6 +466,21 @@ export type Character = {
   birthRegion?: RegionKey;
   // ---- working life (v2.6) ----
   workMode?: "coast" | "steady" | "grind";
+  // ---- body, mind and things to do (v2.7) ----
+  routine?: Routine;
+  diet?: Diet;
+  bmi?: number; // hidden body-mass index
+  checkupAge?: number;
+  addictions?: Addiction[];
+  hobbies?: Record<string, HobbyState>;
+  faith?: string | null;
+  practising?: boolean;
+  meditating?: boolean;
+  volunteering?: boolean;
+  volunteerYears?: number;
+  achievements?: Record<string, number>; // key -> age earned
+  bucket?: string[]; // achievement keys you've marked as goals
+  lifeScore?: number;
   network?: number; // 0-100 professional contacts
   fieldYears?: Record<string, number>; // years of experience per job field
   peakSalary?: number; // best baseline salary you've had (pension base)

@@ -12,6 +12,7 @@ import { buildTalkEvent, categoryOf, dim, fillTokens, hasScene } from "./convers
 import { buildGiftEvent } from "./gifts";
 import { Protection, bothAdults, canConceive, makeLove, partnerParty, playerParty, visitPlacedChild, writeToPlacedChild } from "./intimacy";
 import { clamp, randomInt } from "./util";
+import { askAdvice, askFavor, checkIn, counselling, counsellingCost, doFavor, hobbyTogether } from "./social";
 
 // Everything you can do with a person from their sheet. `actionsFor()` is the
 // pure catalog the UI renders (available / used up / locked, with a reason);
@@ -24,7 +25,8 @@ export type ActionKey =
   | "makeLove" | "writeLetter" | "visitChild"
   | "exText" | "exCall" | "argue" | "stalk" | "askBack" | "bootyCall" | "block" | "unblock"
   | "playWith" | "readStory" | "helpHomework" | "discipline" | "payCollege"
-  | "pushJob" | "pushCollege" | "pushSettle" | "pushMarriage";
+  | "pushJob" | "pushCollege" | "pushSettle" | "pushMarriage"
+  | "askAdvice" | "doFavor" | "askFavor" | "hobbyTogether" | "counselling" | "checkIn";
 
 export type ActionCategory = "Connect" | "Outings" | "Money" | "Romance" | "Parenting" | "Conflict" | "Remember";
 
@@ -45,6 +47,7 @@ const CAPS: Record<ActionKey, number> = {
   makeLove: 3, writeLetter: 2, visitChild: 1,
   exText: 3, exCall: 2, argue: 2, stalk: 2, askBack: 1, bootyCall: 2, block: 1, unblock: 1,
   playWith: 3, readStory: 2, helpHomework: 2, discipline: 2, payCollege: 1, pushJob: 1, pushCollege: 1, pushSettle: 1, pushMarriage: 1,
+  askAdvice: 2, doFavor: 2, askFavor: 1, hobbyTogether: 2, counselling: 1, checkIn: 2,
 };
 
 const KID_KEYS: ActionKey[] = [
@@ -57,6 +60,7 @@ const CONTACT_KEYS: ActionKey[] = [
   "talk", "spendTime", "goOut", "party", "sleepover", "gift", "giveMoney", "askMoney", "makeLove", "holdHands", "firstKiss",
   "askOut", "exText", "exCall", "argue", "stalk", "askBack", "bootyCall",
   "playWith", "readStory", "helpHomework", "discipline", "payCollege", "pushJob", "pushCollege", "pushSettle", "pushMarriage",
+  "askAdvice", "doFavor", "askFavor", "hobbyTogether", "counselling", "checkIn",
 ];
 
 // ---------- age & romance gates (hardcoded) ----------
@@ -221,6 +225,35 @@ function lockFor(c: Character, r: Relationship, key: ActionKey): string | null {
       // adults only, both of you - hardcoded, never a regional setting
       if (r.type !== "partner" || !adultPair) return "n/a";
       return blocked;
+    case "askAdvice":
+      if (blocked) return blocked;
+      if (c.age < 12) return "n/a";
+      if (theirAge < 16 || !["mother", "father", "sibling", "friend", "partner", "coworker", "teacher"].includes(r.type)) return "n/a";
+      return null;
+    case "doFavor":
+      if (blocked) return blocked;
+      if (c.age < 10 || theirAge < 8 || ["teacher", "ex", "child"].includes(r.type)) return "n/a";
+      return null;
+    case "askFavor":
+      if (blocked) return blocked;
+      if (c.age < 14 || theirAge < 18 || ["teacher", "ex", "child"].includes(r.type)) return "n/a";
+      if (r.level < 40) return "Not close enough yet";
+      return null;
+    case "hobbyTogether":
+      if (blocked) return blocked;
+      if (!["friend", "sibling", "partner", "mother", "father"].includes(r.type) || theirAge < 8) return "n/a";
+      if (!Object.values(c.hobbies ?? {}).some((h) => h.active)) return "Take up a hobby first";
+      return null;
+    case "counselling":
+      if (r.type !== "partner" || !r.married || !adultPair) return "n/a";
+      if (r.level >= 60) return "n/a";
+      if (c.money < counsellingCost(c)) return `${money(counsellingCost(c))} for a session`;
+      return null;
+    case "checkIn":
+      if (blocked) return blocked;
+      if (!["mother", "father", "sibling", "friend", "partner", "child"].includes(r.type)) return "n/a";
+      if ((r.health ?? 80) >= 60 && !(r.conditions ?? []).length) return "n/a";
+      return null;
     default:
       return "n/a"; // memorial and kid actions are handled before this switch
   }
@@ -259,6 +292,12 @@ const META: Record<ActionKey, { label: string; icon: string; cat: ActionCategory
   pushCollege: { label: "Encourage College", icon: "school", cat: "Parenting" },
   pushSettle: { label: "Nudge Them to Settle Down", icon: "heart-half", cat: "Parenting" },
   pushMarriage: { label: "Push for Marriage", icon: "ribbon", cat: "Parenting" },
+  askAdvice: { label: "Ask for Advice", icon: "help-buoy", cat: "Connect" },
+  doFavor: { label: "Do a Favour", icon: "hand-right", cat: "Connect" },
+  askFavor: { label: "Ask a Favour", icon: "key", cat: "Connect" },
+  hobbyTogether: { label: "Share a Hobby", icon: "color-palette", cat: "Outings" },
+  counselling: { label: "Couples Counselling", icon: "heart-half", cat: "Romance" },
+  checkIn: { label: "Check In on Them", icon: "medkit", cat: "Connect" },
   leaveFlowers: { label: "Leave Flowers", icon: "rose", cat: "Remember" },
   remember: { label: "Remember Them", icon: "images", cat: "Remember" },
 };
@@ -268,6 +307,7 @@ const ORDER: ActionKey[] = [
   "exText", "exCall", "askOut", "holdHands", "firstKiss", "makeLove", "askBack", "bootyCall",
   "writeLetter", "visitChild", "argue", "stalk", "block", "unblock",
   "playWith", "readStory", "helpHomework", "discipline", "payCollege", "pushJob", "pushCollege", "pushSettle", "pushMarriage",
+  "askAdvice", "doFavor", "askFavor", "hobbyTogether", "checkIn", "counselling",
   "breakUp",
 ];
 
@@ -562,6 +602,30 @@ export function runPersonAction(
     case "visitChild":
       bump(c, r, key);
       c.yearLog.push(visitPlacedChild(c, r));
+      return null;
+    case "askAdvice":
+      bump(c, r, key);
+      c.yearLog.push(askAdvice(c, r, dim(used)));
+      return null;
+    case "doFavor":
+      bump(c, r, key);
+      c.yearLog.push(doFavor(c, r, dim(used)));
+      return null;
+    case "askFavor":
+      bump(c, r, key);
+      c.yearLog.push(askFavor(c, r));
+      return null;
+    case "hobbyTogether":
+      bump(c, r, key);
+      c.yearLog.push(hobbyTogether(c, r, dim(used)));
+      return null;
+    case "counselling":
+      bump(c, r, key);
+      c.yearLog.push(counselling(c, r));
+      return null;
+    case "checkIn":
+      bump(c, r, key);
+      c.yearLog.push(checkIn(c, r));
       return null;
     case "makeLove":
       return buildLoveEvent(c, r, used, false);

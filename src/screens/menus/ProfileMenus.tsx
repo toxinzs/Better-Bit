@@ -11,6 +11,7 @@ import { cityByKey } from "../../data/cities";
 import { cityOf } from "../../engine/where";
 import { COUNTRIES } from "../../data/countries";
 import { statusLabel } from "../../engine/immigration";
+import { lifeScore } from "../../engine/achievements";
 import { totalNetWorth } from "../../engine/lifeEngine";
 import { talentsKnown, traitWords } from "../../engine/character";
 import { CLASSES, TALENTS, quirkDef, talentWord } from "../../data/traits";
@@ -63,6 +64,7 @@ export function ProfileMenu() {
         <Row label="School" value={STAGE[character.educationStage] ?? character.educationStage} />
         {character.gpa != null && character.age >= 5 && <Row label="GPA" value={character.gpa.toFixed(2)} />}
         {character.currentSchool && <Row label="Attending" value={character.currentSchool} />}
+        <Row label="Life score" value={`${lifeScore(character)} · ${Object.keys(character.achievements ?? {}).length} achievements`} />
         <Row label="Net worth" value={money(totalNetWorth(character, world))} />
         <Row label="Living in" value={`${cityOf(character).name}, ${region.label}`} />
         <Row label="Citizen of" value={(character.citizenships ?? [character.birthRegion ?? character.originRegion ?? "us"]).map((r) => COUNTRIES[r].demonym).join(", ")} />

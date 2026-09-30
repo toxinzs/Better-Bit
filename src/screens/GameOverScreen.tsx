@@ -7,6 +7,8 @@ import Button from "../components/Button";
 import { colors, fonts, fontSize, spacing } from "../theme";
 import { totalNetWorth } from "../engine/lifeEngine";
 import Avatar from "../components/Avatar";
+import { ACHIEVEMENTS, achievementDef } from "../data/achievements";
+import { lifeScore } from "../engine/achievements";
 
 export default function GameOverScreen() {
   const character = useGameStore((s) => s.character);
@@ -40,12 +42,28 @@ export default function GameOverScreen() {
             label="Education"
             value={character.hasCollegeDegree ? "College graduate" : character.educationStage}
           />
+          <SummaryRow icon="trophy" label="Life score" value={String(lifeScore(character))} />
+          <SummaryRow icon="ribbon" label="Achievements" value={`${Object.keys(character.achievements ?? {}).length} of ${ACHIEVEMENTS.length}`} />
+          {character.business && <SummaryRow icon="storefront" label="Business" value={character.business.name} />}
+          {(character.citizenships ?? []).length > 1 && <SummaryRow icon="id-card" label="Citizenships" value={String((character.citizenships ?? []).length)} />}
           <SummaryRow
             icon="people"
             label="Relationships left behind"
             value={String(character.relationships.filter((r) => r.alive).length)}
           />
         </Card>
+
+        {Object.keys(character.achievements ?? {}).length > 0 && (
+          <Card>
+            <Text style={styles.sectionTitle}>What you achieved</Text>
+            {Object.entries(character.achievements ?? {}).sort((a, b) => a[1] - b[1]).map(([k, age]) => (
+              <Text key={k} style={styles.line}>
+                <Text style={styles.lineAge}>[{age}] </Text>
+                {achievementDef(k)?.label ?? k}
+              </Text>
+            ))}
+          </Card>
+        )}
 
         <Card>
           <Text style={styles.sectionTitle}>Life story</Text>

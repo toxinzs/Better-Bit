@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Character, Gender, JobKind, LifeEvent, Lifestyle, RentKey, VisaRoute, SchoolKind, StudyMode, RegionKey, SkillKey, WorldState } from "../types";
+import { AddictionKey, Character, Diet, Routine, Gender, JobKind, LifeEvent, Lifestyle, RentKey, VisaRoute, SchoolKind, StudyMode, RegionKey, SkillKey, WorldState } from "../types";
 import type { CreationOptions } from "../engine/lifeEngine";
 import { CarListing, HomeListing } from "../data/assets";
 import { LoanListing, CreditCardListing } from "../data/loans";
@@ -89,6 +89,12 @@ import { askForPromotion, askForRaise, doNetwork as engineNetwork, retire, setWo
 import { expand, fireStaff, hire, marketing, sellBusiness, closeBusiness, startBusiness } from "../engine/business";
 import { buyRental, declareBankruptcy, sellRental } from "../engine/wealth";
 import type { RentalListing } from "../engine/wealth";
+import { checkup as engineCheckup, ensureBody, setDiet as engineSetDiet, setRoutine as engineSetRoutine } from "../engine/body";
+import { quit as engineQuit, use as engineUse } from "../engine/addiction";
+import type { QuitMethod } from "../engine/addiction";
+import { setFaith as engineSetFaith, toggleMeditation, togglePractising, toggleVolunteering } from "../engine/mind";
+import { dropHobby as engineDropHobby, showcase as engineShowcase, takeUp as engineTakeUp } from "../engine/hobbies";
+import { toggleBucket as engineToggleBucket } from "../engine/achievements";
 
 const STORAGE_KEY = "@better-bit/save/v1";
 
@@ -133,6 +139,19 @@ type GameState = {
   rentPlace: (rentKey: RentKey) => void;
   moveBackHome: () => void;
   setLifestyle: (key: Lifestyle) => void;
+  setDiet: (d: Diet) => void;
+  setRoutine: (r: Routine) => void;
+  doCheckup: () => void;
+  useSubstance: (k: AddictionKey) => void;
+  quitSubstance: (k: AddictionKey, m: QuitMethod) => void;
+  setFaith: (k: string) => void;
+  togglePractising: () => void;
+  toggleMeditation: () => void;
+  toggleVolunteering: () => void;
+  takeUpHobby: (k: string) => void;
+  dropHobby: (k: string) => void;
+  hobbyShowcase: (k: string) => void;
+  toggleBucket: (k: string) => void;
   setWorkMode: (mode: "coast" | "steady" | "grind") => void;
   askRaise: () => void;
   askPromotion: () => void;
@@ -291,6 +310,7 @@ export const useGameStore = create<GameState>((set, get) => {
             ensureSchool(parsed.character);
             ensureLocation(parsed.character);
             ensureAbroad(parsed.character);
+            ensureBody(parsed.character);
             const pendingEvent = parsed.screen === "home" ? nextDecisionEvent(parsed.character, worldState) : null;
             set({ character: parsed.character, screen: parsed.screen, worldState, pendingEvent, hydrated: true });
             return;
@@ -392,6 +412,19 @@ export const useGameStore = create<GameState>((set, get) => {
     moveToCity: (cityKey, rentKey) => applyToCharacter((c) => { const city = cityByKey(cityKey); if (city) moveTo(c, city, rentKey); }),
     rentPlace: (rentKey) => applyToCharacter((c) => { rentPlace(c, rentKey); }),
     moveBackHome: () => applyToCharacter((c) => { moveBackHome(c); }),
+    setDiet: (d) => applyToCharacter((c) => { engineSetDiet(c, d); }),
+    setRoutine: (r) => applyToCharacter((c) => { engineSetRoutine(c, r); }),
+    doCheckup: () => applyToCharacter((c) => { engineCheckup(c); }),
+    useSubstance: (k) => applyToCharacter((c) => { engineUse(c, k); }),
+    quitSubstance: (k, m) => applyToCharacter((c) => { engineQuit(c, k, m); }),
+    setFaith: (k) => applyToCharacter((c) => { engineSetFaith(c, k); }),
+    togglePractising: () => applyToCharacter((c) => { togglePractising(c); }),
+    toggleMeditation: () => applyToCharacter((c) => { toggleMeditation(c); }),
+    toggleVolunteering: () => applyToCharacter((c) => { toggleVolunteering(c); }),
+    takeUpHobby: (k) => applyToCharacter((c) => { engineTakeUp(c, k); }),
+    dropHobby: (k) => applyToCharacter((c) => { engineDropHobby(c, k); }),
+    hobbyShowcase: (k) => applyToCharacter((c) => { engineShowcase(c, k); }),
+    toggleBucket: (k) => applyToCharacter((c) => { engineToggleBucket(c, k); }),
     setWorkMode: (mode) => applyToCharacter((c) => { setWorkMode(c, mode); }),
     askRaise: () => applyToCharacterWithWorld((c, w) => { askForRaise(c, w); }),
     askPromotion: () => applyToCharacterWithWorld((c, w) => { askForPromotion(c, w); }),

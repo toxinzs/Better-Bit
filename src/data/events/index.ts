@@ -20,6 +20,9 @@ import { COLLEGE_EXTRA_EVENTS } from "./college-extra";
 import { PLACE_EVENTS } from "./places";
 import { ABROAD_EVENTS } from "./abroad";
 import { WORK_EVENTS } from "./work";
+import { BODY_EVENTS, ADDICTION_EVENTS, HOBBY_EVENTS, MIND_EVENTS } from "./lifestyle";
+import { EVERYDAY_EVENTS } from "./life-more";
+import { FAMILY_EXTRA_EVENTS, COMMUNITY_EVENTS, SENIOR_EXTRA_EVENTS, TEEN_EXTRA_EVENTS } from "./life-extra";
 
 export const EVENTS: LifeEvent[] = [
   ...CHILDHOOD_EVENTS,
@@ -43,4 +46,13 @@ export const EVENTS: LifeEvent[] = [
   ...PLACE_EVENTS,
   ...ABROAD_EVENTS,
   ...WORK_EVENTS,
+  ...BODY_EVENTS,
+  ...ADDICTION_EVENTS,
+  ...HOBBY_EVENTS,
+  ...MIND_EVENTS,
+  ...FAMILY_EXTRA_EVENTS,
+  ...COMMUNITY_EVENTS,
+  ...SENIOR_EXTRA_EVENTS,
+  ...TEEN_EXTRA_EVENTS,
+  ...EVERYDAY_EVENTS,
 ];

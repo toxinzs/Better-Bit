@@ -6,6 +6,7 @@ import { clamp, randomInt } from "./util";
 import { effectiveSalary, hasActiveCondition } from "./worldState";
 import { cityWage, livingIndex } from "./where";
 import { refreshCoworkers } from "./people";
+import { addictionPerfPenalty } from "./addiction";
 import type { Requirement } from "./jobs";
 
 const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
@@ -80,6 +81,8 @@ export function perfFactors(c: Character): PerfFactor[] {
   if ((c.stress ?? 25) > 60) add("Stress", -((c.stress ?? 25) - 60) * 0.3);
   add("Mood", (c.stats.happiness - 50) * 0.08);
   if (c.courseBoost) add("Recent training", c.courseBoost);
+  const drag = addictionPerfPenalty(c);
+  if (drag > 0) add("Substance use", -Math.min(20, drag));
   if (j.minSkill) add("Skill for the job", Math.max(-6, Math.min(6, ((c.skills?.[j.minSkill.skill] ?? 0) - j.minSkill.level) / 8)));
   return f;
 }

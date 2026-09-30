@@ -156,7 +156,18 @@ the planning notes; each release below is shippable on its own.
   Promotion, Business (+ start), Taxes, Property investments, Bankruptcy. Two
   economy fixes: job offers stored a salary that had already been scaled by
   country and city, then scaled again each payday; and prices now inflate ~2%/yr.
-- **v2.7 "Body, Mind & Things To Do":** fitness/diet, addiction, hobbies, interactions pass, 450+ events.
+- **v2.7 "Body, Mind & Things To Do" (done).** `engine/body.ts` (diet + exercise routine,
+  hidden BMI, fitness fade, injuries, check-ups, `bodyRisk`), `engine/addiction.ts`
+  (five dependencies, use / hooked / yearly effects, quit by cold turkey / group / rehab,
+  relapse, `addictionRisk`, work-performance drag), `engine/mind.ts` (meditation,
+  faith, volunteering), `data/hobbies.ts` + `engine/hobbies.ts` (25 hobbies with levels,
+  milestones and showcases), `data/achievements.ts` + `engine/achievements.ts` (61
+  achievements, bucket list, life score), a family tree, a four-step wedding you plan
+  (`data/events/wedding.ts`), and six new person actions (`engine/social.ts`). Menus:
+  Body & Fitness, Mind & Habits, Habits & dependence, Hobbies, Achievements, Family
+  tree; Game Over now shows the life score and achievements. ~175 new events
+  (`lifestyle.ts`, `life-extra.ts`, `life-more.ts`, `wedding.ts`), pool 442. Not built
+  yet: pets as relationships, social media / fame, and a real sports-league system.
 
 Still owed from 2.0: talents `technical`/`verbal`/`social`/`artistic` are only read
 by lessons so far (school subjects and interviews read them in 2.1); hidden

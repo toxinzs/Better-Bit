@@ -9,6 +9,8 @@ import { traitMod } from "./character";
 import { clamp, randomInt } from "./util";
 import { ageOf } from "./people";
 import { priceIndex } from "./where";
+import { bodyRisk } from "./body";
+import { addictionRisk } from "./addiction";
 
 // Your body and your head. Conditions can start, be treated, or wear you down;
 // stress and fitness (hidden) feed happiness, health and looks every year.
@@ -27,6 +29,7 @@ const EXTRA: PlayerConditionDef[] = [
   { key: "asthma", label: "asthma", minAge: 2, chance: 0.012, mortality: 1.1, healthHit: 3, cause: "an illness", treatCost: 400 },
   { key: "anxiety", label: "an anxiety disorder", minAge: 12, chance: 0.014, mortality: 1.05, healthHit: 2, cause: "an illness", treatCost: 500 },
   { key: "back pain", label: "chronic back pain", minAge: 30, chance: 0.02, mortality: 1, healthHit: 3, cause: "old age", treatCost: 600 },
+  { key: "liver disease", label: "liver disease", minAge: 30, chance: 0.003, mortality: 1.9, healthHit: 10, cause: "liver failure", treatCost: 2500 },
 ];
 
 // depression and the mortality list come from mortality.ts; treatCost added where missing
@@ -187,6 +190,7 @@ export function tickHealth(c: Character, world: WorldState): void {
     // stressed, unfit and run-down people get ill more often (capped so it can't snowball)
     chance *= Math.min(2.2, (1 + Math.max(0, stress - 50) / 60) * (1 + (50 - fitness) / 150) * (1 + Math.max(0, 55 - c.stats.health) / 120));
     if (!(def as PlayerConditionDef).acute && def.key !== "depression" && def.key !== "anxiety") chance *= 0.7;
+    chance *= bodyRisk(c, def.key) * addictionRisk(c, def.key);
     if (def.key === "flu" && pandemic) chance *= 2.5;
     if (def.key === "depression" || def.key === "anxiety") chance *= 1 + Math.max(0, traitMod(c, "n")) * 0.8 + (c.stats.happiness < 35 ? 1 : 0);
     if (def.key === "injury" && (c.quirks?.includes("risk-taker") || (c.talents?.athletic ?? 50) > 75)) chance *= 1.5;

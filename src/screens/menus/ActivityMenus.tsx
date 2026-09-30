@@ -50,6 +50,10 @@ export function ActivitiesHub() {
     <ScrollView contentContainerStyle={tabStyles.scroll} showsVerticalScrollIndicator={false}>
       <MenuRow icon="home" color={colors.gold} title="Home & Moving" summary={`${cityOf(character).name}, ${getRegion(character.originRegion).label}`} delay={0} onPress={() => push("place")} />
       <MenuRow icon="location" color={colors.happiness} title="Outings & Venues" summary={`${venues} places to go`} delay={0} onPress={() => push("venues")} />
+      <MenuRow icon="barbell" color={colors.health} title="Body & Fitness" summary="Diet, exercise, check-ups" delay={30} onPress={() => push("body")} />
+      <MenuRow icon="leaf" color={colors.teal} title="Mind & Habits" summary={(character.addictions ?? []).some((a) => a.level >= 20 && !a.quitting) ? "Something has a hold on you" : "Calm, faith, habits"} delay={35} onPress={() => push("mind")} />
+      <MenuRow icon="color-palette" color={colors.looks} title="Hobbies" summary={`${Object.values(character.hobbies ?? {}).filter((h) => h.active).length} active`} delay={38} onPress={() => push("hobbies")} />
+      <MenuRow icon="trophy" color={colors.gold} title="Achievements" summary={`${Object.keys(character.achievements ?? {}).length} earned`} delay={39} onPress={() => push("achievements")} />
       <MenuRow icon="medkit" color={colors.health} title="Health & Wellbeing" summary="Doctor, therapy" delay={40} onPress={() => push("health")} />
       <MenuRow icon="ribbon" color={colors.smarts} title="Lessons & Skills" summary={skills > 0 ? `${skills} skill${skills === 1 ? "" : "s"}` : "Learn something new"} delay={80} onPress={() => push("lessons")} />
       <MenuRow
