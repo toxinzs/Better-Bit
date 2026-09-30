@@ -142,3 +142,18 @@ overstay and deportation. Routes return a `RouteCheck` (requirement list, fee,
 funds, odds, wait) so UI and engine share one source of truth; `apply()` refuses
 unless every requirement is met. Languages live in `c.languages[key]` (0-100);
 `ensureAbroad` backfills them deterministically for old saves.
+
+## Working life (v2.6)
+
+Pay is stored in **baseline dollars** on `job.salary`; what you actually get is
+always `effectiveSalary(job, world, region, cityWage)`. Never store an already
+scaled figure back on the job (v2.1-v2.5 did, and scaled it twice at payday).
+Career state lives on the `Job` itself (`rung`, `perf`, `rapport`, `since`, `pip`,
+`review`) and on the character (`fieldYears`, `network`, `workMode`, `unemp`,
+`retired`, `business`, `rentals`); `ensureRole(c)` backfills old saves. A job that
+ends any way other than the player quitting should go through `loseJob(c, cause,
+world)` so severance and benefits happen. Tick order: income -> `tickCareer` ->
+`tickBusiness` -> `tickAbroad` -> `tickWork`. Country tax, benefit and pension
+numbers are all in `data/economy.ts`; `incomeTax(gross, region, credit)` divides by
+the country's jobMultiplier before applying brackets. `inflation(c)` (2%/yr since
+20) scales rent, living costs and house prices; keep raises near it.

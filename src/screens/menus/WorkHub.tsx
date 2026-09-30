@@ -20,6 +20,16 @@ export function WorkHub() {
     <ScrollView contentContainerStyle={tabStyles.scroll} showsVerticalScrollIndicator={false}>
       <MenuRow icon="briefcase" color={colors.smarts} title="Occupation" summary={job} delay={0} onPress={() => push("occupation")} />
       <MenuRow
+        icon="trending-up" color={colors.primary} title="Career & Promotion"
+        summary={character.retired ? "Retired" : character.job?.kind === "fulltime" ? `${Math.round(character.job.perf ?? 55)} performance · ${character.job.title}` : character.unemp ? "Between jobs" : "Ladder, reviews, networking"}
+        delay={15} onPress={() => push("career")}
+      />
+      <MenuRow
+        icon="storefront" color={colors.gold} title="Business"
+        summary={character.business ? `${character.business.name} · ${character.business.lastProfit >= 0 ? "+" : "-"}$${Math.abs(character.business.lastProfit).toLocaleString()} last year` : "Start your own"}
+        delay={22} onPress={() => push("business")}
+      />
+      <MenuRow
         icon="search" color={colors.happiness} title="Find Work"
         summary={`${character.age < getRegion(character.originRegion).workAge.parttime ? "Odd jobs" : "Part-time, full-time & gigs"}`}
         delay={30} onPress={() => push("findwork")}

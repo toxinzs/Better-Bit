@@ -1,6 +1,7 @@
 import { LifeEvent } from "../../types";
 import { clamp, randomInt } from "../../engine/util";
 import { hasActiveCondition } from "../../engine/worldState";
+import { loseJob } from "../../engine/career";
 
 export const WORLD_EVENTS: LifeEvent[] = [
   {
@@ -52,12 +53,9 @@ export const WORLD_EVENTS: LifeEvent[] = [
       },
       {
         label: "Risk it and start looking elsewhere",
-        effect: (c) => {
+        effect: (c, world) => {
           const laidOff = Math.random() < 0.3;
-          if (laidOff) {
-            c.job = null;
-            c.stats.happiness = clamp(c.stats.happiness - 12);
-          }
+          if (laidOff) loseJob(c, "laidoff", world);
         },
         resultText: (c) => (c.job ? "You kept your job, for now." : "You got laid off."),
       },

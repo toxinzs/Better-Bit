@@ -85,6 +85,10 @@ import { afterBuyHome, afterSellHome, ensureLocation, moveBackHome, moveTo, rent
 import { cityByKey } from "../data/cities";
 import { apply as engineApplyVisa, ensureAbroad, leaveVoluntarily as engineLeaveAbroad, naturalize as engineNaturalize, returnTo as engineReturnTo, sendMoneyHome as engineSendMoneyHome, studyLanguage as engineStudyLanguage, takeTrip as engineTakeTrip, withdraw as engineWithdrawVisa } from "../engine/immigration";
 import type { LanguageKey } from "../data/countries";
+import { askForPromotion, askForRaise, doNetwork as engineNetwork, retire, setWorkMode, takeCourse as engineCourse, toggleUnion } from "../engine/career";
+import { expand, fireStaff, hire, marketing, sellBusiness, closeBusiness, startBusiness } from "../engine/business";
+import { buyRental, declareBankruptcy, sellRental } from "../engine/wealth";
+import type { RentalListing } from "../engine/wealth";
 
 const STORAGE_KEY = "@better-bit/save/v1";
 
@@ -129,6 +133,23 @@ type GameState = {
   rentPlace: (rentKey: RentKey) => void;
   moveBackHome: () => void;
   setLifestyle: (key: Lifestyle) => void;
+  setWorkMode: (mode: "coast" | "steady" | "grind") => void;
+  askRaise: () => void;
+  askPromotion: () => void;
+  doNetwork: () => void;
+  takeCourse: () => void;
+  toggleUnion: () => void;
+  retireNow: () => void;
+  startBusiness: (key: string, name: string) => void;
+  hireStaff: () => void;
+  fireStaff: () => void;
+  bizMarketing: () => void;
+  expandBiz: () => void;
+  sellBiz: () => void;
+  closeBiz: () => void;
+  buyRental: (listing: RentalListing) => void;
+  sellRental: (index: number) => void;
+  declareBankruptcy: () => void;
   applyVisa: (dest: RegionKey, route: VisaRoute, cityKey?: string) => void;
   withdrawVisa: () => void;
   naturalise: () => void;
@@ -371,6 +392,23 @@ export const useGameStore = create<GameState>((set, get) => {
     moveToCity: (cityKey, rentKey) => applyToCharacter((c) => { const city = cityByKey(cityKey); if (city) moveTo(c, city, rentKey); }),
     rentPlace: (rentKey) => applyToCharacter((c) => { rentPlace(c, rentKey); }),
     moveBackHome: () => applyToCharacter((c) => { moveBackHome(c); }),
+    setWorkMode: (mode) => applyToCharacter((c) => { setWorkMode(c, mode); }),
+    askRaise: () => applyToCharacterWithWorld((c, w) => { askForRaise(c, w); }),
+    askPromotion: () => applyToCharacterWithWorld((c, w) => { askForPromotion(c, w); }),
+    doNetwork: () => applyToCharacter((c) => { engineNetwork(c); }),
+    takeCourse: () => applyToCharacter((c) => { engineCourse(c); }),
+    toggleUnion: () => applyToCharacter((c) => { toggleUnion(c); }),
+    retireNow: () => applyToCharacter((c) => { retire(c); }),
+    startBusiness: (key, name) => applyToCharacter((c) => { startBusiness(c, key, name); }),
+    hireStaff: () => applyToCharacter((c) => { hire(c); }),
+    fireStaff: () => applyToCharacter((c) => { fireStaff(c); }),
+    bizMarketing: () => applyToCharacterWithWorld((c, w) => { marketing(c, w); }),
+    expandBiz: () => applyToCharacter((c) => { expand(c); }),
+    sellBiz: () => applyToCharacter((c) => { sellBusiness(c); }),
+    closeBiz: () => applyToCharacter((c) => { closeBusiness(c); }),
+    buyRental: (listing) => applyToCharacter((c) => { buyRental(c, listing); }),
+    sellRental: (index) => applyToCharacter((c) => { sellRental(c, index); }),
+    declareBankruptcy: () => applyToCharacter((c) => { declareBankruptcy(c); }),
     applyVisa: (dest, route, cityKey) => applyToCharacter((c) => { engineApplyVisa(c, dest, route, cityKey); }),
     withdrawVisa: () => applyToCharacter((c) => { engineWithdrawVisa(c); }),
     naturalise: () => applyToCharacter((c) => { engineNaturalize(c); }),

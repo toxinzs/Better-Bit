@@ -23,6 +23,10 @@ import { INSTITUTIONS } from "./src/data/institutions";
 import { MAJORS } from "./src/data/majors";
 import * as LOCATION from "./src/engine/location";
 import * as IMMIGRATION from "./src/engine/immigration";
+import * as CAREER from "./src/engine/career";
+import * as BUSINESS from "./src/engine/business";
+import * as WEALTH from "./src/engine/wealth";
+import * as TAXES from "./src/engine/taxes";
 import { CITIES } from "./src/data/cities";
 import { cityOf } from "./src/engine/where";
 import { useNav } from "./src/nav/navStore";
@@ -30,7 +34,7 @@ import { useNav } from "./src/nav/navStore";
 if (typeof window !== "undefined") {
   (window as any).__store = useGameStore;
   (window as any).__nav = useNav;
-  (window as any).__engine = { actionsFor, romanceCandidates, runPersonAction, killRelative, nextDecisionEvent, tickExes, craziness, listingsFor, requirements, preparedness, QUESTIONS, institutions: (r: string) => INSTITUTIONS.filter((i) => i.region === r), majors: MAJORS, location: LOCATION, immigration: IMMIGRATION, cities: CITIES, cityOf };
+  (window as any).__engine = { actionsFor, romanceCandidates, runPersonAction, killRelative, nextDecisionEvent, tickExes, craziness, listingsFor, requirements, preparedness, QUESTIONS, institutions: (r: string) => INSTITUTIONS.filter((i) => i.region === r), majors: MAJORS, location: LOCATION, immigration: IMMIGRATION, career: CAREER, business: BUSINESS, wealth: WEALTH, taxes: TAXES, cities: CITIES, cityOf };
 }
 
 export default function App() {

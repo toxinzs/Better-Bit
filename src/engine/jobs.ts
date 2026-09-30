@@ -2,7 +2,7 @@ import { Character, Job, JobKind, LifeEvent, WorldState } from "../types";
 import { getRegion, WorkAges } from "../data/regions";
 import { ALL_JOBS, FULLTIME_JOBS, PARTTIME_JOBS } from "../data/jobs";
 import { Humour, Interviewer, companyFor, hashKey, interviewerFor, rngFrom } from "../data/companies";
-import { Ans, Cat, QUESTIONS, Question } from "../data/interviews";
+import { Ans, Cat, FIELD_QUESTIONS, QUESTIONS, Question } from "../data/interviews";
 import { GIGS, GigDef, gigDef } from "../data/gigs";
 import { SKILL_LABELS } from "../data/skills";
 import { changeStat } from "./stats";
@@ -11,6 +11,7 @@ import { effectiveSalary, hasActiveCondition, regionJobMultiplier } from "./worl
 import { incomeTax } from "./taxes";
 import { cityOf, cityWage, noteIncome } from "./where";
 import { refreshCoworkers } from "./people";
+import { startRole } from "./career";
 import { traitMod } from "./character";
 import { attendanceFactor, gainFitness } from "./health";
 import { hasDiploma } from "./education";
@@ -177,6 +178,12 @@ function pickQuestions(c: Character, job: Job, difficulty: number): Question[] {
   };
   // always open with a real question; first jobs lean on the simple ones
   take(job.kind === "parttime" || c.age < 20 ? [...byCat("first"), ...byCat("genuine")] : byCat("genuine"));
+  // full-time jobs in a field get questions from that world
+  if (job.kind === "fulltime" && job.field) {
+    const own = FIELD_QUESTIONS.filter((q) => q.fields?.includes(job.field!));
+    take(own);
+    if (n >= 5) take(own);
+  }
   const weights: [Cat, number][] = job.kind === "parttime" || c.age < 20
     ? [["first", 35], ["genuine", 25], ["situational", 20], ["curveball", 10], ["bs", 10]]
     : [["genuine", 38], ["situational", 28], ["curveball", 20], ["bs", 14]];
@@ -210,6 +217,8 @@ export function preparedness(c: Character, job: Job): number {
   if (c.stats.health < 35) p -= 1;
   if ((c.stress ?? 0) >= 75) p -= 0.5;
   if (c.flags?.includes("return-offer")) p += 1.5;
+  p += (c.network ?? 0) / 60;
+  if (c.firedAge !== undefined && c.age - c.firedAge <= 2) p -= 1;
   if (job.kind === "parttime" && (c.gigRep ?? 0) >= 50) p += 0.5;
   return p;
 }
@@ -224,8 +233,12 @@ function feedbackFor(run: Run, prep: number, c: Character): string {
   return lines[0];
 }
 
-export function acceptJob(c: Character, listing: Listing, salary: number): void {
-  const job: Job = { ...listing.job, salary };
+// `baseSalary` is in baseline dollars (the catalogue's units): what you're paid
+// is always effectiveSalary(job, ...), which applies the country, the city and
+// the economy. `shown` is that effective figure, for the log line only.
+export function acceptJob(c: Character, listing: Listing, baseSalary: number, shown: number): void {
+  const job: Job = startRole({ ...listing.job, salary: baseSalary }, c);
+  const salary = shown;
   const slot = job.kind === "parttime" ? "partTime" : "job";
   const old = c[slot];
   if (old) (c.jobHistory ??= []).push({ title: old.title, company: old.company?.name, from: c.age - 1, to: c.age });
@@ -241,7 +254,9 @@ function offerEvent(c: Character, world: WorldState, listing: Listing, margin: n
   const job = listing.job;
   const co = job.company!;
   // what you studied, and where, shows up in the offer
-  const gross = Math.round(effectiveSalary(job, world, c.originRegion, cityWage(c)) * (job.kind === "fulltime" ? degreeSalaryFactor(c, job) : 1));
+  const factor = job.kind === "fulltime" ? degreeSalaryFactor(c, job) : 1;
+  const base = Math.round(job.salary * factor); // stored in baseline dollars
+  const gross = Math.round(effectiveSalary(job, world, c.originRegion, cityWage(c)) * factor); // what you'd actually be paid
   return {
     id: `offer-${listing.key}`,
     minAge: 0,
@@ -254,7 +269,7 @@ function offerEvent(c: Character, world: WorldState, listing: Listing, margin: n
         tone: "good",
         effect: (cc) => {
           onDone(cc);
-          acceptJob(cc, listing, gross);
+          acceptJob(cc, listing, base, gross);
         },
         resultText: () => `You're a ${job.title} now.`,
       },
@@ -268,12 +283,12 @@ function offerEvent(c: Character, world: WorldState, listing: Listing, margin: n
                 const p = clamp(0.28 + margin / 14 + traitMod(cc, "e") * 0.05, 0.1, 0.8);
                 if (Math.random() < p) {
                   const bump = 1 + (8 + Math.floor(Math.random() * 11)) / 100;
-                  acceptJob(cc, listing, Math.round(gross * bump));
+                  acceptJob(cc, listing, Math.round(base * bump), Math.round(gross * bump));
                 } else if (Math.random() < 0.2) {
                   cc.yearLog.push(`You pushed too hard: ${co.name} withdrew the offer.`);
                 } else {
                   cc.yearLog.push("They wouldn't move on the pay, so you took the original offer.");
-                  acceptJob(cc, listing, gross);
+                  acceptJob(cc, listing, base, gross);
                 }
               },
             },

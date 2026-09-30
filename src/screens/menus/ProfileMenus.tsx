@@ -19,6 +19,8 @@ import { SKILL_LABELS } from "../../data/skills";
 import { UPBRINGING_BLURB } from "../../engine/education";
 import { colors, fonts, fontSize, spacing } from "../../theme";
 import { StatKey } from "../../types";
+import { effectiveSalary } from "../../engine/lifeEngine";
+import { cityWage } from "../../engine/where";
 
 const STAGE: Record<string, string> = {
   none: "Not in school yet",
@@ -40,7 +42,7 @@ export function ProfileMenu() {
   const region = getRegion(character.originRegion);
   const alive = character.relationships.filter((r) => r.alive && r.type !== "classmate" && r.type !== "teacher");
   const skills = Object.entries(character.skills ?? {}).filter(([, v]) => (v ?? 0) > 0);
-  const job = character.inJail ? "Incarcerated" : character.job ? `${character.job.title} · $${character.job.salary.toLocaleString()}/yr` : character.inCollege ? "Student" : "Unemployed";
+  const job = character.inJail ? "Incarcerated" : character.job ? `${character.job.title} · $${effectiveSalary(character.job, world, character.originRegion, cityWage(character)).toLocaleString()}/yr` : character.inCollege ? "Student" : "Unemployed";
 
   return (
     <MenuScreen title="Profile" icon="person" color={colors.primary}>

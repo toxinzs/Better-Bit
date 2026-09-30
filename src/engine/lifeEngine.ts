@@ -29,7 +29,10 @@ import { ensureAbroad, tickAbroad } from "./immigration";
 import { cityWage, noteIncome } from "./where";
 import { tickDebt } from "./debt";
 import { tickMarket, portfolioValue } from "./stocks";
-import { incomeTax } from "./taxes";
+import { incomeTax, taxCredit } from "./taxes";
+import { tickCareer } from "./career";
+import { tickBusiness, valueOf as businessValue } from "./business";
+import { tickRentals, tickSavings } from "./wealth";
 import { applyContribution, tickRetirementGrowth, retirementBalance } from "./retirement";
 import { tickSentence, tickRecordClock, tickAnkleMonitor, tickJuvenileRecordClear } from "./crime";
 import {
@@ -94,7 +97,7 @@ export type { ActionKey, ActionDef } from "./interactions";
 export { surrender } from "./surrender";
 
 export function totalNetWorth(c: Character, world: WorldState): number {
-  return netWorth(c) + portfolioValue(c, world) + retirementBalance(c);
+  return netWorth(c) + portfolioValue(c, world) + retirementBalance(c) + businessValue(c);
 }
 
 export type CreationOptions = {
@@ -345,7 +348,7 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
     // a head for business shows up in the pay packet
     const gross = Math.round(effectiveSalary(c.job, world, c.originRegion, cityWage(c)) * (1 + ((c.talents?.business ?? 50) - 50) / 1000) * attendanceFactor(c));
     const { contribution, employerMatch, taxableIncome } = applyContribution(c, gross);
-    const tax = incomeTax(taxableIncome, c.originRegion);
+    const tax = incomeTax(taxableIncome, c.originRegion, taxCredit(c));
     const net = taxableIncome - tax;
     c.money += net;
     noteIncome(c, net, tax);
@@ -360,10 +363,14 @@ export function ageUp(c: Character, world: WorldState): AgeUpResult {
     );
   }
 
+  tickCareer(c, world);
+  tickBusiness(c, world);
   tickAbroad(c, world);
   tickWork(c, world);
   tickAssets(c);
+  tickRentals(c, world);
   tickLocation(c);
+  tickSavings(c, world);
   tickDebt(c);
 
   // death roll: very low health raises the odds sharply but never guarantees death on its own

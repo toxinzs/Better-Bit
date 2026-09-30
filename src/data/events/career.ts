@@ -3,6 +3,7 @@ import { clamp } from "../../engine/util";
 import { hasActiveCondition } from "../../engine/worldState";
 import { randomInt } from "../../engine/util";
 import { quickApply, tradePickerEvent } from "../../engine/higher";
+import { askForRaise, salaryNow } from "../../engine/career";
 
 export const CAREER_EVENTS: LifeEvent[] = [
   // What comes after high school. Enrollment itself is the real thing in
@@ -56,14 +57,9 @@ export const CAREER_EVENTS: LifeEvent[] = [
       {
         label: "Ask for a raise",
         effect: (c, world) => {
-          const threshold = hasActiveCondition(world, "boom") ? 75 : hasActiveCondition(world, "recession") ? 105 : 90;
-          if (c.job && c.stats.happiness + c.stats.smarts > threshold) {
-            c.job = { ...c.job, salary: Math.round(c.job.salary * 1.15) };
-          } else {
-            c.stats.happiness = clamp(c.stats.happiness - 5);
-          }
+          if (!askForRaise(c, world)) c.yearLog.push("You'd already asked this year.");
         },
-        resultText: (c) => (c.job ? `New salary: $${c.job.salary.toLocaleString()}` : ""),
+        resultText: (c, world) => (c.job ? `You're on $${salaryNow(c, world).toLocaleString()} a year.` : ""),
       },
       {
         label: "Stay quiet, keep your head down",
@@ -108,6 +104,7 @@ export const CAREER_EVENTS: LifeEvent[] = [
         label: "Call it out in front of the team",
         effect: (c) => {
           c.stats.happiness = clamp(c.stats.happiness + 6);
+          if (c.job) c.job.rapport = clamp((c.job.rapport ?? 50) + (Math.random() < 0.5 ? 4 : -6));
         },
       },
       {
@@ -178,6 +175,8 @@ export const CAREER_EVENTS: LifeEvent[] = [
       {
         label: "Quit, right now",
         effect: (c) => {
+          const j = c.job;
+          if (j) (c.jobHistory ?? []).filter((h) => h.to === -1 && h.title === j.title).forEach((h) => (h.to = c.age));
           c.job = null;
           c.stats.happiness = clamp(c.stats.happiness + 15);
         },
@@ -202,6 +201,7 @@ export const CAREER_EVENTS: LifeEvent[] = [
         effect: (c) => {
           c.stats.happiness = clamp(c.stats.happiness - 1);
           c.stats.smarts = clamp(c.stats.smarts + 2);
+          c.network = clamp((c.network ?? 0) + randomInt(4, 9));
         },
         resultText: () => "Made a few decent connections, at least.",
       },

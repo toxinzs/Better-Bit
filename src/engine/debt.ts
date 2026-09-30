@@ -128,4 +128,6 @@ export function tickDebt(c: Character): void {
   }
 
   c.creditScore = clamp((c.creditScore ?? 650) + scoreDelta, 300, 850);
+  // a bankruptcy stays on your record for seven years
+  if (c.bankruptAge !== undefined && c.age - c.bankruptAge < 7) c.creditScore = Math.min(c.creditScore, 540);
 }

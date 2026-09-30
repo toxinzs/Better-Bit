@@ -22,6 +22,7 @@ export type Question = {
   answers: Ans[];
   minAge?: number;
   maxAge?: number; // teen-only questions
+  fields?: string[]; // only asked for jobs in these fields
 };
 
 const q = (id: string, cat: Cat, text: string, answers: Ans[], extra: Partial<Question> = {}): Question => ({ id, cat, text, answers, ...extra });
@@ -711,3 +712,140 @@ export const QUESTIONS: Question[] = [
 ];
 
 export const questionsByCat = (cat: Cat) => QUESTIONS.filter((x) => x.cat === cat);
+
+// ---------------------------------------------------------------- field-specific
+// Asked in addition to the general questions when the job is in one of these
+// fields: the questions a hiring manager in that world actually cares about.
+export const FIELD_QUESTIONS: Question[] = [
+  q("f-tech-bug", "situational", "A live system is down and customers are angry. You've got a guess about the cause. What do you do?", [
+    ["Tell the team, check logs to confirm the guess, roll back the last change, write it up afterwards.", 3, { c: 1 }],
+    ["Change things until it works.", -2],
+    ["Wait for someone senior to tell you what to do.", -1, { n: 0.5 }],
+    ["Fix it quickly and quietly and hope nobody asks.", -1, { a: -0.5 }, "l"],
+  ], { fields: ["Tech"] }),
+  q("f-tech-learn", "genuine", "Our stack changes every couple of years. How do you keep up?", [
+    ["Side projects, docs and a habit of reading other people's code.", 3, { o: 1 }],
+    ["I learn it when a task forces me to.", 0],
+    ["I mostly stick with what I know.", -2, { o: -1 }],
+  ], { fields: ["Tech"] }),
+  q("f-tech-explain", "situational", "Explain what a database index is to someone who has never programmed.", [
+    ["A book's index: it lets you jump to the page instead of reading every one.", 3, { o: 0.5 }],
+    ["Cross-referencing data structures for query optimisation.", -1],
+    ["I'd rather show them than explain it.", 0],
+  ], { fields: ["Tech"] }),
+  q("f-fin-risk", "situational", "A client wants to put all their savings into one hot investment. What do you tell them?", [
+    ["Explain diversification and risk plainly, then respect their decision in writing.", 3, { a: 0.5, c: 1 }],
+    ["Tell them to go for it.", -3],
+    ["Refuse to talk about it.", -1],
+  ], { fields: ["Finance & Business"] }),
+  q("f-fin-error", "situational", "You spot a mistake in a report that's already gone to the client. Nobody has noticed. What now?", [
+    ["Tell your manager immediately and offer a corrected version.", 3, { c: 1, a: 0.5 }],
+    ["Wait to see if anyone notices.", -3, undefined, "l"],
+    ["Quietly fix it in the next report.", -1],
+  ], { fields: ["Finance & Business", "Office & Admin"] }),
+  q("f-fin-numbers", "genuine", "Talk me through how you'd sanity-check a budget with a suspiciously round total.", [
+    ["Look at the biggest lines, ask where the round numbers came from, and compare with last year.", 3, { c: 1 }],
+    ["Assume it's fine.", -2],
+    ["Ask someone else to check it.", -1],
+  ], { fields: ["Finance & Business"] }),
+  q("f-health-calm", "situational", "A patient's family is panicking and demanding answers you can't give yet. What do you do?", [
+    ["Stay calm, say what you do know, what you're doing next and when they'll hear more.", 3, { a: 1, n: -1 }],
+    ["Tell them to wait outside.", -2],
+    ["Promise everything will be fine.", -2, undefined, "l"],
+  ], { fields: ["Healthcare"] }),
+  q("f-health-shift", "genuine", "Healthcare means nights, weekends and long shifts. How do you cope?", [
+    ["Routines, good sleep habits, and people I can talk to after hard days.", 3, { c: 1 }],
+    ["I'll just push through it.", -1, { n: 0.5 }],
+    ["I'd rather avoid nights.", -1],
+  ], { fields: ["Healthcare"] }),
+  q("f-health-mistake", "situational", "You realise you've given a patient the wrong form to sign. What do you do?", [
+    ["Tell your supervisor straight away and put it right before it goes any further.", 3, { c: 1 }],
+    ["Swap it quietly.", -3, undefined, "l"],
+    ["Ask a colleague what they'd do.", 0],
+  ], { fields: ["Healthcare"] }),
+  q("f-edu-behaviour", "situational", "A student is disrupting the class for the third time this week. What do you do?", [
+    ["Talk to them privately to find out what's behind it, and agree a plan with them.", 3, { a: 1 }],
+    ["Send them out of the room.", -1],
+    ["Raise your voice until they stop.", -2, { a: -1 }],
+  ], { fields: ["Education & Care"] }),
+  q("f-edu-diff", "genuine", "How would you teach the same idea to a quick learner and a struggling one?", [
+    ["Different examples, different pace, same expectations.", 3, { o: 0.5, a: 0.5 }],
+    ["The same way; that's fair.", -1],
+    ["Focus on the quick ones.", -2],
+  ], { fields: ["Education & Care"] }),
+  q("f-pub-conflict", "situational", "Two members of the public are arguing and it's getting heated. You arrive first. What do you do?", [
+    ["Stay calm, separate them, listen to each and keep it safe.", 3, { a: 0.5, n: -1 }],
+    ["Take a side quickly.", -2],
+    ["Wait for backup and stay out of it.", -1],
+  ], { fields: ["Public Service"] }),
+  q("f-pub-rules", "genuine", "What do you do when the rules seem to work against the person in front of you?", [
+    ["Follow them, explain honestly, and point them to whoever can actually help.", 3, { c: 1, a: 0.5 }],
+    ["Bend the rules quietly.", -2],
+    ["Hide behind the rulebook.", -1],
+  ], { fields: ["Public Service"] }),
+  q("f-trade-safety", "situational", "You're on site and someone's cutting a corner on safety to save time. What do you do?", [
+    ["Stop the job, say why, and won't restart until it's done right.", 3, { c: 1 }],
+    ["Say nothing; it's their call.", -3],
+    ["Do it their way to keep the peace.", -2],
+  ], { fields: ["Outdoors & Trades", "Logistics"] }),
+  q("f-trade-measure", "genuine", "What's your rule about measuring and checking your work?", [
+    ["Measure twice, cut once, and check when I'm done.", 3, { c: 1 }],
+    ["I trust my eye.", -1],
+    ["Whatever's quickest.", -2],
+  ], { fields: ["Outdoors & Trades"] }),
+  q("f-trade-early", "genuine", "This job means early starts and physical days. How does that sit with you?", [
+    ["I'm happy with it. I like being out and doing something real.", 3, { c: 1 }],
+    ["I'd rather have a desk.", -2],
+    ["I'll manage, I suppose.", 0],
+  ], { fields: ["Outdoors & Trades", "Logistics"] }),
+  q("f-log-deadline", "situational", "A delivery is going to be late through no fault of yours. The customer hasn't called yet. What do you do?", [
+    ["Call them first, explain, and offer a new time you can actually keep.", 3, { a: 0.5, c: 1 }],
+    ["Wait to see if they call.", -2],
+    ["Say it's on its way.", -3, undefined, "l"],
+  ], { fields: ["Logistics", "Retail & Service"] }),
+  q("f-ret-upsell", "situational", "A customer is clearly unsure. Your target says sell them the expensive one. What do you do?", [
+    ["Ask about what they need and recommend what genuinely fits, even if it's cheaper.", 3, { a: 1, c: 1 }],
+    ["Push the expensive one.", -2],
+    ["Let them work it out alone.", -1],
+  ], { fields: ["Retail & Service"] }),
+  q("f-ret-queue", "situational", "It's the busiest hour, the queue's out the door and the till freezes. What do you do?", [
+    ["Stay calm, tell the queue, switch to the backup and keep people moving.", 3, { n: -1, c: 1 }],
+    ["Panic quietly.", -2, { n: 1 }],
+    ["Go and find the manager.", -1],
+  ], { fields: ["Retail & Service", "Food & Hospitality"] }),
+  q("f-food-rush", "situational", "It's Saturday night and three tables are complaining at once. How do you handle it?", [
+    ["Take a breath, triage by who's waited longest, keep everyone informed.", 3, { n: -1, c: 1 }],
+    ["Hide in the kitchen.", -2],
+    ["Blame the kitchen.", -2, { a: -1 }],
+  ], { fields: ["Food & Hospitality"] }),
+  q("f-food-hygiene", "genuine", "What does good food hygiene look like to you, day to day?", [
+    ["Clean as you go, correct temperatures, labelled and dated, wash your hands constantly.", 3, { c: 1 }],
+    ["Clean at the end of the shift.", -2],
+    ["Nobody has died yet.", -3],
+  ], { fields: ["Food & Hospitality"] }),
+  q("f-creative-crit", "genuine", "A client hates the first version of something you're proud of. How do you respond?", [
+    ["Ask what isn't working, separate taste from the brief, and offer options.", 3, { a: 0.5, o: 0.5 }],
+    ["Defend it.", -1, { a: -0.5 }],
+    ["Redo it from scratch without asking.", -1],
+  ], { fields: ["Creative & Media"] }),
+  q("f-creative-deadline", "genuine", "Creative work is hard to hurry. How do you meet a deadline when the ideas won't come?", [
+    ["Set constraints, show a rough version early and iterate.", 3, { c: 1 }],
+    ["Wait for inspiration.", -2],
+    ["Copy something that already works.", -2, undefined, "l"],
+  ], { fields: ["Creative & Media"] }),
+  q("f-creative-portfolio", "genuine", "Which piece in your portfolio are you proudest of, and what would you change?", [
+    ["Name one, explain the thinking, and say honestly what you'd do differently.", 3, { o: 1 }],
+    ["They're all perfect.", -2],
+    ["I haven't got a portfolio.", -3],
+  ], { fields: ["Creative & Media"] }),
+  q("f-office-priorities", "situational", "Three people each need something urgent from you by five. How do you decide what comes first?", [
+    ["Ask what each really needs by when, then be upfront about what I can deliver.", 3, { c: 1 }],
+    ["Do the loudest one first.", -1],
+    ["Try to do all three at once.", -2, { n: 0.5 }],
+  ], { fields: ["Office & Admin", "Finance & Business"] }),
+  q("f-office-detail", "genuine", "Tell me about a time your attention to detail saved the day.", [
+    ["Give a specific example: what you noticed, what would have gone wrong, what you did.", 3, { c: 1 }],
+    ["I'm always very detail-oriented.", -1],
+    ["I can't think of one.", -2],
+  ], { fields: ["Office & Admin"] }),
+];

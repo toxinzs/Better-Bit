@@ -49,7 +49,8 @@ export function netWorth(c: Character): number {
   const carValue = c.car?.value ?? 0;
   const homeEquity = c.home ? c.home.value - c.home.mortgageBalance : 0;
   const debt = (c.loans ?? []).reduce((sum, l) => sum + l.balance, 0);
-  return c.money + carValue + homeEquity - debt;
+  const rentals = (c.rentals ?? []).reduce((sum, r) => sum + r.value, 0);
+  return c.money + carValue + homeEquity + rentals - debt;
 }
 
 // Mortgage payments and car upkeep can push money negative - there's no

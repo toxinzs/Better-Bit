@@ -19,6 +19,10 @@ export function livingIndex(region: RegionKey | undefined): number {
   return def.costOfLivingTier === "low" ? Math.max(0.26, def.jobMultiplier * 0.85) : def.jobMultiplier;
 }
 
+// Prices creep up about 2% a year through your working life; raises are sized
+// to keep pace, and promotions are where real progress comes from.
+export const inflation = (c: Character): number => Math.pow(1.02, Math.max(0, c.age - 20));
+
 export function cityOf(c: Character): City {
   return cityByKey(c.residence?.city) ?? defaultCityFor(c.originRegion);
 }

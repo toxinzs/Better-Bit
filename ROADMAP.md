@@ -141,8 +141,21 @@ the planning notes; each release below is shippable on its own.
   Passport & languages, Travel, Citizenship, Go home. 10 abroad events. Not built yet:
   refugee/asylum, per-language jobs gating, foreign degree recognition, and partner
   nationality (the marriage route assumes a local spouse).
-- **v2.6 "Working Life & Money":** career ladders, performance, promotions, firing,
-  business, taxes per country, field-specific interview questions.
+- **v2.6 "Working Life & Money" (done).** `data/careers.ts` (six-rung ladders, custom
+  titles for 12 professions, field aptitudes), `engine/career.ts` (`startRole`,
+  performance factors + yearly review, raises, bonuses, auto promotion, `askForRaise` /
+  `askForPromotion`, PIP -> dismissal, layoffs by economy / company size / union,
+  `loseJob`, unemployment benefits, severance, retirement + state pension, network,
+  training, union). `data/economy.ts` (per-country tax brackets + social + child
+  credit, unemployment / severance / pension / retirement age), `engine/taxes.ts`
+  rewrite (`taxBreakdown`, `marginalRate`, `taxCredit`). `data/businesses.ts` +
+  `engine/business.ts` (10 business types, level / staff / reputation, yearly P&L,
+  bankruptcy, sale). `engine/wealth.ts` (savings interest, rental property,
+  bankruptcy). Three new assets (index fund, bond, crypto). 48 more events
+  (`data/events/work.ts`) and 25 field-specific interview questions. Menus: Career &
+  Promotion, Business (+ start), Taxes, Property investments, Bankruptcy. Two
+  economy fixes: job offers stored a salary that had already been scaled by
+  country and city, then scaled again each payday; and prices now inflate ~2%/yr.
 - **v2.7 "Body, Mind & Things To Do":** fitness/diet, addiction, hobbies, interactions pass, 450+ events.
 
 Still owed from 2.0: talents `technical`/`verbal`/`social`/`artistic` are only read

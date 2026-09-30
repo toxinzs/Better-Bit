@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "2.5.0";
+export const APP_VERSION = "2.6.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,24 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "2.6.0",
+    title: "Working Life & Money",
+    highlights: [
+      "Real careers: every full-time job now sits on a ladder from entry level to executive, with proper titles (Junior to Senior to Lead to Manager to Director to Chief) and pay that climbs with each rung",
+      "Annual performance reviews: your smarts, aptitude, personality, experience, health, stress and how hard you work all feed a performance score. See exactly what's helping or hurting it, then choose whether to coast, work steadily or grind",
+      "Raises, bonuses and promotions you earn, plus the option to ask for a raise or a promotion once a year (and pay for a refusal with your boss's goodwill)",
+      "Trouble at work is real: performance improvement plans, dismissals, redundancies in recessions, and severance pay. Unions protect you from layoffs at the cost of dues",
+      "Unemployment benefits, severance and state pensions now differ by country: 12 tax systems with their own brackets, social contributions and child credits. A new Taxes screen shows what you pay and what you get back",
+      "Build a network, take training courses, get headhunted, mentored, burned out or called out for whistleblowing: 18 new workplace events",
+      "Start your own business: ten types from a food truck to a tech start-up, with staff, marketing, expansion, reputation, bad years, bankruptcy and buy-out offers. Run it alongside a job or go all in",
+      "Retire when you like from 55; the state pension starts at your country's retirement age",
+      "More ways to grow money: idle cash earns interest, plus a global index fund, a treasury bond and a wildly volatile coin. Buy rental property and collect rent (or chase a late tenant)",
+      "Bankruptcy is a real, painful last resort that wipes your debts and wrecks your credit for seven years",
+      "Interviews ask field-specific questions: technical ones for tech jobs, patient scenarios for healthcare, safety questions for trades, and more",
+      "Prices now creep up about 2% a year and pay is sized to match, so long lives don't end in runaway wealth. Fixed a bug where the pay you were offered was scaled by your country and city twice, which made non-US wages far too low",
+    ],
+  },
   {
     version: "2.5.0",
     title: "Across Borders",

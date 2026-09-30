@@ -1,5 +1,6 @@
 import { Character, Retirement, WorldState } from "../types";
 import { clamp } from "./util";
+import { stockDef } from "../data/stocks";
 
 const EARLY_WITHDRAWAL_AGE = 60;
 const EARLY_WITHDRAWAL_PENALTY_RATE = 0.1;
@@ -42,7 +43,11 @@ export function applyContribution(
 export function tickRetirementGrowth(c: Character, world: WorldState): void {
   const retirement = c.retirement;
   if (!retirement || retirement.balance <= 0) return;
-  const stocks = world.stocks ?? [];
+  // a pension fund tracks the broad market, not a coin or a bond
+  const stocks = (world.stocks ?? []).filter((s) => {
+    const k = stockDef(s.ticker)?.kind;
+    return !k || k === "stock" || k === "fund";
+  });
   if (stocks.length === 0) return;
   const avgReturn =
     stocks.reduce((sum, s) => sum + (s.prevPrice > 0 ? (s.price - s.prevPrice) / s.prevPrice : 0), 0) / stocks.length;

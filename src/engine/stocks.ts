@@ -10,6 +10,10 @@ export function ensureMarket(world: WorldState): StockState[] {
   if (!world.stocks || world.stocks.length === 0) {
     world.stocks = STOCK_DEFS.map((d) => ({ ticker: d.ticker, price: d.basePrice, prevPrice: d.basePrice }));
   }
+  // saves from before the fund, bond and crypto existed pick them up
+  for (const d of STOCK_DEFS) {
+    if (!world.stocks.some((s) => s.ticker === d.ticker)) world.stocks.push({ ticker: d.ticker, price: d.basePrice, prevPrice: d.basePrice });
+  }
   return world.stocks;
 }
 
@@ -23,7 +27,8 @@ export function tickMarket(world: WorldState): void {
     const volatility = def?.volatility ?? 0.15;
     const shock = (Math.random() * 2 - 1) * volatility;
     s.prevPrice = s.price;
-    s.price = Math.max(1, Math.round(s.price * (1 + driftBias + shock) * 100) / 100);
+    const drift = def?.drift ?? (def?.kind === "crypto" ? driftBias * 1.5 : driftBias);
+    s.price = Math.max(1, Math.round(s.price * (1 + drift + shock) * 100) / 100);
   }
 }
 

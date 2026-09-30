@@ -148,7 +148,36 @@ export type Job = {
   day?: string; // "a typical day"
   growth?: string; // where it leads
   company?: Company; // set once you actually work somewhere
+  // ---- career (v2.6); set when you start the role, all optional for old saves ----
+  baseTitle?: string; // the entry-level title this role grew from
+  rung?: number; // 0 entry ... 5 executive
+  perf?: number; // 0-100 job performance
+  rapport?: number; // 0-100 how you get on with the boss and the team
+  since?: number; // age you started this rung
+  pip?: boolean; // on a performance improvement plan
+  review?: { age: number; perf: number; verdict: string; note: string };
 };
+
+export type Unemployment = { since: number; lastSalary: number; yearsLeft: number; cause: "laidoff" | "fired" };
+
+export type BusinessKey = string;
+export type Business = {
+  type: BusinessKey;
+  name: string;
+  since: number;
+  reserve: number; // cash the business holds
+  employees: number;
+  rep: number; // 0-100
+  level: number; // 1-5 size of the operation
+  lastRevenue: number;
+  lastProfit: number;
+  totalProfit: number;
+  badYears: number;
+  sideline: boolean; // run alongside a day job
+  marketAge?: number; // last year you ran marketing
+};
+
+export type Rental = { name: string; value: number; rent: number; since: number; vacantYears?: number };
 
 export type OwnedCar = {
   name: string;
@@ -428,6 +457,24 @@ export type Character = {
   griefYears?: number; // years of lingering sadness after losing someone close
   originRegion?: RegionKey; // the country you live in now (the name is historic)
   birthRegion?: RegionKey;
+  // ---- working life (v2.6) ----
+  workMode?: "coast" | "steady" | "grind";
+  network?: number; // 0-100 professional contacts
+  fieldYears?: Record<string, number>; // years of experience per job field
+  peakSalary?: number; // best baseline salary you've had (pension base)
+  unemp?: Unemployment | null;
+  retired?: boolean;
+  firedAge?: number;
+  raiseAsked?: number; // last year you asked for a raise
+  promoAsked?: number;
+  netAge?: number; // last year you networked
+  courseAge?: number; // last year you did professional training
+  courseBoost?: number;
+  inUnion?: boolean;
+  promotions?: number;
+  business?: Business | null;
+  rentals?: Rental[];
+  bankruptAge?: number;
   citizenships?: RegionKey[]; // passports you hold
   immigration?: Immigration | null; // set while you live in a country you're not a citizen of
   visaApp?: VisaApplication | null; // one application at a time

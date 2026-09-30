@@ -2,6 +2,7 @@ import { LifeEvent } from "../../types";
 import { clamp, randomInt } from "../../engine/util";
 import { hasChild } from "./helpers";
 import { addPerson } from "../../engine/people";
+import { retire } from "../../engine/career";
 
 export const SENIOR_EVENTS: LifeEvent[] = [
   {
@@ -37,8 +38,7 @@ export const SENIOR_EVENTS: LifeEvent[] = [
       {
         label: "Retire",
         effect: (c) => {
-          c.job = null;
-          c.stats.happiness = clamp(c.stats.happiness + 12);
+          retire(c);
         },
       },
       {

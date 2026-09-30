@@ -8,6 +8,7 @@ import { FindWorkMenu, OccupationMenu } from "../screens/menus/JobMenus";
 import { ProfileMenu, StatDetailMenu } from "../screens/menus/ProfileMenus";
 import { BudgetMenu, MoveCityMenu, MoveMenu, PlaceHub, RentMenu } from "../screens/menus/PlaceMenus";
 import { AbroadHub, AbroadListMenu, CitizenMenu, CountryMenu, GoHomeMenu, PassportMenu, TravelMenu } from "../screens/menus/AbroadMenus";
+import { BankruptMenu, BusinessMenu, CareerMenu, RentalsMenu, StartBusinessMenu, TaxMenu } from "../screens/menus/CareerMenus";
 import PeopleTab from "../screens/tabs/PeopleTab";
 import { RegionKey, StatKey } from "../types";
 
@@ -45,6 +46,12 @@ export default function MenuHost({ route }: { route: Route }) {
     case "collegemoney": return <CollegeMoneyMenu />;
     case "degree": return <DegreeMenu />;
     case "transcript": return <TranscriptMenu />;
+    case "career": return <CareerMenu />;
+    case "business": return <BusinessMenu />;
+    case "bizstart": return <StartBusinessMenu bizKey={String(route.params?.key ?? "")} />;
+    case "taxes": return <TaxMenu />;
+    case "rentals": return <RentalsMenu />;
+    case "bankrupt": return <BankruptMenu />;
     case "abroad": return <AbroadHub />;
     case "abroadlist": return <AbroadListMenu />;
     case "abroadcountry": return <CountryMenu dest={route.params?.to as RegionKey} />;

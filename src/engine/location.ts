@@ -7,7 +7,7 @@ import { rngFrom } from "../data/companies";
 import { changeStat } from "./stats";
 import { clamp, randomInt } from "./util";
 import { addPerson, refreshCoworkers } from "./people";
-import { livingIndex, cityOf } from "./where";
+import { livingIndex, cityOf, inflation } from "./where";
 import { enterSchool } from "./education";
 import { sellHome } from "./assets";
 
@@ -56,12 +56,12 @@ export function ensureLocation(c: Character): void {
 
 export function rentFor(c: Character, city: City, key: RentKey): number {
   const opt = rentOption(key) ?? RENT_OPTIONS[1];
-  return Math.round(RENT_BASE * opt.mult * city.cost * livingIndex(c.originRegion));
+  return Math.round(RENT_BASE * opt.mult * city.cost * livingIndex(c.originRegion) * inflation(c));
 }
 
 export function livingCost(c: Character): number {
   const city = cityOf(c);
-  const base = lifestyleDef(c.lifestyle).cost * (0.4 + 0.6 * city.cost) * livingIndex(c.originRegion);
+  const base = lifestyleDef(c.lifestyle).cost * (0.4 + 0.6 * city.cost) * livingIndex(c.originRegion) * inflation(c);
   return Math.round(base);
 }
 
@@ -82,7 +82,7 @@ export function moveCost(c: Character, dest: City): number {
 
 export function homeListingsFor(c: Character): HomeListing[] {
   const city = cityOf(c);
-  return HOME_LISTINGS.map((h) => ({ ...h, price: Math.round((h.price * city.cost * livingIndex(c.originRegion)) / 500) * 500 }));
+  return HOME_LISTINGS.map((h) => ({ ...h, price: Math.round((h.price * city.cost * livingIndex(c.originRegion) * inflation(c)) / 500) * 500 }));
 }
 
 export function depositFor(rent: number): number {

@@ -58,6 +58,9 @@ export function AssetsHub() {
       <MenuRow icon="car-sport" color={colors.smarts} title="Vehicle" summary={character.car ? `${character.car.name} · $${character.car.value.toLocaleString()}` : "No car"} delay={40} onPress={() => push("car")} />
       <MenuRow icon="card" color={colors.danger} title="Credit & Loans" summary={debtTotal > 0 ? `Debt $${debtTotal.toLocaleString()}` : `Credit score ${score}`} delay={80} onPress={() => push("loans")} />
       <MenuRow icon="trending-up" color={colors.primary} title="Investments" summary={investTotal > 0 ? `$${investTotal.toLocaleString()}` : "Nothing invested"} delay={120} onPress={() => push("invest")} />
+      <MenuRow icon="business" color={colors.gold} title="Property investments" summary={(character.rentals ?? []).length > 0 ? `${character.rentals!.length} rental${character.rentals!.length === 1 ? "" : "s"}` : "Buy to let"} delay={140} onPress={() => push("rentals")} />
+      <MenuRow icon="receipt" color={colors.danger} title="Taxes" summary="What you pay and what you get back" delay={150} onPress={() => push("taxes")} />
+      {(debtTotal > 0 || character.money < 0) && <MenuRow icon="warning" color={colors.danger} title="Bankruptcy" summary="A last resort" delay={155} onPress={() => push("bankrupt")} />}
       <MenuRow icon="umbrella" color={colors.looks} title="Retirement" summary={`$${retirement.balance.toLocaleString()} saved`} delay={160} onPress={() => push("retire")} />
     </ScrollView>
   );
