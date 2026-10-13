@@ -209,3 +209,19 @@ the year's tick. Use `record(c, text)` (not a bare `yearLog.push`) for lines tha
 also enter the life story, since achievements read `fullLog`. New notable log lines need a
 rule in `notify.ts`. Ages: platforms 13+ (Podcast 14), hiring 18+, buying followers 16+;
 minors keep 60% of earnings (a trust) and pay no tax.
+
+## Settings, saves and looks (v2.10)
+
+Device preferences live in `src/settings.ts`, not in the character save: import `settings`
+(plain object, read at call time) in non-React code and `useSettings()` in components. Text
+size is baked into `fontSize` when `theme.ts` loads, so changing it reloads the page like the
+theme does; always size text from the `fontSize` tokens, never a literal, or it won't scale.
+`motion.tsx`, `sound.ts` and the stat blink already honour reduce-motion and sound. A life
+moves between browsers as `encodeSave`/`decodeSave` text (`engine/saveio.ts`); `importSave`
+in the store runs the same `ensure*` backfills as `hydrate`, so any new `ensureX` guard added
+to `hydrate` must also be added there. `ageUpMany` must never skip a decision: it stops when
+`pendingEvent`, `notices` or `pendingBabyId` is set. Event popups get their header from
+`sceneFor(event.id)`: name new events with a category word (`school-`, `job-`, `money-`...)
+or add a pattern in `data/eventScenes.ts`. Avatars read `job.field`, `inJail`,
+`educationStage` and `social.fame` straight off the character; add an outfit in
+`outfitFor` / `outfitUnder` / `outfitOver`.

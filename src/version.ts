@@ -2,7 +2,7 @@
 // Core Update or DLC pack landing, major for something that changes the
 // game in a fundamental way. Add a matching CHANGELOG entry (newest first)
 // whenever the version bumps - that's what WhatsNewModal reads from.
-export const APP_VERSION = "2.9.0";
+export const APP_VERSION = "2.10.0";
 
 export type ChangelogEntry = {
   version: string;
@@ -11,6 +11,22 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "2.10.0",
+    title: "Quality of Life & Looks",
+    highlights: [
+      "Settings (the gear in the header): colour theme, text size, reduce motion, sound, keyboard shortcuts, and a button to start over",
+      "Back up and move your life: copy your save as text and paste it into another browser, device or the downloaded copy of the game. You can also load a save from the start screen",
+      "Age up several years: the fast-forward button next to Age Up does +5 years, +10 years, or runs until something needs your answer. It always stops for decisions, so nothing is skipped",
+      "Keyboard shortcuts on computers: Space ages up, 1 to 9 pick a choice (the numbers show on the buttons), Esc goes back or closes a pop-up, Q W E R T switch tabs",
+      "Your story so far has filters (Money, Love, Family, Work, School, Health, Fame, Wins, Trouble) so a long life is easy to look back through",
+      "The Activities tab shows a badge when your social inbox has messages or a controversy is brewing",
+      "Your avatar now dresses for your life: scrubs, hi-vis, aprons, uniforms, suits, lanyards, headphones, cardigans and name tags by job; school bags, hoodies at college, onesies as a baby, an orange jumpsuit behind bars, and sunglasses and a gold star pin when you're properly famous",
+      "Every life-event pop-up has an illustrated header for what kind of moment it is: family, love, school, work, money, health, trouble, travel or fame",
+      "The header and your life card quietly change colour as you move through the stages of life, and the start screen shows one person growing up with a new outfit for each stage",
+      "A stat that drops to 25 or below now blinks red so you notice before it's a crisis",
+    ],
+  },
   {
     version: "2.9.0",
     title: "Fame & Social Media",

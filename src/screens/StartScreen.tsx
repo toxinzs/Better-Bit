@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Animated, Easing, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../state/gameStore";
 import Button from "../components/Button";
@@ -17,11 +17,14 @@ import { quirkDef } from "../data/traits";
 import { createCharacter } from "../engine/lifeEngine";
 import { ageOf } from "../engine/people";
 import { APP_VERSION } from "../version";
-import { colors, fonts, fontSize, radii, spacing } from "../theme";
+import { colors, fonts, fontSize, mixColors, radii, spacing } from "../theme";
 import Avatar from "../components/Avatar";
 import GradientBg from "../components/GradientBg";
 import ThemePicker from "../components/ThemePicker";
-import { FadeInUp } from "../motion";
+import ModalBase from "../components/ModalBase";
+import { FadeInUp, Pop } from "../motion";
+import { settings } from "../settings";
+import { stageTint } from "../data/stageTint";
 
 const GENDER_OPTIONS: { key: Gender; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { key: "female", label: "Female", icon: "female" },
@@ -35,6 +38,88 @@ const FLAGS: Record<RegionKey, string> = { us: "🇺🇸", uk: "🇬🇧", niger
 const STEPS = ["Who are you?", "Where are you born?", "Your family", "How do you look?", "Ready?"] as const;
 
 const PREVIEW_AGES = [1, 8, 16, 30, 55, 80];
+
+// The landing shows one person growing up: a new age every moment or two, wearing what that
+// stage of life wears.
+const STAGES: { age: number; caption: string; extra: Record<string, unknown> }[] = [
+  { age: 1, caption: "Newborn", extra: {} },
+  { age: 7, caption: "First day of school", extra: { educationStage: "elementary" } },
+  { age: 15, caption: "Teenager", extra: { educationStage: "high" } },
+  { age: 21, caption: "Student", extra: { inCollege: true } },
+  { age: 29, caption: "First real job", extra: { job: { field: "Healthcare", title: "Nurse" } } },
+  { age: 38, caption: "Making it", extra: { job: { field: "Finance & Business", title: "Manager" } } },
+  { age: 52, caption: "Doing it their way", extra: { job: { field: "Creative & Media", title: "Producer" } } },
+  { age: 74, caption: "A life well lived", extra: {} },
+];
+
+function LifeCarousel({ gender, region, seed, appearance }: { gender: Gender; region: RegionKey; seed: number; appearance: Appearance }) {
+  const [i, setI] = useState(2);
+  useEffect(() => {
+    const t = setInterval(() => setI((n) => (n + 1) % STAGES.length), settings.reduceMotion ? 3200 : 2100);
+    return () => clearInterval(t);
+  }, []);
+  const st = STAGES[i];
+  const tint = stageTint(st.age);
+  return (
+    <View style={styles.carousel}>
+      <View style={[styles.previewWrap, { borderColor: tint + "aa", backgroundColor: mixColors(colors.surfaceRaised, tint, 0.18) }]}>
+        <Pop trigger={i} strength={1.12}>
+          <Avatar character={{ gender, originRegion: region, avatarSeed: seed, appearance, age: st.age, ...(st.extra as object) }} size={112} />
+        </Pop>
+      </View>
+      <View style={styles.ageTag}>
+        <Text style={[styles.ageTagAge, { color: tint }]}>Age {st.age}</Text>
+        <Text style={styles.ageTagText}>{st.caption}</Text>
+      </View>
+      <View style={styles.stageDots}>
+        {STAGES.map((_, n) => (
+          <View key={n} style={[styles.stageDot, n === i && { backgroundColor: tint, width: 18 }]} />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+// soft colour blobs drifting behind the landing
+function Orb({ size, color, x, y, delay }: { size: number; color: string; x: string; y: string; delay: number }) {
+  const v = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (settings.reduceMotion) return;
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(v, { toValue: 1, duration: 7000 + delay, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      Animated.timing(v, { toValue: 0, duration: 7000 + delay, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+    ]));
+    loop.start();
+    return () => loop.stop();
+  }, [v, delay]);
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: "absolute", left: x as never, top: y as never, width: size, height: size, borderRadius: size / 2, backgroundColor: color, opacity: 0.16,
+        transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -26] }) }, { translateX: v.interpolate({ inputRange: [0, 1], outputRange: [0, 16] }) }],
+      }}
+    />
+  );
+}
+
+function LoadSaveModal({ onClose }: { onClose: () => void }) {
+  const importSave = useGameStore((x) => x.importSave);
+  const [text, setText] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  return (
+    <ModalBase icon="download" iconColor={colors.primary}>
+      <Text style={styles.loadTitle}>Load a saved life</Text>
+      <Text style={styles.cardText}>Paste a save you copied from Settings in another browser or device.</Text>
+      <TextInput style={[styles.input, { height: 110, marginTop: spacing.md, textAlignVertical: "top" }]} value={text} onChangeText={(t) => { setText(t); setErr(null); }} placeholder="Paste a save here" placeholderTextColor={colors.textMuted} multiline autoCapitalize="none" autoCorrect={false} />
+      {err ? <Text style={[styles.cardText, { color: colors.danger, marginBottom: spacing.sm }]}>{err}</Text> : null}
+      <View style={{ flexDirection: "row", gap: spacing.sm }}>
+        <Button label="Load it" icon="download" variant="primary" disabled={!text.trim()} onPress={() => { const r = importSave(text); if (!r.ok) setErr(r.error ?? "Couldn't load that."); }} />
+        <Button label="Cancel" variant="ghost" onPress={onClose} />
+      </View>
+    </ModalBase>
+  );
+}
 
 export default function StartScreen() {
   const beginLife = useGameStore((s) => s.beginLife);
@@ -50,6 +135,7 @@ export default function StartScreen() {
   const [previewAge, setPreviewAge] = useState(16);
   const [showWhatsNew, setShowWhatsNew] = useState(false);
   const [showThemes, setShowThemes] = useState(false);
+  const [showLoad, setShowLoad] = useState(false);
 
   const setApp = (patch: Partial<Appearance>) => setAppearance((a) => ({ ...a, ...patch }));
   const rerollLook = () => setAppearance(appearanceFromSeed((Math.random() * 999983) | 0, gender, region));
@@ -80,6 +166,9 @@ export default function StartScreen() {
     return (
       <SafeAreaView style={styles.root}>
         <GradientBg id="startBg" from={colors.gradStart} to={colors.background} radius={0} vertical style={StyleSheet.absoluteFill} />
+        <Orb size={220} color={colors.primary} x="-14%" y="8%" delay={0} />
+        <Orb size={170} color={colors.looks} x="68%" y="22%" delay={900} />
+        <Orb size={260} color={colors.smarts} x="40%" y="68%" delay={1800} />
         <View style={styles.landing}>
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Change theme" activeOpacity={0.7} style={styles.themeBtn} onPress={() => setShowThemes(true)}>
             <Ionicons name="color-palette" size={20} color={colors.textSecondary} />
@@ -91,16 +180,19 @@ export default function StartScreen() {
             <Text style={styles.title}>Better Bit</Text>
             <Text style={styles.subtitle}>A life, from birth.</Text>
           </View>
-          <View style={styles.previewWrap}>
-            <Avatar character={{ gender, originRegion: region, avatarSeed: seed, appearance, age: 30 }} size={112} />
-          </View>
+          <LifeCarousel gender={gender} region={region} seed={seed} appearance={appearance} />
           <Button label="Start a new life" icon="arrow-forward" variant="primary" size="lg" onPress={() => setStep(0)} style={styles.wide} />
+          <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} onPress={() => setShowLoad(true)} style={styles.loadRow}>
+            <Ionicons name="download" size={14} color={colors.textSecondary} />
+            <Text style={styles.loadText}>Load a saved life</Text>
+          </TouchableOpacity>
           <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} onPress={() => setShowWhatsNew(true)} style={styles.versionRow}>
             <Text style={styles.versionText}>v{APP_VERSION} · What's New</Text>
           </TouchableOpacity>
         </View>
         {showWhatsNew && <WhatsNewModal onClose={() => setShowWhatsNew(false)} />}
         {showThemes && <ThemePicker onClose={() => setShowThemes(false)} />}
+        {showLoad && <LoadSaveModal onClose={() => setShowLoad(false)} />}
       </SafeAreaView>
     );
   }
@@ -354,13 +446,22 @@ const styles = StyleSheet.create({
     position: "absolute", top: spacing.lg, right: spacing.lg, width: 40, height: 40, borderRadius: 20,
     backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center", zIndex: 5,
   },
-  logoWrap: { alignItems: "center", marginBottom: spacing.xxl },
+  carousel: { alignItems: "center", marginBottom: spacing.xl },
+  ageTag: { alignItems: "center", marginTop: spacing.md, minHeight: 44 },
+  ageTagAge: { fontFamily: fonts.extraBold, fontSize: fontSize.lg },
+  ageTagText: { color: colors.textSecondary, fontFamily: fonts.semiBold, fontSize: fontSize.md, marginTop: 1 },
+  stageDots: { flexDirection: "row", gap: 5, marginTop: spacing.sm },
+  stageDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.border },
+  loadRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: spacing.md, padding: spacing.sm },
+  loadText: { color: colors.textSecondary, fontFamily: fonts.semiBold, fontSize: fontSize.md },
+  loadTitle: { color: colors.textPrimary, fontFamily: fonts.extraBold, fontSize: fontSize.xl, marginBottom: spacing.sm },
+  logoWrap: { alignItems: "center", marginBottom: spacing.xl },
   logoBadge: { width: 56, height: 56, borderRadius: radii.xl, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center", marginBottom: spacing.md },
   title: { fontSize: fontSize.display, fontFamily: fonts.extraBold, color: colors.textPrimary },
   subtitle: { fontSize: fontSize.base, fontFamily: fonts.regular, color: colors.textSecondary, marginTop: 2 },
   previewWrap: {
     width: 128, height: 128, borderRadius: 64, backgroundColor: colors.surfaceRaised, borderWidth: 2, borderColor: colors.primary + "88",
-    overflow: "hidden", alignItems: "center", justifyContent: "center", marginBottom: spacing.xxl,
+    overflow: "hidden", alignItems: "center", justifyContent: "center",
   },
   previewWrapLg: {
     width: 170, height: 170, borderRadius: 85, backgroundColor: colors.surfaceRaised, borderWidth: 2, borderColor: colors.primary + "88",

@@ -11,6 +11,7 @@ import { AbroadHub, AbroadListMenu, CitizenMenu, CountryMenu, GoHomeMenu, Passpo
 import { BankruptMenu, BusinessMenu, CareerMenu, RentalsMenu, StartBusinessMenu, TaxMenu } from "../screens/menus/CareerMenus";
 import { AchievementsMenu, BodyMenu, HabitsMenu, HobbiesMenu, MindMenu, TreeMenu } from "../screens/menus/LifestyleMenus";
 import { AnalyticsMenu, ChannelMenu, CreatePostMenu, DealsMenu, FeedMenu, InboxMenu, NewChannelMenu, SocialHub, TeamMenu, TrendingMenu } from "../screens/menus/SocialMenus";
+import { SettingsMenu } from "../screens/menus/SettingsMenus";
 import PeopleTab from "../screens/tabs/PeopleTab";
 import { RegionKey, StatKey } from "../types";
 
@@ -81,6 +82,7 @@ export default function MenuHost({ route }: { route: Route }) {
     case "analytics": return <AnalyticsMenu />;
     case "trending": return <TrendingMenu />;
     case "team": return <TeamMenu />;
+    case "settings": return <SettingsMenu />;
     case "createpost": return <CreatePostMenu platform={String(route.params?.platform ?? "")} />;
     case "peopleGroup": return <PeopleTab group={String(route.params?.group ?? "family")} />;
     case "profile": return <ProfileMenu />;

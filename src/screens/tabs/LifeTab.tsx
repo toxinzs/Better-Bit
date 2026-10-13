@@ -11,7 +11,8 @@ import { getLifeStage } from "../../engine/lifeEngine";
 import { PersonAvatar } from "../../components/Avatar";
 import { ageOf } from "../../engine/people";
 import { Character, NewsItem, NewsKind, YearRecord } from "../../types";
-import { colors, fonts, fontSize, radii, spacing } from "../../theme";
+import { stageTint } from "../../data/stageTint";
+import { colors, mixColors, fonts, fontSize, radii, spacing } from "../../theme";
 
 type LineKind = { icon: keyof typeof Ionicons.glyphMap; color: string };
 
@@ -70,30 +71,51 @@ function history(c: Character): YearRecord[] {
 
 const PAGE = 10;
 
+// quick filters for a long life story, matched on the same icon kinds the feed already uses
+const FILTERS: { key: string; label: string; icons: string[] }[] = [
+  { key: "all", label: "All", icons: [] },
+  { key: "money", label: "Money", icons: ["cash", "storefront"] },
+  { key: "love", label: "Love", icons: ["heart"] },
+  { key: "family", label: "Family", icons: ["people"] },
+  { key: "work", label: "Work", icons: ["briefcase"] },
+  { key: "school", label: "School", icons: ["school"] },
+  { key: "health", label: "Health", icons: ["medkit", "barbell", "leaf", "beer"] },
+  { key: "fame", label: "Fame", icons: ["phone-portrait"] },
+  { key: "wins", label: "Wins", icons: ["trophy"] },
+  { key: "trouble", label: "Trouble", icons: ["warning", "shield"] },
+];
+
 export default function LifeTab() {
   const character = useGameStore((s) => s.character);
   const worldState = useGameStore((s) => s.worldState);
   const [shown, setShown] = useState(PAGE);
+  const [filter, setFilter] = useState<string>("all");
 
   if (!character) return null;
 
   const region = getRegion(character.originRegion);
   const stage = getLifeStage(character.age);
-  const past = history(character);
+  const allPast = history(character);
+  const f = FILTERS.find((x) => x.key === filter) ?? FILTERS[0];
+  const past = f.key === "all"
+    ? allPast
+    : allPast
+        .map((y) => ({ ...y, lines: y.lines.filter((l) => f.icons.includes(kindFor(l).icon as string)), news: undefined }))
+        .filter((y) => y.lines.length > 0);
   const cond = worldState.activeCondition;
   const news = [...worldState.log];
 
   return (
     <ScrollView contentContainerStyle={styles.scroll}>
       <FadeInUp key={`hero-${character.age}`} distance={20} duration={420}>
-      <GradientBg id="lifeHero" from={colors.gradLife} to={colors.surface} radius={radii.lg} style={styles.hero}>
+      <GradientBg id="lifeHero" from={mixColors(colors.gradLife, stageTint(character.age), colors.mode === "light" ? 0.2 : 0.28)} to={colors.surface} radius={radii.lg} style={styles.hero}>
         <View style={styles.heroTop}>
           <View>
             <Text style={styles.heroAge}>{character.age}</Text>
             <Text style={styles.heroAgeLabel}>{character.age === 1 ? "year old" : "years old"}</Text>
           </View>
           <View style={styles.heroMeta}>
-            <Chip label={stage.replace(/_/g, " ").toUpperCase()} color={colors.smarts} />
+            <Chip label={stage.replace(/_/g, " ").toUpperCase()} color={stageTint(character.age)} />
             <Chip label={region.label.toUpperCase()} color={colors.gold} />
             {character.appearanceFlavor ? (
               <Text style={styles.flavor}>
@@ -144,12 +166,19 @@ export default function LifeTab() {
         </View>
       ) : null}
 
-      {past.length > 0 ? (
+      {allPast.length > 0 ? (
         <>
           <View style={styles.timelineHeader}>
             <Ionicons name="time" size={16} color={colors.textSecondary} />
             <Text style={styles.timelineTitle}>Your story so far</Text>
           </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filters} contentContainerStyle={styles.filtersRow}>
+            {FILTERS.map((x) => (
+              <TouchableOpacity key={x.key} accessibilityRole="button" activeOpacity={0.75} style={[styles.filter, filter === x.key && styles.filterOn]} onPress={() => { setFilter(x.key); setShown(PAGE); }}>
+                <Text style={[styles.filterText, filter === x.key && { color: colors.primary }]}>{x.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
           {past.slice(0, shown).map((y, idx) => (
             <FadeInUp key={`${y.age}-${idx}`} delay={Math.min(idx, 7) * 55 + 250} style={styles.yearRow}>
               <View style={styles.rail}>
@@ -168,6 +197,7 @@ export default function LifeTab() {
               </Card>
             </FadeInUp>
           ))}
+          {past.length === 0 ? <Text style={styles.emptyText}>Nothing in your story matches that yet.</Text> : null}
           {shown < past.length && (
             <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.more} onPress={() => setShown((s) => s + PAGE)}>
               <Text style={styles.moreText}>Show earlier years ({past.length - shown} more)</Text>
@@ -357,6 +387,31 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontFamily: fonts.bold,
     fontSize: fontSize.lg,
+  },
+  filters: {
+    marginBottom: spacing.md,
+    marginHorizontal: -spacing.lg,
+  },
+  filtersRow: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
+  },
+  filter: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 7,
+    borderRadius: radii.pill,
+    backgroundColor: colors.surfaceRaised,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  filterOn: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary + "18",
+  },
+  filterText: {
+    color: colors.textSecondary,
+    fontFamily: fonts.semiBold,
+    fontSize: fontSize.md,
   },
   yearRow: {
     flexDirection: "row",

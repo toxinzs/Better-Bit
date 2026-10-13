@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Character, LifeEvent, WorldState } from "../types";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
@@ -7,6 +7,9 @@ import ModalBase from "./ModalBase";
 import { FadeInUp } from "../motion";
 import { PersonAvatar } from "./Avatar";
 import { ageOf } from "../engine/people";
+import SceneBanner from "./SceneBanner";
+import { sceneFor } from "../data/eventScenes";
+import { settings } from "../settings";
 
 // On web the modal auto-focuses its first focusable child - the scroll area -
 // and Chrome draws a white focus ring around it.
@@ -32,7 +35,8 @@ export default function EventModal({
   const who = whoId ? character.relationships.find((r) => r.id === whoId) : undefined;
 
   return (
-    <ModalBase icon={who || event.banner ? undefined : "sparkles"}>
+    <ModalBase>
+      {!event.banner && <SceneBanner scene={sceneFor(event.id)} age={character.age} />}
       {event.banner && (
         <View style={styles.banner}>
           <View style={styles.bannerIcon}>
@@ -92,6 +96,11 @@ export default function EventModal({
                   ]}
                   onPress={() => onChoose(i)}
                 >
+                  {Platform.OS === "web" && settings.shortcuts && i < 9 ? (
+                    <View style={styles.keycap}>
+                      <Text style={styles.keycapText}>{i + 1}</Text>
+                    </View>
+                  ) : null}
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.choiceText, danger && { color: colors.danger }]}>{choice.label}</Text>
                     {choice.sublabel ? <Text style={styles.choiceSub}>{choice.sublabel}</Text> : null}
@@ -186,6 +195,22 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
     borderRadius: radii.md,
+  },
+  keycap: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: spacing.sm,
+  },
+  keycapText: {
+    color: colors.textMuted,
+    fontFamily: fonts.bold,
+    fontSize: fontSize.xs,
   },
   choiceText: {
     color: colors.textPrimary,

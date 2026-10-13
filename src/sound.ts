@@ -1,3 +1,4 @@
+import { settings } from "./settings";
 import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from "expo-audio";
 
 const SOUND_SOURCES = {
@@ -27,6 +28,7 @@ function getPlayer(key: SoundKey): AudioPlayer | null {
 }
 
 export function playSound(key: SoundKey) {
+  if (!settings.sound) return;
   const player = getPlayer(key);
   if (!player) return;
   player

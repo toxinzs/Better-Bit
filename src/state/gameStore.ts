@@ -99,6 +99,7 @@ import { toggleBucket as engineToggleBucket } from "../engine/achievements";
 import { buyFollowers as engineBuyFollowers, closeChannel as engineCloseChannel, doAction as engineCreatorAction, fire as engineFireTeam, hire as engineHireTeam, launchMembers as engineLaunchMembers, launchMerch as engineLaunchMerch, openChannel as engineOpenChannel, setPlan as engineSetPlan } from "../engine/creator";
 import type { Role } from "../engine/creator";
 import { ensureSocial } from "../engine/creatorCore";
+import { decodeSave, encodeSave } from "../engine/saveio";
 import { answerInbox as engineAnswerInbox } from "../engine/inbox";
 import type { Cadence, PlatformKey, PostStyle, QualityTier } from "../types";
 
@@ -241,6 +242,10 @@ type GameState = {
   buyInsurance: () => void;
   personAction: (relationshipId: string, key: ActionKey, amount?: number) => void;
   restart: () => void;
+  // age several years in a row, stopping at the first thing that needs an answer
+  ageUpMany: (years: number | "event") => void;
+  exportSave: () => string;
+  importSave: (text: string) => { ok: boolean; error?: string };
 };
 
 function persist(character: Character | null, screen: Screen, worldState: WorldState) {
@@ -572,6 +577,41 @@ export const useGameStore = create<GameState>((set, get) => {
     restart: () => {
       set({ screen: "start", character: null, pendingEvent: null, actionResultLines: null });
       persist(null, "start", get().worldState);
+    },
+
+    ageUpMany: (years) => {
+      const limit = years === "event" ? 60 : years;
+      for (let i = 0; i < limit; i++) {
+        const s = get();
+        if (s.screen !== "home" || !s.character || !s.character.alive) break;
+        // something is waiting on the player: stop here so nothing gets skipped
+        if (s.pendingEvent || s.character.pendingBabyId || (s.character.notices ?? []).length > 0) break;
+        get().ageUp();
+      }
+    },
+
+    exportSave: () => {
+      const { character, worldState, screen } = get();
+      if (!character) return "";
+      return encodeSave({ character, worldState, screen: screen === "gameover" ? "gameover" : "home" });
+    },
+
+    importSave: (text) => {
+      const r = decodeSave(text);
+      if (!r.ok) return { ok: false, error: r.error };
+      const c = r.payload.character;
+      ensurePeople(c);
+      ensureSchool(c);
+      ensureLocation(c);
+      ensureAbroad(c);
+      ensureBody(c);
+      ensureSocial(c);
+      const worldState = r.payload.worldState ?? get().worldState;
+      const screen: Screen = r.payload.screen === "gameover" || !c.alive ? "gameover" : "home";
+      const pendingEvent = screen === "home" ? nextDecisionEvent(c, worldState) : null;
+      set({ character: c, worldState, screen, pendingEvent, actionResultLines: null });
+      persist(c, screen, worldState);
+      return { ok: true };
     },
   };
 });

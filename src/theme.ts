@@ -1,4 +1,5 @@
 import { Platform } from "react-native";
+import { settings } from "./settings";
 
 // ---------- palettes ----------
 // Every color in the app comes from `colors`, which is filled from one of
@@ -288,7 +289,7 @@ export const fonts = {
   extraBold: "Nunito_800ExtraBold",
 };
 
-export const fontSize = {
+const FONT_BASE = {
   xs: 11,
   sm: 12,
   md: 13,
@@ -298,6 +299,8 @@ export const fontSize = {
   xxl: 26,
   display: 32,
 };
+// the saved text size scales every size token (the pixel values in a few headings stay as drawn)
+export const fontSize = Object.fromEntries(Object.entries(FONT_BASE).map(([k, v]) => [k, Math.round(v * settings.textScale)])) as typeof FONT_BASE;
 
 export const shadow = {
   shadowColor: "#000",
@@ -306,3 +309,11 @@ export const shadow = {
   shadowRadius: 10,
   elevation: 4,
 };
+
+// blend two #rrggbb colours (t = 0 gives a, 1 gives b)
+export function mixColors(a: string, b: string, t: number): string {
+  const p = (h: string, i: number) => parseInt(h.slice(1 + i * 2, 3 + i * 2), 16);
+  const k = Math.max(0, Math.min(1, t));
+  const ch = (i: number) => Math.round(p(a, i) + (p(b, i) - p(a, i)) * k).toString(16).padStart(2, "0");
+  return `#${ch(0)}${ch(1)}${ch(2)}`;
+}

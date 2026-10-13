@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { creatorLabel } from "../engine/creatorCore";
-import { Animated, Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Animated, Platform, Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useGameStore } from "../state/gameStore";
 import EventModal from "../components/EventModal";
@@ -12,7 +12,6 @@ import Avatar, { moodFor } from "../components/Avatar";
 import { Confetti, CountUp, FadeInUp, FloatingDelta, Pop } from "../motion";
 import GradientBg from "../components/GradientBg";
 import StatStrip from "../components/StatStrip";
-import ThemePicker from "../components/ThemePicker";
 import LifeTab from "./tabs/LifeTab";
 import PeopleHub from "./menus/PeopleHub";
 import { ActivitiesHub } from "./menus/ActivityMenus";
@@ -21,8 +20,10 @@ import { WorkHub } from "./menus/WorkHub";
 import MenuHost from "../nav/MenuHost";
 import { useNav } from "../nav/navStore";
 import { getRegion } from "../data/regions";
-import { colors, fonts, fontSize, radii, spacing } from "../theme";
+import { colors, fonts, fontSize, mixColors, radii, spacing } from "../theme";
+import { stageTint } from "../data/stageTint";
 import { playSound } from "../sound";
+import { settings } from "../settings";
 import { cityOf } from "../engine/where";
 
 const MILESTONES: Record<number, string> = {
@@ -71,7 +72,7 @@ export default function HomeScreen() {
   const stack = useNav((s) => s.stack);
   const push = useNav((s) => s.push);
   const resetNav = useNav((s) => s.reset);
-  const [showThemes, setShowThemes] = useState(false);
+  const [ffOpen, setFfOpen] = useState(false);
   const [confetti, setConfetti] = useState(0);
   const [milestone, setMilestone] = useState<string | null>(null);
 
@@ -124,10 +125,67 @@ export default function HomeScreen() {
     playSound(after && !after.alive ? "gameOver" : "ageUp");
   };
 
+  const handleAgeMany = (years: number | "event") => {
+    setFfOpen(false);
+    useGameStore.getState().ageUpMany(years);
+    const after = useGameStore.getState().character;
+    playSound(after && !after.alive ? "gameOver" : "ageUp");
+  };
+
   const handleChoose = (choiceIndex: number) => {
     playSound("choice");
     chooseEventOption(choiceIndex);
   };
+
+  // keyboard shortcuts on the web: Space ages up, 1-9 choose, Esc backs out, QWERT switch tabs
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof window === "undefined") return;
+    const TAB_KEYS: Record<string, Tab> = { q: "life", w: "do", e: "people", r: "work", t: "money" };
+    const onKey = (e: KeyboardEvent) => {
+      if (!settings.shortcuts || e.ctrlKey || e.metaKey || e.altKey) return;
+      const el = e.target as HTMLElement | null;
+      if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
+      const onButton = !!el && el.getAttribute?.("role") === "button";
+      const st = useGameStore.getState();
+      const c = st.character;
+      if (!c || st.screen !== "home") return;
+      const confirm = e.key === "Enter" || e.key === " ";
+      if (e.key === "Escape") {
+        if ((c.notices ?? []).length > 0 && !c.pendingBabyId) st.dismissNotice(c.notices![0].id);
+        else if (!st.pendingEvent && !c.pendingBabyId && st.actionResultLines) st.clearActionResult();
+        else if (!st.pendingEvent && !c.pendingBabyId && useNav.getState().thread) useNav.getState().setThread(null);
+        else if (!st.pendingEvent && !c.pendingBabyId) useNav.getState().pop();
+        return;
+      }
+      if ((c.notices ?? []).length > 0 && !c.pendingBabyId) {
+        if (confirm && !onButton) { e.preventDefault(); st.dismissNotice(c.notices![0].id); }
+        return;
+      }
+      if (c.pendingBabyId) return;
+      if (st.pendingEvent) {
+        const n = Number(e.key);
+        const choice = Number.isInteger(n) && n >= 1 ? st.pendingEvent.choices?.[n - 1] : undefined;
+        if (choice && !choice.disabled) { e.preventDefault(); playSound("choice"); st.chooseEventOption(n - 1); }
+        else if (confirm && !onButton && st.pendingEvent.choices?.length === 1 && !st.pendingEvent.choices[0].disabled) { e.preventDefault(); st.chooseEventOption(0); }
+        return;
+      }
+      if (st.actionResultLines) {
+        if (confirm && !onButton) { e.preventDefault(); st.clearActionResult(); }
+        return;
+      }
+      if (useNav.getState().thread) return;
+      const t = TAB_KEYS[e.key.toLowerCase()];
+      if (t) { useNav.getState().reset(); setTab(t); return; }
+      if (confirm && !onButton && useNav.getState().stack.length === 0) {
+        e.preventDefault();
+        st.ageUp();
+        const after = useGameStore.getState().character;
+        playSound(after && !after.alive ? "gameOver" : "ageUp");
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   if (!character) return null;
 
@@ -137,7 +195,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <GradientBg id="homeHeader" from={colors.gradHeader} to={colors.surface} radius={0} vertical style={styles.header}>
+      <GradientBg id="homeHeader" from={mixColors(colors.gradHeader, stageTint(character.age), colors.mode === "light" ? 0.22 : 0.3)} to={colors.surface} radius={0} vertical style={styles.header}>
         <View style={styles.identityRow}>
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Open profile" activeOpacity={0.8} style={styles.avatarRing} onPress={() => push("profile")}>
             <Pop trigger={character.age} strength={1.18}>
@@ -169,8 +227,8 @@ export default function HomeScreen() {
               style={styles.moneyDelta}
             />
           </View>
-          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Change theme" activeOpacity={0.7} style={styles.themeBtn} onPress={() => setShowThemes(true)}>
-            <Ionicons name="color-palette" size={17} color={colors.textSecondary} />
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Settings" activeOpacity={0.7} style={styles.themeBtn} onPress={() => push("settings")}>
+            <Ionicons name="settings" size={17} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
       </GradientBg>
@@ -196,24 +254,39 @@ export default function HomeScreen() {
       </Animated.View>
 
       <View style={styles.bottomArea}>
-        <Pressable accessibilityRole="button" onPress={handleAgeUp} onPressIn={ageBtnPressIn} onPressOut={ageBtnPressOut}>
-          <Animated.View style={{ transform: [{ scale: ageBtnScale }] }}>
-            <GradientBg id="ageBtn" from={colors.primary} to={colors.primaryDeep} radius={radii.lg} style={styles.ageBtn}>
-              <View style={styles.ageBtnInner}>
-                <Text style={styles.ageBtnText}>Age Up</Text>
-                <View style={styles.ageBtnPill}>
-                  <Pop trigger={character.age}>
-                    <Text style={styles.ageBtnPillText}>{character.age + 1}</Text>
-                  </Pop>
-                  <Ionicons name="arrow-forward" size={14} color={colors.primaryText} />
+        {ffOpen ? (
+          <FadeInUp distance={8} duration={180} style={styles.ffRow}>
+            {([[5, "+5 years"], [10, "+10 years"], ["event", "Until something happens"]] as [number | "event", string][]).map(([v, label]) => (
+              <TouchableOpacity key={String(v)} accessibilityRole="button" activeOpacity={0.75} style={styles.ffChip} onPress={() => handleAgeMany(v)}>
+                <Ionicons name="play-forward" size={13} color={colors.primary} />
+                <Text style={styles.ffText}>{label}</Text>
+              </TouchableOpacity>
+            ))}
+          </FadeInUp>
+        ) : null}
+        <View style={styles.ageRow}>
+          <Pressable accessibilityRole="button" style={{ flex: 1 }} onPress={handleAgeUp} onPressIn={ageBtnPressIn} onPressOut={ageBtnPressOut}>
+            <Animated.View style={{ transform: [{ scale: ageBtnScale }] }}>
+              <GradientBg id="ageBtn" from={colors.primary} to={colors.primaryDeep} radius={radii.lg} style={styles.ageBtn}>
+                <View style={styles.ageBtnInner}>
+                  <Text style={styles.ageBtnText}>Age Up</Text>
+                  <View style={styles.ageBtnPill}>
+                    <Pop trigger={character.age}>
+                      <Text style={styles.ageBtnPillText}>{character.age + 1}</Text>
+                    </Pop>
+                    <Ionicons name="arrow-forward" size={14} color={colors.primaryText} />
+                  </View>
                 </View>
-              </View>
-            </GradientBg>
-          </Animated.View>
-        </Pressable>
+              </GradientBg>
+            </Animated.View>
+          </Pressable>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Age up several years" activeOpacity={0.75} style={[styles.ffBtn, ffOpen && { borderColor: colors.primary }]} onPress={() => setFfOpen((v) => !v)}>
+            <Ionicons name={ffOpen ? "close" : "play-forward"} size={20} color={colors.primary} />
+          </TouchableOpacity>
+        </View>
         <View style={styles.tabBar}>
           {TABS.map((t) => (
-            <TabButton key={t.key} tab={t} active={tab === t.key} activeColor={activeTab.color} onPress={() => {
+            <TabButton key={t.key} tab={t} badge={t.key === "do" ? (character.social?.inbox.length ?? 0) + (character.social?.crisis ? 1 : 0) : 0} active={tab === t.key} activeColor={activeTab.color} onPress={() => {
               resetNav();
               setTab(t.key);
             }}
@@ -229,8 +302,6 @@ export default function HomeScreen() {
           <Text style={styles.milestoneText}>{milestone}</Text>
         </FadeInUp>
       )}
-
-      {showThemes && <ThemePicker onClose={() => setShowThemes(false)} />}
 
       {(character.notices ?? []).length > 0 && !character.pendingBabyId ? (
         <NoticeModal key={character.notices![0].id} notice={character.notices![0]} remaining={character.notices!.length - 1} onClose={() => dismissNotice(character.notices![0].id)} />
@@ -253,11 +324,13 @@ function TabButton({
   tab,
   active,
   activeColor,
+  badge = 0,
   onPress,
 }: {
   tab: (typeof TABS)[number];
   active: boolean;
   activeColor: string;
+  badge?: number;
   onPress: () => void;
 }) {
   const scale = useRef(new Animated.Value(1)).current;
@@ -271,6 +344,11 @@ function TabButton({
     <TouchableOpacity accessibilityRole="button" activeOpacity={0.7} style={styles.tabBtn} onPress={onPress}>
       <Animated.View style={[styles.tabIcon, active && { backgroundColor: tab.color + "26" }, { transform: [{ scale }] }]}>
         <Ionicons name={tab.icon} size={22} color={active ? tab.color : colors.textMuted} />
+        {badge > 0 ? (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{badge > 9 ? "9+" : badge}</Text>
+          </View>
+        ) : null}
       </Animated.View>
       <Text style={[styles.tabLabel, active && { color: activeColor }]}>{tab.label}</Text>
     </TouchableOpacity>
@@ -398,6 +476,42 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.xs,
   },
+  ageRow: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: spacing.sm,
+  },
+  ffBtn: {
+    width: 54,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surfaceRaised,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ffRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  ffChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: colors.primaryDark,
+    borderWidth: 1,
+    borderColor: colors.primary + "55",
+    paddingHorizontal: spacing.md,
+    paddingVertical: 8,
+    borderRadius: radii.pill,
+  },
+  ffText: {
+    color: colors.primary,
+    fontFamily: fonts.bold,
+    fontSize: fontSize.md,
+  },
   ageBtn: {
     paddingVertical: spacing.md + 2,
     paddingHorizontal: spacing.lg,
@@ -442,6 +556,23 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
+  },
+  badge: {
+    position: "absolute",
+    top: -3,
+    right: 2,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    paddingHorizontal: 4,
+    backgroundColor: colors.danger,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badgeText: {
+    color: "#ffffff",
+    fontFamily: fonts.extraBold,
+    fontSize: 10,
   },
   tabLabel: {
     fontSize: fontSize.xs,

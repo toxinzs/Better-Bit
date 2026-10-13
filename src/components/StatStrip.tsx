@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Stats } from "../types";
 import { FloatingDelta, Pop } from "../motion";
 import { colors, fonts, fontSize, radii, spacing } from "../theme";
+import { settings } from "../settings";
 
 const META: { key: keyof Stats; label: string; color: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { key: "health", label: "Health", color: colors.health, icon: "heart" },
@@ -45,6 +46,19 @@ function Meter({
     Animated.timing(width, { toValue: v, duration: 450, useNativeDriver: false }).start();
   }, [v, width]);
 
+  // a low stat blinks so you notice before it's a crisis
+  const low = v <= 25;
+  const blink = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    if (!low || settings.reduceMotion) {
+      blink.setValue(1);
+      return;
+    }
+    const loop = Animated.loop(Animated.sequence([Animated.timing(blink, { toValue: 0.35, duration: 650, useNativeDriver: false }), Animated.timing(blink, { toValue: 1, duration: 650, useNativeDriver: false })]));
+    loop.start();
+    return () => loop.stop();
+  }, [low, blink]);
+
   return (
     <TouchableOpacity accessibilityRole="button" accessibilityLabel={`${label} details`} activeOpacity={0.7} disabled={!onPress} style={styles.meter} onPress={onPress}>
       <View style={styles.topRow}>
@@ -61,7 +75,7 @@ function Meter({
         <Animated.View
           style={[
             styles.fill,
-            { backgroundColor: color, width: width.interpolate({ inputRange: [0, 100], outputRange: ["0%", "100%"] }) },
+            { backgroundColor: low ? colors.danger : color, opacity: blink, width: width.interpolate({ inputRange: [0, 100], outputRange: ["0%", "100%"] }) },
           ]}
         />
       </View>

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Dimensions, Easing, StyleProp, StyleSheet, TextStyle, View, ViewStyle } from "react-native";
 import { colors, fonts, fontSize } from "./theme";
+import { settings } from "./settings";
 
 // Small, reusable motion helpers so screens can feel alive without each one
 // hand-rolling Animated code.
@@ -20,8 +21,9 @@ export function FadeInUp({
   duration?: number;
   style?: StyleProp<ViewStyle>;
 }) {
-  const v = useRef(new Animated.Value(0)).current;
+  const v = useRef(new Animated.Value(settings.reduceMotion ? 1 : 0)).current;
   useEffect(() => {
+    if (settings.reduceMotion) return;
     Animated.timing(v, {
       toValue: 1,
       duration,
@@ -57,7 +59,7 @@ export function Pop({
   const scale = useRef(new Animated.Value(1)).current;
   const first = useRef(true);
   useEffect(() => {
-    if (first.current) {
+    if (first.current || settings.reduceMotion) {
       first.current = false;
       return;
     }
@@ -165,6 +167,11 @@ export function Flash({ trigger, color, children, style }: { trigger: unknown; c
 
 // A burst of falling confetti for birthdays and milestones.
 export function Confetti({ onDone }: { onDone?: () => void }) {
+  if (settings.reduceMotion) return null;
+  return <ConfettiBurst onDone={onDone} />;
+}
+
+function ConfettiBurst({ onDone }: { onDone?: () => void }) {
   const { width, height } = Dimensions.get("window");
   const palette = [colors.primary, colors.gold, colors.love, colors.smarts, colors.looks, colors.happiness];
   const parts = useRef(

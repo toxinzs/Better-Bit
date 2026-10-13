@@ -33,7 +33,142 @@ const BROWS: Record<Mood, { left: string; right: string }> = {
 const SHIRT_COLORS = ["#4d9fef", "#2ecc71", "#f5b942", "#b370e0", "#ef5b5b", "#3fb8af", "#e67e22", "#7f8c8d"];
 
 type AvatarChar = Pick<Character, "gender" | "originRegion" | "avatarSeed"> &
-  Partial<Pick<Character, "appearance" | "age" | "stats" | "job">>;
+  Partial<Pick<Character, "appearance" | "age" | "stats" | "job" | "inJail" | "educationStage" | "inCollege" | "higher" | "retired" | "social">>;
+
+// What you're wearing says what you're doing: scrubs, a hi-vis vest, a suit, a school bag,
+// headphones if you make things online, an orange jumpsuit if you're locked up.
+type Outfit = { kind: string; shirt: string };
+
+function outfitFor(c: AvatarChar, base: string): Outfit {
+  const age = c.age ?? 25;
+  if (c.inJail) return { kind: "jumpsuit", shirt: "#f0861a" };
+  if (age <= 2) return { kind: "onesie", shirt: ["#ffd6e0", "#cfe8ff", "#e4f5d0", "#fff1c1"][Math.abs(base.charCodeAt(1)) % 4] };
+  const field = c.job?.field;
+  if (c.job && age >= 16) {
+    switch (field) {
+      case "Healthcare": return { kind: "scrubs", shirt: "#2fb8ac" };
+      case "Food & Hospitality": return { kind: "apron", shirt: base };
+      case "Outdoors & Trades":
+      case "Logistics": return { kind: "hivis", shirt: "#556270" };
+      case "Public Service": return { kind: "uniform", shirt: "#2c3e75" };
+      case "Tech": return { kind: "lanyard", shirt: "#6b7a99" };
+      case "Creative & Media": return { kind: "headphones", shirt: base };
+      case "Education & Care": return { kind: "cardigan", shirt: "#b98a5e" };
+      case "Retail & Service": return { kind: "nametag", shirt: "#3d7fd1" };
+      default: return { kind: "suit", shirt: "#2f3a4d" };
+    }
+  }
+  if (age >= 5 && age <= 17 && ["elementary", "middle", "high"].includes(c.educationStage ?? "")) return { kind: "school", shirt: base };
+  if (c.inCollege || c.higher) return { kind: "hoodie", shirt: "#7a6bb0" };
+  if (age >= 16 && (c.social?.fame ?? 0) >= 20) return { kind: "headphones", shirt: base };
+  if (age >= 65) return { kind: "cardigan", shirt: "#a8896a" };
+  return { kind: "plain", shirt: base };
+}
+
+// worn over the shirt, behind the neck
+function outfitUnder(kind: string, w: number): React.ReactNode {
+  const x0 = 32 - w / 2;
+  switch (kind) {
+    case "suit": return (
+      <>
+        <Rect x={x0} y={46} width={w} height={22} rx={13} fill="#2f3a4d" />
+        <Path d="M26.5 46.5 L32 57 L37.5 46.5 Z" fill="#f4f4f4" />
+        <Path d="M31 50 L33 50 L34 59 L32 61 L30 59 Z" fill="#c0392b" opacity={0.9} />
+        <Path d="M26.5 46.5 L30 60 L22 56 Z M37.5 46.5 L34 60 L42 56 Z" fill="#232c3b" opacity={0.7} />
+      </>
+    );
+    case "scrubs": return <Path d="M27.5 46.2 L32 54.5 L36.5 46.2 Z" fill="#1c8a80" />;
+    case "apron": return (
+      <>
+        <Path d="M26.5 52 L37.5 52 L40 68 L24 68 Z" fill="#f7f7f2" />
+        <Path d="M27.5 46.8 L26.5 52 M36.5 46.8 L37.5 52" stroke="#f7f7f2" strokeWidth={1.4} />
+        <Rect x={29} y={57} width={6} height={4} rx={1} fill="#e5e5dc" />
+      </>
+    );
+    case "hivis": return (
+      <>
+        <Rect x={x0 + 3} y={47} width={w - 6} height={21} rx={8} fill="#d4e600" />
+        <Rect x={x0 + 3} y={54} width={w - 6} height={2} fill="#eceff1" />
+        <Rect x={x0 + 3} y={60} width={w - 6} height={2} fill="#eceff1" />
+        <Path d="M29 46.6 L32 52 L35 46.6" fill="#556270" />
+      </>
+    );
+    case "uniform": return (
+      <>
+        <Path d="M25.5 46.5 L31 53 L28 47.6 Z M38.5 46.5 L33 53 L36 47.6 Z" fill="#f4f4f4" />
+        <Circle cx={38.2} cy={55.5} r={2.3} fill="#e8b923" />
+        <Rect x={x0 + 1.5} y={50.5} width={5} height={3} rx={1} fill="#e8b923" opacity={0.85} />
+      </>
+    );
+    case "cardigan": return (
+      <>
+        <Rect x={x0} y={46} width={w} height={22} rx={13} fill="#8a6a4a" opacity={0.55} />
+        <Line x1={32} y1={50} x2={32} y2={68} stroke="#5a4330" strokeWidth={1} opacity={0.6} />
+        <Circle cx={32} cy={55} r={1} fill="#3d2d20" />
+        <Circle cx={32} cy={61} r={1} fill="#3d2d20" />
+      </>
+    );
+    case "nametag": return (
+      <>
+        <Path d="M27 46.6 L32 51 L37 46.6" stroke="#f4f4f4" strokeWidth={1.4} fill="none" />
+        <Rect x={35.2} y={52} width={5.2} height={2.8} rx={0.6} fill="#ffffff" />
+      </>
+    );
+    case "hoodie": return (
+      <>
+        <Path d="M23.5 47.5 Q32 58 40.5 47.5" stroke="#5a4c8c" strokeWidth={3} fill="none" strokeLinecap="round" />
+        <Line x1={29.5} y1={53} x2={29} y2={61} stroke="#e8e8f2" strokeWidth={0.9} />
+        <Line x1={34.5} y1={53} x2={35} y2={61} stroke="#e8e8f2" strokeWidth={0.9} />
+      </>
+    );
+    case "school": return (
+      <>
+        <Path d="M26.5 47 L25 67 M37.5 47 L39 67" stroke="#2d3340" strokeWidth={2.6} strokeLinecap="round" />
+      </>
+    );
+    case "onesie": return (
+      <>
+        <Circle cx={32} cy={53} r={0.9} fill="#ffffff" opacity={0.85} />
+        <Circle cx={32} cy={57} r={0.9} fill="#ffffff" opacity={0.85} />
+        <Circle cx={32} cy={61} r={0.9} fill="#ffffff" opacity={0.85} />
+      </>
+    );
+    case "jumpsuit": return (
+      <>
+        <Path d="M27 46.4 L32 55 L37 46.4 Z" fill="#c76a10" />
+        <Rect x={36} y={55} width={6} height={4} rx={0.8} fill="#ffffff" opacity={0.9} />
+        <Line x1={x0 + 2} y1={64} x2={x0 + w - 2} y2={64} stroke="#c76a10" strokeWidth={1.2} />
+      </>
+    );
+    default: return null;
+  }
+}
+
+// worn on top of the neck
+function outfitOver(kind: string): React.ReactNode {
+  switch (kind) {
+    case "scrubs": return (
+      <>
+        <Path d="M27.5 48 Q26 58.5 32 59.5 Q38 58.5 36.5 48" stroke="#2b2f36" strokeWidth={1.3} fill="none" />
+        <Circle cx={32} cy={60.4} r={1.7} fill="#c9d1d9" stroke="#2b2f36" strokeWidth={0.6} />
+      </>
+    );
+    case "lanyard": return (
+      <>
+        <Path d="M28.4 46.8 L31.3 58 M35.6 46.8 L32.7 58" stroke="#e74c3c" strokeWidth={1.2} />
+        <Rect x={30.4} y={58} width={3.2} height={4.4} rx={0.6} fill="#ffffff" />
+      </>
+    );
+    case "headphones": return (
+      <>
+        <Path d="M23.6 44 Q32 58 40.4 44" stroke="#22262e" strokeWidth={2.2} fill="none" strokeLinecap="round" />
+        <Ellipse cx={23.4} cy={44.4} rx={2.8} ry={3.6} fill="#2e333d" />
+        <Ellipse cx={40.6} cy={44.4} rx={2.8} ry={3.6} fill="#2e333d" />
+      </>
+    );
+    default: return null;
+  }
+}
 
 function mix(a: string, b: string, t: number): string {
   const p = (h: string, i: number) => parseInt(h.slice(1 + i * 2, 3 + i * 2), 16);
@@ -133,7 +268,9 @@ export default function Avatar({
   const skin = ap.skin;
   const dark = "#241a14";
   const eye = EYE_COLORS[ap.eyes]?.hex ?? "#5a3a22";
-  const shirt = SHIRT_COLORS[Math.floor(seed / 5) % SHIRT_COLORS.length];
+  const baseShirt = SHIRT_COLORS[Math.floor(seed / 5) % SHIRT_COLORS.length];
+  const outfit = outfitFor(character, baseShirt);
+  const shirt = outfit.shirt;
   const shoulderW = { slim: 40, average: 44, stocky: 50, athletic: 48 }[ap.build] ?? 44;
   // greys with age
   const hairColor = mix(ap.hairColor, "#c8c8c8", (age - 42) / 32);
@@ -143,7 +280,7 @@ export default function Avatar({
   const eyeR = child ? 2.3 : 1.8;
   const health = character.stats?.health ?? 80;
   const wrinkle = Math.max(0, Math.min(0.55, (age - 48) / 45));
-  const formal = !!character.job && age >= 18;
+  const fame = character.social?.fame ?? 0;
   const showFace = age >= 16 ? ap.facialHair : "none";
   const stubbleColor = age > 50 ? mix(ap.hairColor, "#c8c8c8", (age - 42) / 32) : ap.hairColor;
 
@@ -155,10 +292,10 @@ export default function Avatar({
         {hairBack(style, hairColor)}
         {/* shoulders / shirt */}
         <Rect x={32 - shoulderW / 2} y={46} width={shoulderW} height={22} rx={13} fill={shirt} />
-        {formal && <Path d="M26 46.5 L32 55 L38 46.5 Z" fill="#f4f4f4" />}
-        {formal && ap.build !== "slim" && <Path d="M31 50 L33 50 L34 58 L32 60 L30 58 Z" fill="#c0392b" opacity={0.85} />}
+        {outfitUnder(outfit.kind, shoulderW)}
         {/* neck */}
         <Rect x={27} y={38} width={10} height={11} rx={4} fill={skin} />
+        {outfitOver(outfit.kind)}
         {/* ears */}
         <Circle cx={18.2} cy={27} r={2.6} fill={skin} />
         <Circle cx={45.8} cy={27} r={2.6} fill={skin} />
@@ -201,6 +338,16 @@ export default function Avatar({
           </>
         )}
         <Path d={MOUTH[mood]} stroke={dark} strokeWidth={1.6} fill="none" strokeLinecap="round" opacity={0.75} />
+        {/* sunglasses pushed up on the head once you're properly famous */}
+        {fame >= 50 && age >= 16 && (
+          <>
+            <Rect x={23.5} y={13.2} width={7} height={3.4} rx={1.5} fill="#15171c" />
+            <Rect x={33.5} y={13.2} width={7} height={3.4} rx={1.5} fill="#15171c" />
+            <Line x1={30.5} y1={14.6} x2={33.5} y2={14.6} stroke="#15171c" strokeWidth={1} />
+          </>
+        )}
+        {/* a gold star pin for the very famous */}
+        {fame >= 75 && age >= 16 && <Path d="M44 50 l1.1 2.7 2.9.2 -2.2 1.8 .7 2.8 -2.5 -1.5 -2.5 1.5 .7 -2.8 -2.2 -1.8 2.9 -.2z" fill="#f5c542" />}
         {/* glasses */}
         {ap.glasses && (
           <>
